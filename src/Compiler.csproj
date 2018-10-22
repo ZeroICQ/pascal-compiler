@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+    </PropertyGroup>
+
+    <Target Name="TestTarget" DependsOnTargets="Build">
+        <Message Text="Test target message" Importance="high" />
+    </Target>
+    
+    <Target Name="UnitTest" DependsOnTargets="Build">
+        <Exec Command="dotnet test --configuration $(Configuration) ../tests/" />
+    </Target>
+    
+    <Target Name="Coverage" DependsOnTargets="Build">
+        <Exec Command="dotnet test --configuration $(Configuration) /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=../reports/$(MSBuildProjectName).opencover.xml ../tests" />
+    </Target>
+
+    <Target Name="Report" DependsOnTargets="Coverage">
+        <Exec WorkingDirectory="../tests"
+              Command="dotnet reportgenerator -reports:../reports/$(MSBuildProjectName).opencover.xml -targetdir:../reports/" />
+    </Target>
+    
+</Project>
