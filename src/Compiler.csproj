@@ -18,8 +18,7 @@
     </Target>
 
     <Target Name="Report" DependsOnTargets="Coverage">
-        <Exec WorkingDirectory="../tests"
-              Command="dotnet reportgenerator -reports:../reports/$(MSBuildProjectName).opencover.xml -targetdir:../reports/" />
+        <Exec WorkingDirectory="../tests" Command="dotnet reportgenerator -reports:../reports/$(MSBuildProjectName).opencover.xml -targetdir:../reports/" />
     </Target>
     
 </Project>
