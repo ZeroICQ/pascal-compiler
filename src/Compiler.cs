@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -49,10 +50,9 @@ internal static class App {
 
         try {
             using (var compiler = new Compiler(File.OpenText(inputFilePath))) {
-                
-                Token lastToken;
-                while ((lastToken = compiler.GetNextToken()) != null) {
-                    Console.WriteLine($"{lastToken.ToString()}\t\t{lastToken.Line.ToString()}\t\t{lastToken.Column.ToString()}");
+                Token lt;
+                while ((lt = compiler.GetNextToken()) != null) {
+                    Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(), lt.Type.ToString(), lt.GetStringValue(), lt.ToString());
                 }
             }
         }
