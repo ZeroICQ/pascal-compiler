@@ -8,10 +8,22 @@ using DiffPlex.DiffBuilder.Model;
 
 namespace Tester {
 class Tester {
+    private static void ShowUsage() {
+        Console.WriteLine("USAGE");
+//        Console.WriteLine("dotnet Tester.dll [pathToCompiler] [pathToTestsDirectory]");
+    }
+        
     static void Main(string[] args) {
-        var testFiles = Directory.GetFiles(Directory.GetCurrentDirectory());
+        if (args.Length < 2) {
+            ShowUsage();
+            return;
+        }
+            
+        
+        var testDir = Directory.GetFiles(args[1]);
+        var compilerPath = args[0];
 
-        foreach (var testFile in testFiles) {
+        foreach (var testFile in testDir) {
             if (!testFile.EndsWith(".pas"))
                 continue;
 
@@ -20,7 +32,7 @@ class Tester {
             
             Process pr = new Process();
             pr.StartInfo.FileName = "dotnet";
-            pr.StartInfo.Arguments = $"../src/bin/Debug/netcoreapp2.1/Compiler.dll -L {testFile}";
+            pr.StartInfo.Arguments = $"{compilerPath} -L {testFile}";
             pr.StartInfo.UseShellExecute = false;
             pr.StartInfo.RedirectStandardOutput = true;
             pr.Start();
@@ -28,11 +40,11 @@ class Tester {
             using (var answer = File.OpenText(testName + ".test")) {
 
                 while (!pr.StandardOutput.EndOfStream) {
-                    var outLine = pr.StandardOutput.ReadLine();
-                    var compiledResult = outLine.Split();
+                    var compiledResult = pr.StandardOutput.ReadLine().Split().Where(i => i != "" && i != "\t");
+                    var outLine = string.Join(" ", compiledResult);
 
-                    var answerLine = answer.ReadLine();
-                    var expectedAnswer = answerLine.Split();
+                    var expectedAnswer = answer.ReadLine().Split().Where(i => i != "" && i != "\t");
+                    var answerLine = string.Join(" ", expectedAnswer);;
 
                     if (!compiledResult.SequenceEqual(expectedAnswer)) {
 
