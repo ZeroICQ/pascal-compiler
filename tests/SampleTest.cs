@@ -9,8 +9,8 @@ namespace Tests
     public class AppTests
     {
         [Fact]
-        public void SampleTest()
-        {
+        public void SampleTest() {
+//            Compiler.Compiler.Main(new string[] {"heh"});
 //            var veryLongString = new StringBuilder();
 //            
 //            for (var i = 0; i < 10000; ++i) {
@@ -36,8 +36,8 @@ namespace Tests
 //                exeProcess.WaitForExit();
 //                Assert.Equal(exeProcess.StandardOutput.ReadToEnd(), "Hello World!"+ Environment.NewLine);
 //            }
-            
-            
+
+
         }
     }
 }
