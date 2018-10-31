@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.IO.Enumeration;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -9,20 +8,28 @@ using System.Runtime.CompilerServices;
 
 namespace Compiler {
 
-class Compiler {
-    private StreamReader _streamReader;
+internal class Compiler : IDisposable {
+    //disposable?
+    private StreamReader _input;
+    private LexemesAutomata _lexer = new LexemesAutomata();
     
-    public Compiler(StreamReader streamReader) {
+    public Compiler(StreamReader input) {
         // ASK: same objects or copy?
-        _streamReader = streamReader;
+        _input = input;
+    }
+    
+    // ASK: return ref vs return object;
+    public Token GetNextToken() {
+        return _lexer.Parse(_input);
     }
 
-    public void getNextToken() {
+    public void Dispose() {
+        _input?.Dispose();
     }
-   
 }
 
-static class App {
+
+internal static class App {
     private static void ShowUsage() {
         Console.WriteLine("[USAGE]");
         Console.WriteLine("dotnet compiler.dll [OPTIONS] source.pas");
@@ -41,9 +48,12 @@ static class App {
         var inputFilePath = args.Last();
 
         try {
-            using (var inputFileStreamReader = File.OpenText(inputFilePath)) {
-                var compiler = new Compiler(inputFileStreamReader);
-                compiler.getNextToken();
+            using (var compiler = new Compiler(File.OpenText(inputFilePath))) {
+                
+                Token lastToken;
+                while ((lastToken = compiler.GetNextToken()) != null) {
+                    Console.WriteLine($"{lastToken.ToString()}\t\t{lastToken.Line.ToString()}\t\t{lastToken.Column.ToString()}");
+                }
             }
         }
         catch (FileNotFoundException ex) {

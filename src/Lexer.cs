@@ -1,5 +1,5 @@
 namespace Compiler {
-    public class Lexer {
-        
-    }
+public class Lexer {
+    
+}
 }
