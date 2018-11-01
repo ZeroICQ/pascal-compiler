@@ -15,13 +15,13 @@ internal static class Symbols {
     public static int EOF = -1;
 }
 
-
+//{} - braces, [] - brackets, () - parentheses
 public class LexemesAutomata {
-    private enum States {Start, Id, Digit, Separator, Eof, Comment}
+    private enum States {Start, Id, Digit, Separator, Eof, LineComment, Parenthese, Slash}
     
     private int _line = 1;
     private int _column = 1;
-            
+    
     public Token Parse(StreamReader input) {
         var currState = States.Start;
         
@@ -33,14 +33,30 @@ public class LexemesAutomata {
                 case States.Start:
                     if (eof)
                         currState = States.Eof;
+                    else if (forward == '/')
+                        currState = States.Slash;
+                    else if (forward == '{')
+                        currState = States.LineComment;
+                    else if (forward == '(')
+                        currState = States.Parenthese;
                     else if (Symbols.letters.Contains(forward) || forward == '_')
                         currState = States.Id;
                     else if (Symbols.digits.Contains(forward))
                         currState = States.Digit;
                     else if (Symbols.separators.Contains(forward))
                         currState = States.Separator;
-                    else if (forward == '/' || forward == '{')
-                        currState = States.Comment;
+                    break;
+                case States.Parentheses:
+                    if (forward == '(') {
+                        input.Read();
+                        _column += 1;
+                    }
+                    else if (forward == '*') {
+                        ParenthesesComments.Parse(input, ref _line, ref _column);
+                        currState = States.Start;
+                    }
+                    else
+                        throw new UnkownLexemeException(_line, _column);
                     break;
                 case States.Id:
                     return IdAutomata.Parse(input, ref _line, ref _column);
@@ -111,8 +127,66 @@ public static class IdAutomata {
     }
 }
 
-// TODO: comments starting (*
-public static class CommentAutomata {
+//Start position is before asterisk (->* posistion
+public static class ParenthesesComments {
+    private enum States {Comment, AfterAsterisk, Error}
+
+    public static void Parse(StreamReader input, ref int line, ref int column) {
+        var currState = States.Comment;
+        //skip asterisk;
+        input.Read();
+        column += 1;
+        
+        while (true) {
+            var eof = input.Peek() == -1;
+            var forward = (char) input.Peek();
+
+            switch (currState) {
+                case States.Comment:
+                    if (eof)
+                        return;
+                    
+                    if (forward == '*') {
+                        column += 1;
+                        input.Read();
+                        currState = States.AfterAsterisk;
+                        break;
+                    }
+
+                    if (forward == '\n') {
+                        line += 1;
+                        column = 1;
+                    } else if (forward != '\r')
+                        column += 1;
+
+                    input.Read();
+                    break;
+                case States.AfterAsterisk:
+                    if (eof) {
+                        currState = States.Error;
+                        break;
+                    }
+
+                    if (forward == ')') {
+                        line += 1;
+                        input.Read();
+                        return;
+                    } else {
+                        currState = States.Comment;
+                    }
+                    break;
+                case States.Error:
+                    throw new UnkownLexemeException(line, column);
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+        
+}
+
+//todo:continue
+public static class LineCommentAutomata {
     private enum States {Start, Curly, Line, Finish}
     
     public static void Parse(StreamReader input, ref int line, ref int column) {
