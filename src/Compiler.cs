@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -12,16 +11,17 @@ namespace Compiler {
 internal class Compiler : IDisposable {
     //disposable?
     private StreamReader _input;
-    private LexemesAutomata _lexer = new LexemesAutomata();
+    private LexemesAutomata _lexer;
     
     public Compiler(StreamReader input) {
         // ASK: same objects or copy?
         _input = input;
+        _lexer = new LexemesAutomata(input);
     }
     
     // ASK: return ref vs return object;
     public Token GetNextToken() {
-        return _lexer.Parse(_input);
+        return _lexer.Parse();
     }
 
     public void Dispose() {
@@ -50,9 +50,15 @@ internal static class App {
 
         try {
             using (var compiler = new Compiler(File.OpenText(inputFilePath))) {
-                Token lt;
-                while ((lt = compiler.GetNextToken()) != null) {
-                    Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(), lt.Type.ToString(), lt.GetStringValue(), lt.ToString());
+                try {
+                    Token lt;
+                    while ((lt = compiler.GetNextToken()) != null) {
+                        Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(),
+                            lt.Type.ToString(), lt.GetStringValue(), lt.ToString());
+                    }
+                }
+                catch (UnkownLexemeException ex) {
+                    Console.WriteLine($"Unknown lexeme at {ex.Line.ToString()}, {ex.Line.ToString()}");
                 }
             }
         }

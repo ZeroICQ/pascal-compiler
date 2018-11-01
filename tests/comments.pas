@@ -1,11 +1,20 @@
-id // commented out {nested}
-// line comment dsadasdada
+id // dasdas
+// comment 1 // nested comment
+// comment 2
+    a
+
 {
-	
-//nested commenct
-big multiline comment
-
-
-
+    multiline comment
+    //nesetd line comment
 }
-{ dsadas } b //332
+
+// sss {aaaaa}
+
+after
+
+(*
+//kek
+parentheses
+*)
+
+//()

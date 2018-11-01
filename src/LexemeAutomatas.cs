@@ -17,77 +17,112 @@ internal static class Symbols {
 
 //{} - braces, [] - brackets, () - parentheses
 public class LexemesAutomata {
-    private enum States {Start, Id, Digit, Separator, Eof, LineComment, Parenthese, Slash}
+    private enum States {Start, Id, Digit, Separator, Eof, AfterSlash, AfterParenthesis, Unknown}
     
     private int _line = 1;
     private int _column = 1;
+    private readonly StreamReader _input;
+    private bool IsEof() => _input.Peek() == -1;
+    private char Forward() => (char) _input.Peek(); 
+
+    public LexemesAutomata(StreamReader input) {
+        _input = input;
+    }
     
-    public Token Parse(StreamReader input) {
+    public Token Parse() {
         var currState = States.Start;
         
         while (true) {
-            var eof = input.Peek() == -1;
-            var forward = (char) input.Peek();
-            
             switch (currState) {
                 case States.Start:
-                    if (eof)
+                    if (IsEof())
                         currState = States.Eof;
-                    else if (forward == '/')
-                        currState = States.Slash;
-                    else if (forward == '{')
-                        currState = States.LineComment;
-                    else if (forward == '(')
-                        currState = States.Parenthese;
-                    else if (Symbols.letters.Contains(forward) || forward == '_')
-                        currState = States.Id;
-                    else if (Symbols.digits.Contains(forward))
-                        currState = States.Digit;
-                    else if (Symbols.separators.Contains(forward))
-                        currState = States.Separator;
-                    break;
-                case States.Parentheses:
-                    if (forward == '(') {
-                        input.Read();
+                    else if (Forward() == '/') {
+                        currState = States.AfterSlash;
                         _column += 1;
+                        _input.Read();
+                    } 
+                    else if (Forward() == '{') {
+                        BracesCommentAutomata.Parse(_input, ref _line, ref _column);
+                        break;
                     }
-                    else if (forward == '*') {
-                        ParenthesesComments.Parse(input, ref _line, ref _column);
+                    else if (Forward() == '(') {
+                        currState = States.AfterParenthesis;                        
+                        _column += 1;
+                        _input.Read();
+                    }
+                    else if (Symbols.letters.Contains(Forward()) || Forward() == '_')
+                        currState = States.Id;
+//                    else if (Symbols.digits.Contains(forward))
+//                        currState = States.Digit;
+                    else if (Symbols.separators.Contains(Forward()))
+                        currState = States.Separator;
+                    else
+                        currState = States.Unknown;
+                    break;
+                case States.AfterSlash:
+                    if (IsEof())
+                        currState = States.Eof;
+                    else if (Forward() == '/') {
+                        SkipLine();
+                        currState = States.Start;
+                    }
+                    else 
+                        throw new UnkownLexemeException(_line, _column);
+                    break;
+                case States.AfterParenthesis:
+                    if (Forward() == '*') {
+                        _input.Read();
+                        _column += 1;
+                        ParenthesesComments.Parse(_input, ref _line, ref _column);
                         currState = States.Start;
                     }
                     else
                         throw new UnkownLexemeException(_line, _column);
                     break;
                 case States.Id:
-                    return IdAutomata.Parse(input, ref _line, ref _column);
-                case States.Digit:
-                    break;
-                case States.Comment:
-                    CommentAutomata.Parse(input, ref _line, ref _column);
-                    currState = States.Start;
-                    break;
+                    return IdAutomata.Parse(_input, ref _line, ref _column);
+//                case States.Digit:
+//                    break;
+//                case States.Comment:
+//                    CommentAutomata.Parse(_input, ref _line, ref _column);
+//                    currState = States.Start;
+//                    break;
                 case States.Separator:
-                    if (eof) {
+                    if (IsEof()) {
                         currState = States.Eof;
                         break;
-                    } else if (!Symbols.separators.Contains(forward)) {
+                    } else if (!Symbols.separators.Contains(Forward())) {
                         currState = States.Start;
                         break;
-                    } else if (forward == '\n') {
+                    } else if (Forward() == '\n') {
                         _line += 1;
                         _column = 1;
-                    } else
+                    } else if (Forward() != '\r')
                         _column += 1;
                         
-                    input.Read();
-                    
+                    _input.Read();
                     break;
                 case States.Eof:
                     return null;
+                case States.Unknown:
+                    throw new UnkownLexemeException(_line, _column);
                 default:
                     throw new ArgumentOutOfRangeException();
             }                
         }
+    }
+
+    private void SkipLine() {
+        while (!IsEof() && Forward() != '\n') {
+            if (Forward() != '\r')
+                _column += 1;
+            _input.Read();
+        }
+
+        _line += 1;
+        _column = 1;
+        _input.Read();
     }
 }
 
@@ -185,9 +220,9 @@ public static class ParenthesesComments {
         
 }
 
-//todo:continue
-public static class LineCommentAutomata {
-    private enum States {Start, Curly, Line, Finish}
+// start state ->{*... 
+public static class BracesCommentAutomata {
+    private enum States {Start, Comment, Finish}
     
     public static void Parse(StreamReader input, ref int line, ref int column) {
         var currState = States.Start;
@@ -198,20 +233,24 @@ public static class LineCommentAutomata {
 
             switch (currState) {
                 case States.Start:
-                    if (forward == '/')
-                        currState = States.Line;
-                    else if (forward == '{')
-                        currState = States.Curly;
+                    if (eof)
+                        currState = States.Finish;
+                    else if (forward == '{') {
+                        column += 1;
+                        currState = States.Comment;
+                    }
                     break;
-                case States.Curly:
+                case States.Comment:
                     if (eof) {
-                        return;
+                        currState = States.Finish;
+                        break;
                     }
                     
                     if (forward == '}') {
                         input.Read();
                         column += 1;
-                        return;
+                        currState = States.Finish;
+                        break;
                     }
 
                     if (forward == '\n') {
@@ -222,21 +261,9 @@ public static class LineCommentAutomata {
                         column += 1;
 
                     input.Read();
-                    
                     break;
-                case States.Line:
-                    if (eof) {
-                        return;
-                    }
-                    
-                    if (forward == '\n') {
-                        input.Read();
-                        line += 1;
-                        return;
-                    }
-
-                    input.Read();
-                    break;
+                case States.Finish:
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

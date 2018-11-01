@@ -39,7 +39,7 @@ class Tester {
 
             using (var answer = File.OpenText(testName + ".test")) {
 
-                while (!pr.StandardOutput.EndOfStream) {
+                while (!pr.StandardOutput.EndOfStream && !answer.EndOfStream) {
                     var compiledResult = pr.StandardOutput.ReadLine().Split().Where(i => i != "" && i != "\t");
                     var outLine = string.Join(" ", compiledResult);
 
@@ -74,12 +74,9 @@ class Tester {
                         break;
                     }
 
-
                 }
             }
-
             pr.WaitForExit();// Waits here for the process to exit.
-            
         }
     }
 }
