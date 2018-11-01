@@ -50,7 +50,7 @@ class Tester {
 
                         var diffBuilder = new InlineDiffBuilder(new Differ());
                         var diff = diffBuilder.BuildDiffModel(answerLine, outLine);
-
+                        Console.WriteLine($"Error in {testName}");
                         foreach (var line in diff.Lines) {
                             switch (line.Type) {
                                 case ChangeType.Inserted:
