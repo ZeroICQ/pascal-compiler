@@ -41,7 +41,7 @@ class Tester {
 
                 while (!pr.StandardOutput.EndOfStream) {
                     if (answer.EndOfStream) {
-                        Console.WriteLine("line count missmatch in " + testName);
+                        Console.WriteLine("line count mismatch in " + testName);
                         break;
                     }
                         
