@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Compiler {
 
 internal static class Symbols {
-    // ASK: why can't var?
-    public static readonly HashSet<char> digits = new HashSet<char>("0123456789".ToCharArray());
+    public static readonly HashSet<char> decDigits = new HashSet<char>("0123456789".ToCharArray());
+    public static readonly HashSet<char> octDigits = new HashSet<char>("01234567".ToCharArray());
+    public static readonly HashSet<char> hexDigits = new HashSet<char>("01234567ABCDEFabcdef".ToCharArray());
     public static readonly HashSet<char> letters = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray());
-    public static readonly HashSet<char> hexDigits = new HashSet<char>("ABCDEFabcdef0123456789".ToCharArray());
     public static readonly HashSet<char> separators = new HashSet<char> {'\t', ' ', '\n', '\r'};
     public static int EOF = -1;
 }
@@ -53,7 +52,7 @@ public class LexemesAutomata {
                     }
                     else if (Symbols.letters.Contains(Forward()) || Forward() == '_')
                         currState = States.Id;
-                    else if (Symbols.digits.Contains(Forward()))
+                    else if (Symbols.decDigits.Contains(Forward()))
                         currState = States.Digit;
                     else if (Symbols.separators.Contains(Forward()))
                         currState = States.Separator;
@@ -147,7 +146,7 @@ public static class IdAutomata {
                     currState = States.Body;
                     break;
                 case States.Body:
-                    if (Symbols.letters.Contains(forward) || Symbols.digits.Contains(forward) || forward == '_') {
+                    if (Symbols.letters.Contains(forward) || Symbols.decDigits.Contains(forward) || forward == '_') {
                         value.Append(forward);
                         input.Read();
                     } else

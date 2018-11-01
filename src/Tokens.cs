@@ -38,4 +38,23 @@ public class IdentityToken : Token {
 //    }
 //}
 
+//Numbers
+public abstract class Number : Token {}
+
+public abstract class Integer: Number {}
+
+public abstract class SignedInteger: Integer {
+    protected int value;
+}
+
+public abstract class UnsignedInteger : Integer {
+    public uint Value {get; protected set; }
+
+    public UnsignedInteger(uint val, int line, int column) {
+        Line = line;
+        Column = column;
+        Value = val;
+    }
+}
+
 }

@@ -9,17 +9,14 @@ using System.Runtime.CompilerServices;
 namespace Compiler {
 
 internal class Compiler : IDisposable {
-    //disposable?
     private StreamReader _input;
     private LexemesAutomata _lexer;
     
     public Compiler(StreamReader input) {
-        // ASK: same objects or copy?
         _input = input;
         _lexer = new LexemesAutomata(input);
     }
     
-    // ASK: return ref vs return object;
     public Token GetNextToken() {
         return _lexer.Parse();
     }
