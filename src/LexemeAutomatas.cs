@@ -15,8 +15,9 @@ internal static class Symbols {
     public static int EOF = -1;
 }
 
+
 public class LexemesAutomata {
-    private enum States {Start, Id, Digit, Separator, Eof}
+    private enum States {Start, Id, Digit, Separator, Eof, Comment}
     
     private int _line = 1;
     private int _column = 1;
@@ -38,10 +39,16 @@ public class LexemesAutomata {
                         currState = States.Digit;
                     else if (Symbols.separators.Contains(forward))
                         currState = States.Separator;
+                    else if (forward == '/' || forward == '{')
+                        currState = States.Comment;
                     break;
                 case States.Id:
                     return IdAutomata.Parse(input, ref _line, ref _column);
                 case States.Digit:
+                    break;
+                case States.Comment:
+                    CommentAutomata.Parse(input, ref _line, ref _column);
+                    currState = States.Start;
                     break;
                 case States.Separator:
                     if (eof) {
@@ -97,6 +104,65 @@ public static class IdAutomata {
                     var identityToken = new IdentityToken(value.ToString(), line, column);
                     column += value.Length;
                     return identityToken;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+}
+
+// TODO: comments starting (*
+public static class CommentAutomata {
+    private enum States {Start, Curly, Line, Finish}
+    
+    public static void Parse(StreamReader input, ref int line, ref int column) {
+        var currState = States.Start;
+        
+        while (true) {
+            var eof = input.Peek() == -1;
+            var forward = (char) input.Peek();
+
+            switch (currState) {
+                case States.Start:
+                    if (forward == '/')
+                        currState = States.Line;
+                    else if (forward == '{')
+                        currState = States.Curly;
+                    break;
+                case States.Curly:
+                    if (eof) {
+                        return;
+                    }
+                    
+                    if (forward == '}') {
+                        input.Read();
+                        column += 1;
+                        return;
+                    }
+
+                    if (forward == '\n') {
+                        line += 1;
+                        column = 1;
+                    }
+                    else if (forward != '\r')
+                        column += 1;
+
+                    input.Read();
+                    
+                    break;
+                case States.Line:
+                    if (eof) {
+                        return;
+                    }
+                    
+                    if (forward == '\n') {
+                        input.Read();
+                        line += 1;
+                        return;
+                    }
+
+                    input.Read();
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
