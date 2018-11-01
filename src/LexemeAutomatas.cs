@@ -53,8 +53,8 @@ public class LexemesAutomata {
                     }
                     else if (Symbols.letters.Contains(Forward()) || Forward() == '_')
                         currState = States.Id;
-//                    else if (Symbols.digits.Contains(forward))
-//                        currState = States.Digit;
+                    else if (Symbols.digits.Contains(Forward()))
+                        currState = States.Digit;
                     else if (Symbols.separators.Contains(Forward()))
                         currState = States.Separator;
                     else
@@ -82,6 +82,8 @@ public class LexemesAutomata {
                     break;
                 case States.Id:
                     return IdAutomata.Parse(_input, ref _line, ref _column);
+                case States.Digit:
+                    break;
 //                case States.Digit:
 //                    break;
 //                case States.Comment:
@@ -217,7 +219,6 @@ public static class ParenthesesComments {
             }
         }
     }
-        
 }
 
 // start state ->{*... 

@@ -39,7 +39,12 @@ class Tester {
 
             using (var answer = File.OpenText(testName + ".test")) {
 
-                while (!pr.StandardOutput.EndOfStream && !answer.EndOfStream) {
+                while (!pr.StandardOutput.EndOfStream) {
+                    if (answer.EndOfStream) {
+                        Console.WriteLine("line count missmatch in " + testName);
+                        break;
+                    }
+                        
                     var compiledResult = pr.StandardOutput.ReadLine().Split().Where(i => i != "" && i != "\t");
                     var outLine = string.Join(" ", compiledResult);
 
