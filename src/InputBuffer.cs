@@ -11,16 +11,7 @@ public class InputBuffer {
 
     public int Read() {
         SkipWhitespaces();
-        var c = _textReader.Read();
-        
-        if (c == '\n') {
-            Line += 1;
-            Column = 1;
-        } else if (c != '\r' && c != -1) {
-            Column += 1;
-        }
-
-        return c;
+        return _textReader.Read();
     }
 
     public int Peek() {
@@ -29,6 +20,27 @@ public class InputBuffer {
     
     public InputBuffer(TextReader textReader) {
         _textReader = textReader;
+    }
+
+    public void SkipLine() {
+        while (true) {
+            var symbol = _textReader.Read();
+
+            switch (symbol) {
+                case '\n':
+                    Line += 1;
+                    Column = 1;
+                    return;
+                case '\r':
+                    break;
+                case -1:
+                    return;
+                default:
+                    Column += 1;
+                    break;
+            }
+        }
+            
     }
 
     private void SkipWhitespaces() {
