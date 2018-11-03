@@ -10,8 +10,24 @@ public class InputBuffer {
     private readonly TextReader _textReader;
 
     public int Read() {
-        SkipWhitespaces();
-        return _textReader.Read();
+        var symbol = _textReader.Read();
+        
+        switch (symbol) {
+            case '\n':
+                Line += 1;
+                Column = 1;
+                break;
+            case '\r':
+                break;
+            // EOF
+            case -1:
+                break;
+            default:
+                Column += 1;
+                break;
+        }
+        
+        return symbol;
     }
 
     public int Peek() {
@@ -42,7 +58,8 @@ public class InputBuffer {
         }
             
     }
-
+    
+// TODO: remove
     private void SkipWhitespaces() {
         while (true) {
             var peek = _textReader.Peek();
