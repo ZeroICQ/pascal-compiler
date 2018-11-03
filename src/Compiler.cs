@@ -8,24 +8,17 @@ using System.Runtime.CompilerServices;
 
 namespace Compiler {
 
-internal class Compiler : IDisposable {
-    private StreamReader _input;
+internal class Compiler {
     private LexemesAutomata _lexer;
     
-    public Compiler(StreamReader input) {
-        _input = input;
-        _lexer = new LexemesAutomata(input);
+    public Compiler(in TextReader input) {
+        _lexer = new LexemesAutomata(new InputBuffer(input));
     }
     
     public Token GetNextToken() {
         return _lexer.Parse();
     }
-
-    public void Dispose() {
-        _input?.Dispose();
-    }
 }
-
 
 internal static class App {
     private static void ShowUsage() {
@@ -46,16 +39,21 @@ internal static class App {
         var inputFilePath = args.Last();
 
         try {
-            using (var compiler = new Compiler(File.OpenText(inputFilePath))) {
+            using (var fileStream = File.OpenText(inputFilePath)) {
+                var compiler = new Compiler(fileStream);
+                
                 try {
-                    Token lt;
-                    while ((lt = compiler.GetNextToken()) != null) {
-                        Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(),
-                            lt.Type.ToString(), lt.GetStringValue(), lt.ToString());
+                    Token lastToken;
+                    while (!((lastToken = compiler.GetNextToken()) is EofToken)) {
+                        Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lastToken.Line.ToString(), lastToken.Column.ToString(),
+                            lastToken.Type.ToString(), lastToken.GetStringValue(), lastToken.ToString());
                     }
                 }
-                catch (UnkownLexemeException ex) {
-                    Console.WriteLine($"Unknown lexeme at {ex.Line.ToString()}, {ex.Line.ToString()}");
+                catch (UnknownLexemeException ex) {
+                    Console.WriteLine($"Error at lexeme {ex.Lexeme} at {ex.Line.ToString()}, {ex.Column.ToString()}");
+                }
+                catch (CommentNotClosedException ex) {
+                    Console.WriteLine($"Comment {ex.Lexeme} was not closed at {ex.Line.ToString()}, {ex.Column.ToString()}");
                 }
             }
         }

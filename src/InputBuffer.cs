@@ -7,13 +7,13 @@ public class InputBuffer {
     public int Column { get; protected set; } = 1;
     public int Line { get; protected set; } = 1;
 
-    public int LexemeBeginLine { get; protected set; } = 1;
-    public int LexemeBeginColumn { get; protected set; } = 1;
+    public int LexemeLine { get; protected set; } = 1;
+    public int LexemeColumn { get; protected set; } = 1;
     
     public string Lexeme => _buffer.ToString();
 
     private readonly TextReader _textReader;
-    private readonly StringBuilder _buffer;
+    private readonly StringBuilder _buffer = new StringBuilder();
     
     // retraction simulation
     private bool _isRetracted = false;
@@ -23,8 +23,8 @@ public class InputBuffer {
     public void StartLexeme() {
         SkipWhitespaces();
         
-        LexemeBeginLine = Line;
-        LexemeBeginColumn = Column;
+        LexemeLine = Line;
+        LexemeColumn = Column;
 
         _buffer.Clear();
     }
@@ -51,12 +51,19 @@ public class InputBuffer {
             _buffer.Remove(_buffer.Length - 1, 1);
         }
     }
-
-    public int Read() {
+    
+    // hack for not write multiline comments to lexeme buffer
+    public int Read(bool isWriteToBuffer = true) {
         var symbol = ReadNext();
+
+        // love windows <3
+        if (symbol == '\r')
+            symbol = ReadNext();
+            
         lastSymbol = symbol;
-        
-        if (symbol != -1)
+
+
+        if (symbol != -1 && symbol != '\r' && isWriteToBuffer)
             _buffer.Append((char) symbol);
         
         switch (symbol) {
@@ -116,14 +123,15 @@ public class InputBuffer {
                 case '\t':
                 case ' ':
                     Column += 1;
-                    _textReader.Read();
+                    ReadNext();
                     break;
                 case '\r':
-                    _textReader.Read();
+                    ReadNext();
                     break;
                 case '\n':
                     Column = 1;
                     Line += 1;
+                    ReadNext();
                     break;
                 default:
                     return;

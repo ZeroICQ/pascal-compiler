@@ -10,265 +10,152 @@ internal static class Symbols {
     public static readonly HashSet<char> octDigits = new HashSet<char>("01234567".ToCharArray());
     public static readonly HashSet<char> hexDigits = new HashSet<char>("01234567ABCDEFabcdef".ToCharArray());
     public static readonly HashSet<char> letters = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray());
-    public static readonly HashSet<char> separators = new HashSet<char> {'\t', ' ', '\n', '\r'};
-    public static int EOF = -1;
+// TODO: separators are not whitespaces
+//    public static readonly HashSet<char> separators = new HashSet<char> {'\t', ' ', '\n', '\r'};
+    public const int EOF = -1;
 }
 
 //{} - braces, [] - brackets, () - parentheses
-public class LexemesAutomata {
-    private enum States {Start, Id, Digit, Separator, Eof, AfterSlash, AfterParenthesis, Unknown}
-    
-    private int _line = 1;
-    private int _column = 1;
-    private readonly StreamReader _input;
-    private bool IsEof() => _input.Peek() == -1;
-    private char Forward() => (char) _input.Peek(); 
 
-    public LexemesAutomata(StreamReader input) {
+public class LexemesAutomata {
+    private readonly InputBuffer _input;
+
+    public LexemesAutomata(InputBuffer input) {
         _input = input;
     }
     
+    private enum States {Start, AfterSlash, AfterParenthesis}
     public Token Parse() {
         var currState = States.Start;
+        //ASK: does pascal skip whitespace between lexemes?
         
         while (true) {
+            //must be performed before Read(), due to whitespace skipping in startLexeme()
+            if (currState == States.Start)
+                _input.StartLexeme();
+            
+            var symbol = _input.Read();
+            
             switch (currState) {
                 case States.Start:
-                    if (IsEof())
-                        currState = States.Eof;
-                    else if (Forward() == '/') {
+                    
+                    if (symbol == Symbols.EOF)
+                        return new EofToken();
+                    
+                    else if (symbol == '/')
                         currState = States.AfterSlash;
-                        _column += 1;
-                        _input.Read();
-                    } 
-                    else if (Forward() == '{') {
-                        BracesCommentAutomata.Parse(_input, ref _line, ref _column);
-                        break;
-                    }
-                    else if (Forward() == '(') {
-                        currState = States.AfterParenthesis;                        
-                        _column += 1;
-                        _input.Read();
-                    }
-                    else if (Symbols.letters.Contains(Forward()) || Forward() == '_')
-                        currState = States.Id;
-                    else if (Symbols.decDigits.Contains(Forward()))
-                        currState = States.Digit;
-                    else if (Symbols.separators.Contains(Forward()))
-                        currState = States.Separator;
+                    
+                    else if (symbol == '{')
+                        BracesCommentAutomata.Parse(_input);
+
+                    else if (symbol == '(')
+                        currState = States.AfterParenthesis;
+                    
+                    else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
+                        return IdentityAutomata.Parse(_input);
+                    
                     else
-                        currState = States.Unknown;
+                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
+                    
                     break;
+                    // --- END OF States.Start ---
+                
                 case States.AfterSlash:
-                    if (IsEof())
-                        currState = States.Eof;
-                    else if (Forward() == '/') {
-                        SkipLine();
+
+                    if (symbol == '/') {
+                        _input.SkipLine();
                         currState = States.Start;
-                    }
-                    else 
-                        throw new UnkownLexemeException(_line, _column);
+                    } 
+                    else
+                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
+                    
                     break;
+                    // --- END OF States.AfterSlash ---
+                
                 case States.AfterParenthesis:
-                    if (Forward() == '*') {
-                        _input.Read();
-                        _column += 1;
-                        ParenthesesComments.Parse(_input, ref _line, ref _column);
+                    if (symbol == '*') {
+                        ParenthesesComments.Parse(_input);
                         currState = States.Start;
                     }
                     else
-                        throw new UnkownLexemeException(_line, _column);
+                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
+                    
                     break;
-                case States.Id:
-                    return IdAutomata.Parse(_input, ref _line, ref _column);
-                case States.Digit:
-                    break;
-//                case States.Digit:
-//                    break;
-//                case States.Comment:
-//                    CommentAutomata.Parse(_input, ref _line, ref _column);
-//                    currState = States.Start;
-//                    break;
-                case States.Separator:
-                    if (IsEof()) {
-                        currState = States.Eof;
-                        break;
-                    } else if (!Symbols.separators.Contains(Forward())) {
-                        currState = States.Start;
-                        break;
-                    } else if (Forward() == '\n') {
-                        _line += 1;
-                        _column = 1;
-                    } else if (Forward() != '\r')
-                        _column += 1;
-                        
-                    _input.Read();
-                    break;
-                case States.Eof:
-                    return null;
-                case States.Unknown:
-                    throw new UnkownLexemeException(_line, _column);
+                    // -- END OF States.AfterParenthesis
                 default:
                     throw new ArgumentOutOfRangeException();
             }                
         }
     }
+}
 
-    private void SkipLine() {
-        while (!IsEof() && Forward() != '\n') {
-            if (Forward() != '\r')
-                _column += 1;
-            _input.Read();
+// Start position is [a-zA-z_]->[...]  
+public static class IdentityAutomata {
+    public static Token Parse(InputBuffer input) {
+        while (true) {
+            var symbol = input.Read();
+
+            if (Symbols.letters.Contains((char) symbol) || Symbols.decDigits.Contains((char) symbol) || symbol == '_') 
+                continue;
+            
+            if (symbol != Symbols.EOF)
+                input.Retract();
+            //todo: check for keyword
+            return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
         }
-
-        _line += 1;
-        _column = 1;
-        _input.Read();
     }
 }
 
-
-public static class IdAutomata {
-    private enum States {Start, Body, Finish}
+// Start position after brace {->[...]
+public static class BracesCommentAutomata {
     
-    public static Token Parse(StreamReader input, ref int line, ref int column) {
-        var currState = States.Start;
-        var value = new StringBuilder();
+    public static void Parse(InputBuffer input) {
+        while (true) {
+            var symbol = input.Read(isWriteToBuffer: false);
+            
+            switch (symbol) {
+                case Symbols.EOF:
+                    throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                case '}':
+                    return;
+            }
+        }
+    }
+}
+
+// Start position is after asterisk (*->[...] 
+public static class ParenthesesComments {
+    private enum States {InsideComment, AfterAsterisk}
+
+    public static void Parse(InputBuffer input) {
+        var currState = States.InsideComment;
         
         while (true) {
-            var eof = input.Peek() == -1;
-            var forward = (char) input.Peek();
+            var symbol = input.Read(false);
             
             switch (currState) {
-                case States.Start:
-                    value.Append(forward);
-                    input.Read();
-                    currState = States.Body;
-                    break;
-                case States.Body:
-                    if (Symbols.letters.Contains(forward) || Symbols.decDigits.Contains(forward) || forward == '_') {
-                        value.Append(forward);
-                        input.Read();
-                    } else
-                        currState = States.Finish;
-                    break;
-                case States.Finish:
-                    var identityToken = new IdentityToken(value.ToString(), line, column);
-                    column += value.Length;
-                    return identityToken;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-    }
-}
-
-//Start position is before asterisk (->* posistion
-public static class ParenthesesComments {
-    private enum States {Comment, AfterAsterisk, Error}
-
-    public static void Parse(StreamReader input, ref int line, ref int column) {
-        var currState = States.Comment;
-        //skip asterisk;
-        input.Read();
-        column += 1;
-        
-        while (true) {
-            var eof = input.Peek() == -1;
-            var forward = (char) input.Peek();
-
-            switch (currState) {
-                case States.Comment:
-                    if (eof)
-                        return;
-                    
-                    if (forward == '*') {
-                        column += 1;
-                        input.Read();
+                case States.InsideComment:
+                    if (symbol == Symbols.EOF) {
+                        throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    else if (symbol == '*')
                         currState = States.AfterAsterisk;
-                        break;
-                    }
-
-                    if (forward == '\n') {
-                        line += 1;
-                        column = 1;
-                    } else if (forward != '\r')
-                        column += 1;
-
-                    input.Read();
                     break;
+                
                 case States.AfterAsterisk:
-                    if (eof) {
-                        currState = States.Error;
-                        break;
+                    if (symbol == Symbols.EOF) {
+                        throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
                     }
-
-                    if (forward == ')') {
-                        line += 1;
-                        input.Read();
+                    else if (symbol == ')') {
                         return;
-                    } else {
-                        currState = States.Comment;
                     }
+                    else
+                        currState = States.InsideComment;
                     break;
-                case States.Error:
-                    throw new UnkownLexemeException(line, column);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
     }
 }
-
-// start state ->{*... 
-public static class BracesCommentAutomata {
-    private enum States {Start, Comment, Finish}
-    
-    public static void Parse(StreamReader input, ref int line, ref int column) {
-        var currState = States.Start;
-        
-        while (true) {
-            var eof = input.Peek() == -1;
-            var forward = (char) input.Peek();
-
-            switch (currState) {
-                case States.Start:
-                    if (eof)
-                        currState = States.Finish;
-                    else if (forward == '{') {
-                        column += 1;
-                        currState = States.Comment;
-                    }
-                    break;
-                case States.Comment:
-                    if (eof) {
-                        currState = States.Finish;
-                        break;
-                    }
-                    
-                    if (forward == '}') {
-                        input.Read();
-                        column += 1;
-                        currState = States.Finish;
-                        break;
-                    }
-
-                    if (forward == '\n') {
-                        line += 1;
-                        column = 1;
-                    }
-                    else if (forward != '\r')
-                        column += 1;
-
-                    input.Read();
-                    break;
-                case States.Finish:
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-    }
-}
-
-} // namespace Compiler  
+} //namespace Compiler  

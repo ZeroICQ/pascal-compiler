@@ -9,14 +9,20 @@ public abstract class Token {
     public abstract string GetStringValue();
 }
 
+public class EofToken : Token {
+    public override string GetStringValue() {
+        return "EOF";
+    }
+}
+
 public class IdentityToken : Token {
     private readonly string _value;
 
     public IdentityToken(string value, int line, int col) {
         _value = value;
+        Type = TokenType.Identifier;
         Line = line;
         Column = col;
-        Type = TokenType.Identifier;
     }
 
     public override string GetStringValue() {

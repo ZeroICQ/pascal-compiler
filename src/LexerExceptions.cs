@@ -2,16 +2,24 @@ using System;
 
 namespace Compiler {
 
-public abstract class LexerException : Exception {};
+public abstract class LexerException : Exception {
+    public int Line { get; }
+    public int Column { get; }
+    public string Lexeme { get; }
 
-public class UnkownLexemeException: LexerException {
-    public int Line { get; protected set;  }
-    public int Column { get; protected set;  }
-
-    public UnkownLexemeException(int line, int column) {
+    protected LexerException(string lexeme, int line, int column) {
         Line = line;
         Column = column;
+        Lexeme = lexeme;
     }
+};
+
+public class UnknownLexemeException: LexerException {
+    public UnknownLexemeException(string lexeme, int line, int column) : base(lexeme, line, column) {}
+}
+
+public class CommentNotClosedException : LexerException {
+    public CommentNotClosedException(string lexeme, int line, int column) : base(lexeme, line, column) {}
 }
 
 }

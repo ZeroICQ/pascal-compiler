@@ -49,7 +49,7 @@ class Tester {
                     var outLine = string.Join(" ", compiledResult);
 
                     var expectedAnswer = answer.ReadLine().Split().Where(i => i != "" && i != "\t");
-                    var answerLine = string.Join(" ", expectedAnswer);;
+                    var answerLine = string.Join(" ", expectedAnswer);
 
                     if (!compiledResult.SequenceEqual(expectedAnswer)) {
 
@@ -82,6 +82,8 @@ class Tester {
                 }
             }
             pr.WaitForExit();// Waits here for the process to exit.
+            
+            Console.WriteLine($"test {testName} passed");
         }
     }
 }
