@@ -115,7 +115,7 @@ public static class BracesCommentAutomata {
             
             switch (symbol) {
                 case Symbols.EOF:
-                    throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    throw new UnclosedCommentException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
                 case '}':
                     return;
             }
@@ -136,7 +136,7 @@ public static class ParenthesesComments {
             switch (currState) {
                 case States.InsideComment:
                     if (symbol == Symbols.EOF) {
-                        throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                        throw new UnclosedCommentException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
                     }
                     else if (symbol == '*')
                         currState = States.AfterAsterisk;
@@ -144,7 +144,7 @@ public static class ParenthesesComments {
                 
                 case States.AfterAsterisk:
                     if (symbol == Symbols.EOF) {
-                        throw new CommentNotClosedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                        throw new UnclosedCommentException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
                     }
                     else if (symbol == ')') {
                         return;

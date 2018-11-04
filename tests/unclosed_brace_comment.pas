@@ -1,0 +1,9 @@
+somevariable
+           {
+(*
+*)
+(*
+{{{{{{{
+identity
+//line comment
+{

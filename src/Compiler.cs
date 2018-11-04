@@ -50,10 +50,10 @@ internal static class App {
                     }
                 }
                 catch (UnknownLexemeException ex) {
-                    Console.WriteLine($"Error at lexeme {ex.Lexeme} at {ex.Line.ToString()}, {ex.Column.ToString()}");
+                    Console.WriteLine($"Unknown lexeme \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
                 }
-                catch (CommentNotClosedException ex) {
-                    Console.WriteLine($"Comment {ex.Lexeme} was not closed at {ex.Line.ToString()}, {ex.Column.ToString()}");
+                catch (UnclosedCommentException ex) {
+                    Console.WriteLine($"Unclosed comment \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
                 }
             }
         }

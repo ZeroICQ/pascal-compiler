@@ -18,8 +18,8 @@ public class UnknownLexemeException: LexerException {
     public UnknownLexemeException(string lexeme, int line, int column) : base(lexeme, line, column) {}
 }
 
-public class CommentNotClosedException : LexerException {
-    public CommentNotClosedException(string lexeme, int line, int column) : base(lexeme, line, column) {}
+public class UnclosedCommentException : LexerException {
+    public UnclosedCommentException(string lexeme, int line, int column) : base(lexeme, line, column) {}
 }
 
 }
