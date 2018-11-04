@@ -10,7 +10,7 @@ namespace Tester {
 class Tester {
     private static void ShowUsage() {
         Console.WriteLine("USAGE");
-//        Console.WriteLine("dotnet Tester.dll [pathToCompiler] [pathToTestsDirectory]");
+        Console.WriteLine("dotnet Tester.dll [pathToCompiler] [pathToTestsDirectory]");
     }
         
     static void Main(string[] args) {
@@ -42,7 +42,7 @@ class Tester {
                 while (!pr.StandardOutput.EndOfStream) {
                     if (answer.EndOfStream) {
                         Console.WriteLine("line count mismatch in " + testName);
-                        break;
+                        return;
                     }
                         
                     var compiledResult = pr.StandardOutput.ReadLine().Split().Where(i => i != "" && i != "\t");
