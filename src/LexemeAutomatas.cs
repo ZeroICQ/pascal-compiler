@@ -40,7 +40,7 @@ public class LexemesAutomata {
                 case States.Start:
                     
                     if (symbol == Symbols.EOF)
-                        return new EofToken();
+                        return new EofToken(_input.Line, _input.Column);
                     
                     else if (symbol == '/')
                         currState = States.AfterSlash;
@@ -53,6 +53,8 @@ public class LexemesAutomata {
                     
                     else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
                         return IdentityAutomata.Parse(_input);
+                    else if (Symbols.decDigits.Contains((char) symbol))
+                        return DecimalNumberAutomata.Parse(_input);
                     
                     else
                         throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
@@ -86,6 +88,29 @@ public class LexemesAutomata {
                     throw new ArgumentOutOfRangeException();
             }                
         }
+    }
+}
+
+// Start position after decimal digit [0-9]->[...]
+public static class DecimalNumberAutomata {
+    private enum States {BeforeDot, AfterDot}
+    
+    public static Token Parse(InputBuffer input) {
+        var currState = States.BeforeDot;
+        
+//        while (true) {
+//            var symbol = input.Read();
+//
+//            switch (currState) {
+//                case States.BeforeDot:
+//                    if (symbol == Symbols.EOF)
+//                    break;
+//                default:
+//                    break;
+//                    
+//            }
+//        }
+        return new EofToken(input.Line, input.Column);
     }
 }
 

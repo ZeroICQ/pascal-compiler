@@ -43,10 +43,10 @@ internal static class App {
                 var compiler = new Compiler(fileStream);
                 
                 try {
-                    Token lastToken;
-                    while (!((lastToken = compiler.GetNextToken()) is EofToken)) {
-                        Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lastToken.Line.ToString(), lastToken.Column.ToString(),
-                            lastToken.Type.ToString(), lastToken.GetStringValue(), lastToken.ToString());
+                    Token lt;
+                    while (!((lt = compiler.GetNextToken()) is EofToken)) {
+                        Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(),
+                            lt.Type.ToString(), lt.StringValue, lt.Lexeme);
                     }
                 }
                 catch (UnknownLexemeException ex) {

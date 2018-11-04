@@ -1,66 +1,52 @@
+using System;
+
 namespace Compiler {
 
-public enum TokenType {Identifier}
+public enum TokenType {Identifier, Integer, Eof}
 
 public abstract class Token {
     public TokenType Type { get; protected set; }
-    public int Column { get; protected set; }
-    public int Line { get; protected set; }
-    public abstract string GetStringValue();
+    public int Column { get; }
+    public int Line { get; }
+    public abstract string Lexeme { get; }
+    public abstract string StringValue { get; }
+
+    protected Token(int line, int column) {
+        Line = line;
+        Column = column;
+    }
 }
 
 public class EofToken : Token {
-    public override string GetStringValue() {
-        return "EOF";
+    public override string StringValue => "EOF";
+    public override string Lexeme => String.Empty;
+
+    public EofToken(int line, int column) : base(line, column) {
+        Type = TokenType.Eof;
     }
 }
 
 public class IdentityToken : Token {
     private readonly string _value;
+    public override string StringValue => _value.ToLower();
+    public override string Lexeme => _value;
 
-    public IdentityToken(string value, int line, int col) {
-        _value = value;
+    public IdentityToken(string value, int line, int column) : base(line, column) {
         Type = TokenType.Identifier;
-        Line = line;
-        Column = col;
-    }
-
-    public override string GetStringValue() {
-        return _value.ToLower();
-    }
-
-    public override string ToString() {
-        return _value;
+        _value = value;
     }
 }
 
-//public class OperatorToken : Token {
-//    public enum Type {Plus, Minus}
-//    
-//    public Type Value { get; }
-//
-//    public override string ToString() {
-//        return "Some Operator";
-//    }
-//}
-
-//Numbers
-public abstract class Number : Token {}
-
-public abstract class Integer: Number {}
-
-public abstract class SignedInteger: Integer {
-    protected int value;
+public abstract class NumberToken : Token {
+    protected NumberToken(int line, int column) : base(line, column) {}
 }
 
-public abstract class UnsignedInteger : Integer {
-    public uint Value {get; protected set; }
+public abstract class IntegerToken : NumberToken {
+    private readonly int _value;
 
-    public UnsignedInteger(uint val, int line, int column) {
-        Line = line;
-        Column = column;
-        Value = val;
+    public IntegerToken(int value, int line, int column) : base(line, column) {
+        Type = TokenType.Integer;
+        _value = value;
     }
 }
-
 }
