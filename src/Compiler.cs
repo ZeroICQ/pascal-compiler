@@ -50,13 +50,8 @@ internal static class App {
                         Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(),
                             lt.Type.ToString(), lt.StringValue, lt.Lexeme);
                     }
-                    catch (UnknownLexemeException ex) {
-                        Console.WriteLine(
-                            $"Unknown lexeme \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
-                    }
-                    catch (UnclosedCommentException ex) {
-                        Console.WriteLine(
-                            $"Unclosed comment \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
+                    catch (LexerException ex) {
+                        Console.WriteLine(ex.Message);
                     }
                 } while (!(lt is EofToken));
             }

@@ -1,9 +1,11 @@
 using System;
 using System.Globalization;
+using System.IO;
+using System.Text;
 
 namespace Compiler {
 
-public enum TokenType {Identifier, Integer, Real, Eof}
+public enum TokenType {Identifier, Integer, Real, String, Eof}
 
 public abstract class Token {
     public int Column { get; }
@@ -78,6 +80,155 @@ public class RealToken : NumberToken {
     public RealToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
+    }
+}
+
+public class StringToken : Token {
+    private enum States {AfterHash, Dec, Hex, Oct, Bin, StringStart, QuotedString, AfterQMark} 
+        
+    public override TokenType Type => TokenType.String;
+    public override string Lexeme { get; }
+    public override string StringValue => _value;
+
+    private string _value;
+    
+    public StringToken(string lexeme, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        ParseValue();
+    }
+
+    private void ParseValue() {
+        var value = new StringBuilder() {Capacity = Lexeme.Length};
+
+        //ASK: do better?
+        var controlSeq = new StringBuilder();
+        var currState = States.StringStart;
+
+        MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(Lexeme));
+        
+        var input = new StreamReader(stream);
+        
+        bool process = true;
+        while (process) {
+            var symbol = input.Read();
+            
+            switch (currState) {
+                
+                case States.AfterHash:
+                    controlSeq.Clear();
+                    
+                    if (symbol == '$')
+                        currState = States.Hex;
+                    else if (symbol == '&')
+                        currState = States.Oct;
+                    else if (symbol == '%')
+                        currState = States.Bin;
+                    else {
+                        controlSeq.Append((char) symbol);
+                        currState = States.Dec;
+                    }
+                    break;
+                case States.Dec:
+                    if (Symbols.decDigits.Contains((char) symbol)) {
+                        controlSeq.Append((char) symbol);
+                    } 
+                    else {
+                        value.Append((char) int.Parse(controlSeq.ToString()));
+                        if (symbol == '#')
+                            currState = States.AfterHash;
+                        else if (symbol == '\'')
+                            currState = States.QuotedString;
+                        else
+                            currState = States.StringStart;
+                                
+                        if (symbol != -1 && symbol != '#' && symbol != '\'')
+                            value.Append((char) symbol);
+                    }
+                    break;
+                case States.Hex:
+                    if (Symbols.hexDigits.Contains((char) symbol)) {
+                        controlSeq.Append((char) symbol);
+                    }
+                    else {
+                        value.Append((char) int.Parse(controlSeq.ToString(), NumberStyles.HexNumber));
+                        if (symbol == '#')
+                            currState = States.AfterHash;
+                        else if (symbol == '\'')
+                            currState = States.QuotedString;
+                        else
+                            currState = States.StringStart;
+
+                        if (symbol != -1 && symbol != '#' && symbol != '\'')
+                            value.Append((char) symbol);
+                    }
+                    break;
+                case States.Oct:
+                    if (Symbols.octDigits.Contains((char) symbol)) {
+                        controlSeq.Append((char) symbol);
+                    }
+                    else {
+                        value.Append((char) Convert.ToInt64(controlSeq.ToString(), 8));
+                        if (symbol == '#')
+                            currState = States.AfterHash;
+                        else if (symbol == '\'')
+                            currState = States.QuotedString;
+                        else
+                            currState = States.StringStart;
+
+                        if (symbol != -1 && symbol != '#' && symbol != '\'')
+                            value.Append((char) symbol);
+                    }
+                    break;
+                case States.Bin:
+                    if (symbol == '0' || symbol == '1') {
+                        controlSeq.Append((char) symbol);
+                    }
+                    else  {
+                        value.Append((char) Convert.ToInt64(controlSeq.ToString(), 2));
+                        if (symbol == '#')
+                            currState = States.AfterHash;
+                        else if (symbol == '\'')
+                            currState = States.QuotedString;
+                        else
+                            currState = States.StringStart;
+
+                        if (symbol != -1 && symbol != '#' && symbol != '\'')
+                            value.Append((char) symbol);
+                    }
+                    break;
+                case States.StringStart:
+                    // !automata must guarantee this invariant
+                    if (symbol == '#') {
+                        currState = States.AfterHash;
+                    }
+                    else if (symbol == '\'') {
+                        currState = States.QuotedString;
+                    }
+                    else if (symbol == -1)
+                        process = false;
+                    break;
+                case States.QuotedString:
+                    if (symbol == '\'')
+                        currState = States.AfterQMark;
+                    else {
+                        value.Append((char) symbol);
+                    }
+                    break;
+                
+                case States.AfterQMark:
+                    if (symbol == '\'') {
+                        value.Append('\'');
+                        currState = States.QuotedString;
+                    }
+                    else if (symbol == '#')
+                        currState = States.AfterHash;
+                    else if (symbol == -1)
+                        process = false;
+                    break;
+            }
+        }
+        
+        _value = value.ToString();
     }
 }
 

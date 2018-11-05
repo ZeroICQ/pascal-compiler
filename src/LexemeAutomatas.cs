@@ -9,7 +9,7 @@ namespace Compiler {
 internal static class Symbols {
     public static readonly HashSet<char> decDigits = new HashSet<char>("0123456789".ToCharArray());
     public static readonly HashSet<char> octDigits = new HashSet<char>("01234567".ToCharArray());
-    public static readonly HashSet<char> hexDigits = new HashSet<char>("01234567ABCDEFabcdef".ToCharArray());
+    public static readonly HashSet<char> hexDigits = new HashSet<char>("0123456789ABCDEFabcdef".ToCharArray());
     public static readonly HashSet<char> letters = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray());
 // TODO: separators are not whitespaces
 //    public static readonly HashSet<char> separators = new HashSet<char> {'\t', ' ', '\n', '\r'};
@@ -63,6 +63,14 @@ public class LexemesAutomata {
                         return BinaryNumberAutomata.Parse(_input);
                     }
                     
+                    else if (symbol == '\'') {
+                        return StringAutomata.Parse(_input, StringAutomata.States.QuotedString);
+                    }
+                    
+                    else if (symbol == '#') {
+                        return StringAutomata.Parse(_input, StringAutomata.States.AfterHash);
+                    }
+                    
                     else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
                         return IdentityAutomata.Parse(_input);
                     
@@ -103,7 +111,6 @@ public class LexemesAutomata {
                         return OctNumberAutomata.Parse(_input);
                     else
                         throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
-                    break;
                     // -- END OF States.AfterParenthesis
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -261,6 +268,133 @@ public static class IdentityAutomata {
             input.Retract();
             //todo: check for keyword
             return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+        }
+    }
+}
+
+// Start position after # or ': #->[...]; '-> 
+public static class StringAutomata {
+    public  enum States {QuotedString, AfterHash, AfterQMark, AfterDollar, HexControlSeq, 
+        AfterAmpersand, OctControlSeq, AfterPercent, BinaryControlSeq, DecControlSeq}
+
+    private static States currentState;
+
+    public static Token Parse(InputBuffer input, States state) {
+        currentState = state;
+        
+        while (true) {
+            var symbol = input.Read();
+            
+            switch (currentState) {
+                //starts after '
+                case States.QuotedString:
+                    if (symbol == '\r' || symbol == '\n' || symbol == -1)
+                        throw new StringExceedsLineException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    else if (symbol == '\'')
+                        currentState = States.AfterQMark;
+                    break;
+                
+                case States.AfterQMark:
+                    if (symbol == '\'')
+                        currentState = States.QuotedString;
+                    else if (symbol == '#')
+                        currentState = States.AfterHash;
+                    else {
+                        input.Retract();
+                        return new StringToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    break;
+                //start after #
+                case States.AfterHash:
+                    if (symbol == '$')
+                        currentState = States.AfterDollar;
+                    else if (symbol == '&')
+                        currentState = States.AfterAmpersand;
+                    else if (symbol == '%')
+                        currentState = States.AfterPercent;
+                    else if (Symbols.decDigits.Contains((char) symbol))
+                        currentState = States.DecControlSeq;
+                    else
+                        throw new StringMalformedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                        
+                    break;
+                //--- HEXADECIMAL CONTROL SEQUENCE ---
+                //starts after $->[...]
+                case States.AfterDollar:
+                    if (Symbols.hexDigits.Contains((char) symbol))
+                        currentState = States.HexControlSeq;
+                    else
+                        throw new StringMalformedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    break;
+                //starts  $[0-7A-Fa-f]->[...]
+                case States.HexControlSeq:
+                    if (symbol == '\'')
+                        currentState = States.QuotedString;
+                    else if (symbol == '#')
+                        currentState = States.AfterHash;
+                    else if (!Symbols.hexDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new StringToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }      
+                    break;
+                //--- END HEXADECIMAL CONTROL SEQUENCE ---
+                
+                //--- OCTADEMICAL CONTROL SEQUENCE ---
+                //starts after &
+                case States.AfterAmpersand:
+                    if (Symbols.octDigits.Contains((char) symbol))
+                        currentState = States.OctControlSeq;
+                    else
+                        throw new StringMalformedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    break;
+                //starts after &[0-8]->[...]
+                case States.OctControlSeq:
+                    if (symbol == '\'')
+                        currentState = States.QuotedString;
+                    else if (symbol == '#')
+                        currentState = States.AfterHash;
+                    else if (!Symbols.octDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new StringToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }      
+                    break;
+                //--- END OCTADEMICAL CONTROL SEQUENCE ---
+                
+                //--- BINARY CONTROL SEQUENCE ---
+                //starts after %
+                case States.AfterPercent:
+                    if ((char) symbol == '1' || (char) symbol == '0')
+                        currentState = States.BinaryControlSeq;
+                    else
+                        throw new StringMalformedException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    break;
+                
+                case States.BinaryControlSeq:
+                    if (symbol == '\'')
+                        currentState = States.QuotedString;
+                    else if (symbol == '#')
+                        currentState = States.AfterHash;
+                    else if (!((char) symbol == '1' || (char) symbol == '0')) {
+                        input.Retract();
+                        return new StringToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }      
+                    break;
+                //--- END CONTROL SEQUENCE ---
+                
+                //--- DECIMAL CONTROL SEQUENCE ---
+                //starts at #[0-9]->[...]
+                case States.DecControlSeq:
+                    if (symbol == '\'')
+                        currentState = States.QuotedString;
+                    else if (symbol == '#')
+                        currentState = States.AfterHash;
+                    else if (!Symbols.decDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new StringToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }      
+                    break;
+                //--- END DECIMAL CONTROL SEQUENCE ---
+            }            
         }
     }
 }
