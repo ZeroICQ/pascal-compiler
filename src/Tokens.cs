@@ -33,11 +33,16 @@ public class EofToken : Token {
 public class IdentityToken : Token {
     public override TokenType Type => TokenType.Identifier;
     public override string Lexeme { get; }
-    
-    public override string StringValue => Lexeme.ToLower();
 
+    public override string StringValue => _value;
+    private string _value;
+    
     public IdentityToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
+        if (lexeme.StartsWith('&'))
+            _value = lexeme.Substring(1).ToLower();
+        else
+            _value = lexeme.ToLower();
     }
 }
 

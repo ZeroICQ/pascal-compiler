@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq.Expressions;
-using System.Text;
+using System.Linq;
 
 namespace Compiler {
 
@@ -231,6 +229,8 @@ public class LexemesAutomata {
                 case States.AfterAmpersand:
                     if (Symbols.octDigits.Contains((char) symbol))
                         return OctNumberAutomata.Parse(_input);
+                    else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
+                        return IdentityAutomata.Parse(_input);
                     else
                         throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
                     // -- END OF States.AfterParenthesis
@@ -240,6 +240,27 @@ public class LexemesAutomata {
         }
     }
 }
+
+//identities that starts with&
+//start at &[a-ZA-Z]->[...]
+//public static class IdentityReservedAutomata {
+//    public static Token Parse(InputBuffer input) {
+//        while (true) {
+//            var symbol = input.Read();
+//            
+//            if (!Symbols.letters.Contains((char) symbol)) {
+//                input.Retract();
+//                
+//                var textInfo = CultureInfo.InvariantCulture.TextInfo;
+//                if (Enum.TryParse(textInfo.ToTitleCase(input.Lexeme), true, out ReservedToken.Words reservedWord))        
+//                    if (Enum.IsDefined(typeof(ReservedToken.Words), reservedWord))  
+//                        return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+//            
+//                throw new UnknownLexemeException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+//            }
+//        }
+//    }
+//}
 
 // Start position after decimal digit [0-9]->[...]
 public static class DecimalNumberAutomata {
