@@ -55,8 +55,12 @@ public class IntegerToken : NumberToken {
         //hex
         if (lexeme.StartsWith('$')) 
             _value = long.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
+        //oct
         else if (lexeme.StartsWith('&'))
             _value = Convert.ToInt64(lexeme.Substring(1), 8);
+        //bin
+        else if (lexeme.StartsWith('%'))
+            _value = Convert.ToInt64(lexeme.Substring(1), 2);
         //dec
         else
             _value = long.Parse(lexeme);

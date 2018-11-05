@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -56,6 +57,10 @@ public class LexemesAutomata {
                     
                     else if (symbol == '&') {
                         currState = States.AfterAmpersand;
+                    }
+                    
+                    else if (symbol == '%') {
+                        return BinaryNumberAutomata.Parse(_input);
                     }
                     
                     else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
@@ -203,7 +208,6 @@ public static class HexNumberAutomata {
 
 // Start position &[0-7]->[...]
 public static class OctNumberAutomata {
-
     public static Token Parse(InputBuffer input) {
         while (true) {
             var symbol = input.Read();
@@ -213,6 +217,34 @@ public static class OctNumberAutomata {
             
             input.Retract();
             return new IntegerToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+        }
+    }
+}
+
+// Start position after % %->[...]
+public static class BinaryNumberAutomata {
+    private enum States {AfterPercent, BinarySequence}
+    
+    public static Token Parse(InputBuffer input) {
+        var currState = States.AfterPercent;
+        
+        while (true) {
+            var symbol = input.Read();
+            
+            switch (currState) {
+                    case States.AfterPercent:
+                        if ((char) symbol == '0' || (char) symbol == '1')
+                            currState = States.BinarySequence;
+                        else
+                            throw new UnknownLexemeException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                        break;
+                    case States.BinarySequence:
+                        if (!((char) symbol == '0' || (char) symbol == '1')) {
+                            input.Retract();
+                            return new IntegerToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                        }
+                        break;
+            }
         }
     }
 }

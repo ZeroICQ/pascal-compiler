@@ -1,0 +1,4 @@
+1,1 Integer 0   %0
+1,4 Integer 1   %1
+2,1 Integer 42  %101010
+2,8 Eof     EOF
