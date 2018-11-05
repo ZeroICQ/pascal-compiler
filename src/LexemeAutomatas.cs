@@ -24,7 +24,7 @@ public class LexemesAutomata {
         _input = input;
     }
     
-    private enum States {Start, AfterSlash, AfterParenthesis}
+    private enum States {Start, AfterSlash, AfterParenthesis, AfterAmpersand}
     public Token Parse() {
         var currState = States.Start;
         //ASK: does pascal skip whitespace between lexemes?
@@ -50,11 +50,17 @@ public class LexemesAutomata {
 
                     else if (symbol == '(')
                         currState = States.AfterParenthesis;
+                    
                     else if (symbol == '$')
-                        return HexNumberAutomata.Parse(_input); 
+                        return HexNumberAutomata.Parse(_input);
+                    
+                    else if (symbol == '&') {
+                        currState = States.AfterAmpersand;
+                    }
                     
                     else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
                         return IdentityAutomata.Parse(_input);
+                    
                     else if (Symbols.decDigits.Contains((char) symbol))
                         return DecimalNumberAutomata.Parse(_input);
                     
@@ -84,6 +90,14 @@ public class LexemesAutomata {
                     else
                         throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
                     
+                    break;
+                    // -- END OF States.AfterParenthesis
+                
+                case States.AfterAmpersand:
+                    if (Symbols.octDigits.Contains((char) symbol))
+                        return OctNumberAutomata.Parse(_input);
+                    else
+                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
                     break;
                     // -- END OF States.AfterParenthesis
                 default:
@@ -183,6 +197,22 @@ public static class HexNumberAutomata {
                     }
                     break;
             }
+        }
+    }
+}
+
+// Start position &[0-7]->[...]
+public static class OctNumberAutomata {
+
+    public static Token Parse(InputBuffer input) {
+        while (true) {
+            var symbol = input.Read();
+            
+            if (Symbols.octDigits.Contains((char) symbol))
+                continue;
+            
+            input.Retract();
+            return new IntegerToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
         }
     }
 }
