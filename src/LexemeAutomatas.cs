@@ -388,7 +388,11 @@ public static class IdentityAutomata {
                 continue;
             
             input.Retract();
-            //todo: check for keyword
+            var textInfo = CultureInfo.InvariantCulture.TextInfo;
+            if (Enum.TryParse(textInfo.ToTitleCase(input.Lexeme), true, out ReservedToken.Words reservedWord))        
+                if (Enum.IsDefined(typeof(ReservedToken.Words), reservedWord))  
+                    return new ReservedToken(input.Lexeme, reservedWord, input.LexemeLine, input.LexemeColumn);
+            
             return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
         }
     }

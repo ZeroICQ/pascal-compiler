@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Compiler {
 
-public enum TokenType {Identifier, Integer, Real, String, Eof, Operator, Separator}
+public enum TokenType {Identifier, Integer, Real, String, Eof, Operator, Separator, Reserved}
 
 public abstract class Token {
     public int Column { get; }
@@ -273,6 +273,25 @@ public class OperatorToken : Token {
     public OperatorToken(string lexeme, Operation op, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         _operation = op;
+    }
+}
+
+public class ReservedToken : Token {
+    public enum Words {
+        Absolute, And, Array, Asm, Begin, Case, Const, Constructor, Destructor, Div, Do, Downto, Else, End, File, For,
+        Function, Goto, If, Implementation, In, Inherited, Inline, Interface, Label, Mod, Nil, Not, Object, Of, Operator,
+        Or, Packed, Procedure, Program, Record, Reintroduce, Repeat, Self, Set, Shl, Shr, String, Then, To, Type, Unit,
+        Until, Uses, Var, While, With, Xor
+    }
+    public override TokenType Type => TokenType.Reserved;
+    public override string Lexeme { get; }
+    public override string StringValue => _value.ToString();
+
+    private Words _value;
+
+    public ReservedToken(string lexeme, Words word, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        _value = word;
     }
 }
 
