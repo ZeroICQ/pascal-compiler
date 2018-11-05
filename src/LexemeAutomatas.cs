@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace Compiler {
@@ -24,8 +25,11 @@ public class LexemesAutomata {
     public LexemesAutomata(InputBuffer input) {
         _input = input;
     }
-    
-    private enum States {Start, AfterSlash, AfterParenthesis, AfterAmpersand}
+
+    private enum States {
+        Start, AfterSlash, AfterParenthesis, AfterAmpersand, AfterLess, AfterMore, AfterStar, AfterColon,
+        AfterPlus, AfterMinus, AfterDot
+    }
     public Token Parse() {
         var currState = States.Start;
         //ASK: does pascal skip whitespace between lexemes?
@@ -41,7 +45,7 @@ public class LexemesAutomata {
                 case States.Start:
                     
                     if (symbol == Symbols.EOF)
-                        return new EofToken(_input.Line, _input.Column);
+                        return new EofToken(_input.LexemeLine, _input.LexemeColumn);
                     
                     else if (symbol == '/')
                         currState = States.AfterSlash;
@@ -77,31 +81,149 @@ public class LexemesAutomata {
                     else if (Symbols.decDigits.Contains((char) symbol))
                         return DecimalNumberAutomata.Parse(_input);
                     
+                    // --- OPERATORS AND SEPARATORS ---
+                    else if (symbol == '+')
+                        currState = States.AfterPlus;
+                    
+                    else if (symbol == '-')
+                        currState = States.AfterMinus;
+                    
+                    else if (symbol == '*')
+                        currState = States.AfterStar;
+                    
+                    else if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Equal, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == '<')
+                        currState = States.AfterLess;
+                    
+                    else if (symbol == '>')
+                        currState = States.AfterMore;
+                    
+                    else if (symbol == '[')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.OpenBracket, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == ']')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.CloseBracket, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == '.')
+                        currState = States.AfterDot;
+                    
+                    else if (symbol == ')')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.CloseParenthesis, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == '^')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Caret, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == '@')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.AtSign, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == ';')
+                        return new SeparatorToken(_input.Lexeme, SeparatorToken.Separator.Semicolon, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == ',')
+                        return new SeparatorToken(_input.Lexeme, SeparatorToken.Separator.Comma, _input.LexemeLine, _input.LexemeColumn);
+                    
+                    else if (symbol == ':')
+                        currState = States.AfterColon;
+                    
+                    
                     else
                         throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
                     
                     break;
                     // --- END OF States.Start ---
-                
+                //start after  <
+                case States.AfterLess:
+                    if (symbol == '>')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.NotEqual, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '<')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.BitwiseShiftLeft, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.LessOrEqual, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Less, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //start after >
+                case States.AfterMore:
+                    if (symbol == '>')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.BitwiseShiftRight, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '<')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.SymmetricDifference, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.MoreOreEqual, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.More, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //starts after *
+                case States.AfterStar:
+                    if (symbol == '*')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Exponential, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.MultiplyAssign, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Multiply, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //starts after :
+                case States.AfterColon:
+                    if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Assign, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new SeparatorToken(_input.Lexeme, SeparatorToken.Separator.Colon, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //starts after +
+                case States.AfterPlus:
+                    if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.PlusAssign, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Plus, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //start after -
+                case States.AfterMinus:
+                    if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.MinusAssign, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Minus, _input.LexemeLine, _input.LexemeColumn);
+                    }
+                //start after /
                 case States.AfterSlash:
-
                     if (symbol == '/') {
                         _input.SkipLine();
                         currState = States.Start;
-                    } 
-                    else
-                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
-                    
+                    }
+                    else if (symbol == '=')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.DivideAssign, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Divide, _input.LexemeLine, _input.LexemeColumn);
+                    }
                     break;
-                    // --- END OF States.AfterSlash ---
+                
+                 case States.AfterDot:
+                     if (symbol == ')')
+                         return new OperatorToken(_input.Lexeme, OperatorToken.Operation.CloseParenthesisWithDot, _input.LexemeLine, _input.LexemeColumn);
+                     else {
+                         _input.Retract();
+                         return new OperatorToken(_input.Lexeme, OperatorToken.Operation.Dot, _input.LexemeLine, _input.LexemeColumn);
+                     }
                 
                 case States.AfterParenthesis:
                     if (symbol == '*') {
                         ParenthesesComments.Parse(_input);
                         currState = States.Start;
                     }
-                    else
-                        throw new UnknownLexemeException(_input.Lexeme, _input.LexemeLine, _input.LexemeColumn);
+                    else if (symbol == '.')
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.OpenParenthesisWithDot, _input.LexemeLine, _input.LexemeColumn);
+                    else {
+                        _input.Retract();
+                        return new OperatorToken(_input.Lexeme, OperatorToken.Operation.OpenParenthesis, _input.LexemeLine, _input.LexemeColumn);
+                    }
                     
                     break;
                     // -- END OF States.AfterParenthesis

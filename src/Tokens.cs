@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Compiler {
 
-public enum TokenType {Identifier, Integer, Real, String, Eof}
+public enum TokenType {Identifier, Integer, Real, String, Eof, Operator, Separator}
 
 public abstract class Token {
     public int Column { get; }
@@ -229,6 +229,69 @@ public class StringToken : Token {
         }
         
         _value = value.ToString();
+    }
+}
+
+public class OperatorToken : Token {
+    public override TokenType Type => TokenType.Operator;
+    public override string Lexeme { get; }
+    public override string StringValue => Lexeme;
+
+    public enum Operation {
+        Plus,                   // +
+        Minus,                  // -
+        Multiply,               // *
+        Divide,                 // /
+        Equal,                  // =
+        Less,                   // <
+        More,                   // >
+        OpenBracket,            // [
+        CloseBracket,           // ]
+        Dot,                    // .
+        OpenParenthesis,        // (
+        CloseParenthesis,       // )    
+        Caret,                  // ^
+        AtSign,                 // @
+        NotEqual,               // <>
+        BitwiseShiftLeft,       // <<
+        BitwiseShiftRight,      // >>
+        Exponential,            // **
+        SymmetricDifference,    // ><
+        LessOrEqual,            // <=
+        MoreOreEqual,           // >=
+        Assign,                 // :=
+        PlusAssign,             // +=
+        MinusAssign,            // -=
+        MultiplyAssign,         // *=
+        DivideAssign,           // /=
+        OpenParenthesisWithDot, // (.
+        CloseParenthesisWithDot // .)
+    }
+
+    private Operation _operation;
+
+    public OperatorToken(string lexeme, Operation op, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        _operation = op;
+    }
+}
+
+public class SeparatorToken : Token {
+    public override TokenType Type => TokenType.Separator;
+    public override string Lexeme { get; }
+    public override string StringValue { get; }
+
+    public enum Separator {
+        Comma,     // ,
+        Colon,     // :
+        Semicolon  // ; 
+    }
+
+    private Separator _val;
+
+    public SeparatorToken(string lexeme, Separator sep, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        _val = sep;
     }
 }
 
