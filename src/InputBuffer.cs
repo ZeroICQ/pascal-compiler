@@ -39,8 +39,7 @@ public class InputBuffer {
                 break;
             case '\r':
             case -1:
-                //do nothing
-                break;
+                return;
             default:
                 Column = Column > 1 ? Column - 1 : Column;
                 break;
@@ -63,7 +62,7 @@ public class InputBuffer {
         lastSymbol = symbol;
 
 
-        if (symbol != -1 && symbol != '\r' && isWriteToBuffer)
+        if (symbol != -1 && isWriteToBuffer)
             _buffer.Append((char) symbol);
         
         switch (symbol) {
@@ -74,8 +73,6 @@ public class InputBuffer {
                 Column = 1;
                 break;
             case '\r':
-                break;
-            // EOF
             case -1:
                 break;
             default:

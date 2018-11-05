@@ -93,24 +93,68 @@ public class LexemesAutomata {
 
 // Start position after decimal digit [0-9]->[...]
 public static class DecimalNumberAutomata {
-    private enum States {BeforeDot, AfterDot}
+    private enum States {BeforeDot, AfterDot, AfterExponentSign, AfterExponentAfterSign, Fraction}
     
     public static Token Parse(InputBuffer input) {
         var currState = States.BeforeDot;
         
-//        while (true) {
-//            var symbol = input.Read();
-//
-//            switch (currState) {
-//                case States.BeforeDot:
-//                    if (symbol == Symbols.EOF)
-//                    break;
-//                default:
-//                    break;
-//                    
-//            }
-//        }
-        return new EofToken(input.Line, input.Column);
+        while (true) {
+            var symbol = input.Read();
+
+            switch (currState) {
+                case States.BeforeDot:
+                    if (symbol == '.')
+                        currState = States.AfterDot;
+                    else if (symbol == 'e' || symbol == 'E')
+                        currState = States.AfterExponentSign;
+                    else if (!Symbols.decDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new IntegerToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    break;
+                
+                case States.AfterDot:
+                    if (symbol == 'e' || symbol == 'E')
+                        currState = States.AfterExponentSign;
+                    else if (Symbols.decDigits.Contains((char) symbol)) {
+                        currState = States.Fraction;
+                    }
+                    else {
+                        input.Retract();
+                        return new RealToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    
+                    break;
+                
+                //start at [0-9].[0-9]->[...]
+                case States.Fraction:
+                    if (symbol == 'e' || symbol == 'E')
+                        currState = States.AfterExponentSign;
+                    
+                    else if (!Symbols.decDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new RealToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    
+                    break;
+                //start after E [0-9].[0-9][eE]->[...]
+                case States.AfterExponentSign:
+                    if (symbol == '+' || symbol == '-' || Symbols.decDigits.Contains((char) symbol))
+                        currState = States.AfterExponentAfterSign;
+                    else 
+                        throw new UnknownLexemeException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    break;
+                
+                //start after optional exponent sign [0-9].[0-9][eE][+-]?->[...]
+                case States.AfterExponentAfterSign:
+                    if (!Symbols.decDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new RealToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
+                    
+                    break;
+            }
+        }
     }
 }
 

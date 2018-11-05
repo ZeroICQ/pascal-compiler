@@ -42,19 +42,23 @@ internal static class App {
             using (var fileStream = File.OpenText(inputFilePath)) {
                 var compiler = new Compiler(fileStream);
                 
-                try {
-                    Token lt;
-                    while (!((lt = compiler.GetNextToken()) is EofToken)) {
+                Token lt = null;
+                
+                do {
+                    try {
+                        lt = compiler.GetNextToken();
                         Console.WriteLine("{0},{1}\t{2}\t{3}\t{4}", lt.Line.ToString(), lt.Column.ToString(),
                             lt.Type.ToString(), lt.StringValue, lt.Lexeme);
                     }
-                }
-                catch (UnknownLexemeException ex) {
-                    Console.WriteLine($"Unknown lexeme \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
-                }
-                catch (UnclosedCommentException ex) {
-                    Console.WriteLine($"Unclosed comment \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
-                }
+                    catch (UnknownLexemeException ex) {
+                        Console.WriteLine(
+                            $"Unknown lexeme \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
+                    }
+                    catch (UnclosedCommentException ex) {
+                        Console.WriteLine(
+                            $"Unclosed comment \"{ex.Lexeme}\" at {ex.Line.ToString()},{ex.Column.ToString()}");
+                    }
+                } while (!(lt is EofToken));
             }
         }
         catch (FileNotFoundException ex) {

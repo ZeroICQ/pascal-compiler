@@ -1,13 +1,15 @@
 using System;
+using System.Globalization;
 
 namespace Compiler {
 
-public enum TokenType {Identifier, Integer, Eof}
+public enum TokenType {Identifier, Integer, Real, Eof}
 
 public abstract class Token {
-    public TokenType Type { get; protected set; }
     public int Column { get; }
     public int Line { get; }
+    
+    public abstract TokenType Type { get; }
     public abstract string Lexeme { get; }
     public abstract string StringValue { get; }
 
@@ -18,22 +20,22 @@ public abstract class Token {
 }
 
 public class EofToken : Token {
-    public override string StringValue => "EOF";
+    public override TokenType Type => TokenType.Eof;
     public override string Lexeme => String.Empty;
+    public override string StringValue => "EOF";
 
     public EofToken(int line, int column) : base(line, column) {
-        Type = TokenType.Eof;
     }
 }
 
 public class IdentityToken : Token {
-    private readonly string _value;
-    public override string StringValue => _value.ToLower();
-    public override string Lexeme => _value;
+    public override TokenType Type => TokenType.Identifier;
+    public override string Lexeme { get; }
+    
+    public override string StringValue => Lexeme.ToLower();
 
-    public IdentityToken(string value, int line, int column) : base(line, column) {
-        Type = TokenType.Identifier;
-        _value = value;
+    public IdentityToken(string lexeme, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
     }
 }
 
@@ -41,12 +43,31 @@ public abstract class NumberToken : Token {
     protected NumberToken(int line, int column) : base(line, column) {}
 }
 
-public abstract class IntegerToken : NumberToken {
-    private readonly int _value;
+public class IntegerToken : NumberToken {
+    public override TokenType Type => TokenType.Integer;
+    public override string Lexeme { get; }
+    public override string StringValue => _value.ToString();
+    
+    private readonly long _value;
 
-    public IntegerToken(int value, int line, int column) : base(line, column) {
-        Type = TokenType.Integer;
-        _value = value;
+    public IntegerToken(string lexeme, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        _value = int.Parse(lexeme);
     }
 }
+
+public class RealToken : NumberToken {
+    public override TokenType Type => TokenType.Real;
+    public override string Lexeme { get; }
+    public override string StringValue => _value.ToString(CultureInfo.InvariantCulture);
+    
+    private readonly double _value;
+    static readonly NumberFormatInfo NumberFormat = new NumberFormatInfo {NumberDecimalSeparator = "."};
+
+    public RealToken(string lexeme, int line, int column) : base(line, column) {
+        Lexeme = lexeme;
+        _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
+    }
+}
+
 }
