@@ -50,6 +50,8 @@ public class LexemesAutomata {
 
                     else if (symbol == '(')
                         currState = States.AfterParenthesis;
+                    else if (symbol == '$')
+                        return HexNumberAutomata.Parse(_input); 
                     
                     else if (Symbols.letters.Contains((char) symbol) || symbol == '_')
                         return IdentityAutomata.Parse(_input);
@@ -151,7 +153,34 @@ public static class DecimalNumberAutomata {
                         input.Retract();
                         return new RealToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
                     }
-                    
+                    break;
+            }
+        }
+    }
+}
+
+// Start position after $ $->[...]
+public static class HexNumberAutomata {
+    private enum States {AfterDollar, HexSequence}
+    
+    public static Token Parse(InputBuffer input) {
+        var currState = States.AfterDollar;
+        
+        while (true) {
+            var symbol = input.Read();
+
+            switch (currState) {
+                case States.AfterDollar:
+                    if (Symbols.hexDigits.Contains((char) symbol))
+                        currState = States.HexSequence;
+                    else 
+                        throw new UnknownLexemeException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    break;
+                case States.HexSequence:
+                    if (!Symbols.hexDigits.Contains((char) symbol)) {
+                        input.Retract();
+                        return new IntegerToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
+                    }
                     break;
             }
         }
@@ -167,8 +196,7 @@ public static class IdentityAutomata {
             if (Symbols.letters.Contains((char) symbol) || Symbols.decDigits.Contains((char) symbol) || symbol == '_') 
                 continue;
             
-            if (symbol != Symbols.EOF)
-                input.Retract();
+            input.Retract();
             //todo: check for keyword
             return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
         }

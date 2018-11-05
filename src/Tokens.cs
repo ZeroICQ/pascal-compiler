@@ -52,7 +52,12 @@ public class IntegerToken : NumberToken {
 
     public IntegerToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        _value = int.Parse(lexeme);
+        //hex
+        if (lexeme.StartsWith('$')) 
+            _value = int.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
+        //dec
+        else
+            _value = int.Parse(lexeme);
     }
 }
 
