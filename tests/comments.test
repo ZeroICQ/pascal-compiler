@@ -1,3 +1,4 @@
 1,1 Identifier id   id
 4,5 Identifier a    a
-13,1 Identifier after   after
+13,1    Identifier after   after
+28,1    Eof EOF
