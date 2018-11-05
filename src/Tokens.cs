@@ -235,7 +235,7 @@ public class StringToken : Token {
 public class OperatorToken : Token {
     public override TokenType Type => TokenType.Operator;
     public override string Lexeme { get; }
-    public override string StringValue => Lexeme;
+    public override string StringValue => _operation.ToString();
 
     public enum Operation {
         Plus,                   // +
@@ -279,7 +279,7 @@ public class OperatorToken : Token {
 public class SeparatorToken : Token {
     public override TokenType Type => TokenType.Separator;
     public override string Lexeme { get; }
-    public override string StringValue { get; }
+    public override string StringValue => _val.ToString();
 
     public enum Separator {
         Comma,     // ,
