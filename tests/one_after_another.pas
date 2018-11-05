@@ -1,0 +1,1 @@
+123id%1000{comment}{*another comment*}&10$10//
