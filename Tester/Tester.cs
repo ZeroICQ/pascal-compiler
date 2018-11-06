@@ -10,7 +10,7 @@ namespace Tester {
 class Tester {
     private static void ShowUsage() {
         Console.WriteLine("USAGE");
-        Console.WriteLine("dotnet Tester.dll [pathToCompiler] [pathToTestsDirectory]");
+        Console.WriteLine("dotnet Tester.dll [pathToCompiler] [pathToTestsRoot]");
     }
         
     static void Main(string[] args) {
@@ -18,21 +18,25 @@ class Tester {
             ShowUsage();
             return;
         }
+        
+        Test(args[0], $"{args[1]}\\tests", "-l");
+        
+    }
 
+    static void Test(string compilerPath, string testDir, string flags) {
         var defaultForegroundColor = Console.ForegroundColor;
         
-        var testDir = Directory.GetFiles(args[1]);
-        var compilerPath = args[0];
+        var testFiles = Directory.GetFiles(testDir);
 
-        foreach (var testFile in testDir) {
+        foreach (var testFile in testFiles) {
             if (!testFile.EndsWith(".pas"))
                 continue;
 
-            var testName = testFile.Substring(0, testFile.IndexOf('.'));
+            var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
             
             var pr = new Process();
             pr.StartInfo.FileName = "dotnet";
-            pr.StartInfo.Arguments = $"{compilerPath} -L {testFile}";
+            pr.StartInfo.Arguments = $"{compilerPath} {flags} {testFile}";
             pr.StartInfo.UseShellExecute = false;
             pr.StartInfo.RedirectStandardOutput = true;
             pr.Start();
