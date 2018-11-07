@@ -10,3 +10,4 @@
 'break
 the line'
 'why bother closing string?''
+#9000000089080989080980'a'

@@ -59,18 +59,24 @@ public class IntegerToken : NumberToken {
 
     public IntegerToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        //hex
-        if (lexeme.StartsWith('$')) 
-            _value = long.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
-        //oct
-        else if (lexeme.StartsWith('&'))
-            _value = Convert.ToInt64(lexeme.Substring(1), 8);
-        //bin
-        else if (lexeme.StartsWith('%'))
-            _value = Convert.ToInt64(lexeme.Substring(1), 2);
-        //dec
-        else
-            _value = long.Parse(lexeme);
+
+        try {
+            //hex
+            if (lexeme.StartsWith('$')) 
+                _value = long.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
+            //oct
+            else if (lexeme.StartsWith('&'))
+                _value = Convert.ToInt64(lexeme.Substring(1), 8);
+            //bin
+            else if (lexeme.StartsWith('%'))
+                _value = Convert.ToInt64(lexeme.Substring(1), 2);
+            //dec
+            else
+                _value = long.Parse(lexeme);
+        }
+        catch (OverflowException e) {
+            throw new IntegerLiteralOverflowException(Lexeme, Line, Column);
+        }
     }
 }
 
@@ -84,7 +90,12 @@ public class RealToken : NumberToken {
 
     public RealToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
+        try {
+            _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
+        }
+        catch (OverflowException e) {
+            throw new RealLiteralOverflowException(lexeme, Line, Column);
+        }
     }
 }
 
@@ -116,8 +127,8 @@ public class StringToken : Token {
         bool process = true;
         while (process) {
             var symbol = input.Read();
-            
-            switch (currState) {
+            try {
+                switch (currState) {
                 
                 case States.AfterHash:
                     controlSeq.Clear();
@@ -230,6 +241,10 @@ public class StringToken : Token {
                     else if (symbol == -1)
                         process = false;
                     break;
+                }
+            }
+            catch (OverflowException e) {
+                throw new IntegerLiteralOverflowException(Lexeme, Line, Column);
             }
         }
         

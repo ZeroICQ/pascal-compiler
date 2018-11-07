@@ -17,4 +17,5 @@
 21,1    Real    100000    1.0e+5
 22,1    Real    0.001     0.001
 23,1    Real    0         10e-1000
-24,1    Eof     EOF
+Range check error at 24,1. Must be between -9223372036854775808 and 9223372036854775807
+25,1    Eof     EOF

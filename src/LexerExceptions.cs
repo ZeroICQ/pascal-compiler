@@ -41,3 +41,15 @@ public class StringMalformedException : LexerException {
 
     public StringMalformedException(string lexeme, int line, int column) : base(lexeme, line, column) {}
 }
+
+public class IntegerLiteralOverflowException : LexerException {
+    public override string Message => $"Range check error at {Line},{Column}. Must be between {long.MinValue} and {long.MaxValue}";
+
+    public IntegerLiteralOverflowException(string lexeme, int line, int column) : base(lexeme, line, column) {}
+}
+
+public class RealLiteralOverflowException : LexerException {
+    public override string Message => $"Range check error at {Line},{Column}. Must be between {double.MinValue} and {double.MaxValue}";
+
+    public RealLiteralOverflowException(string lexeme, int line, int column) : base(lexeme, line, column) {}
+}

@@ -241,27 +241,6 @@ public class LexemesAutomata {
     }
 }
 
-//identities that starts with&
-//start at &[a-ZA-Z]->[...]
-//public static class IdentityReservedAutomata {
-//    public static Token Parse(InputBuffer input) {
-//        while (true) {
-//            var symbol = input.Read();
-//            
-//            if (!Symbols.letters.Contains((char) symbol)) {
-//                input.Retract();
-//                
-//                var textInfo = CultureInfo.InvariantCulture.TextInfo;
-//                if (Enum.TryParse(textInfo.ToTitleCase(input.Lexeme), true, out ReservedToken.Words reservedWord))        
-//                    if (Enum.IsDefined(typeof(ReservedToken.Words), reservedWord))  
-//                        return new IdentityToken(input.Lexeme, input.LexemeLine, input.LexemeColumn);
-//            
-//                throw new UnknownLexemeException(input.Lexeme, input.LexemeLine, input.LexemeColumn);
-//            }
-//        }
-//    }
-//}
-
 // Start position after decimal digit [0-9]->[...]
 public static class DecimalNumberAutomata {
     private enum States {BeforeDot, AfterDot, AfterExponentSign, AfterExponentAfterSign, Fraction}
