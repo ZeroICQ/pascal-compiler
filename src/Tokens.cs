@@ -74,7 +74,7 @@ public class IntegerToken : NumberToken {
             else
                 _value = long.Parse(lexeme);
         }
-        catch (OverflowException e) {
+        catch (OverflowException) {
             throw new IntegerLiteralOverflowException(Lexeme, Line, Column);
         }
     }
@@ -93,7 +93,7 @@ public class RealToken : NumberToken {
         try {
             _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
         }
-        catch (OverflowException e) {
+        catch (OverflowException) {
             throw new RealLiteralOverflowException(lexeme, Line, Column);
         }
     }
@@ -243,7 +243,7 @@ public class StringToken : Token {
                     break;
                 }
             }
-            catch (OverflowException e) {
+            catch (OverflowException) {
                 throw new IntegerLiteralOverflowException(Lexeme, Line, Column);
             }
         }
@@ -333,5 +333,6 @@ public class SeparatorToken : Token {
         _val = sep;
     }
 }
+
 
 }
