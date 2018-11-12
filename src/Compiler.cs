@@ -17,7 +17,11 @@ internal class Compiler {
     }
     
     public Token GetNextToken() {
-        return _lexer.Parse();
+        return _lexer.GetNextToken();
+    }
+
+    public AstNode GetAst() {
+        return new Parser(_lexer).GetAst();
     }
 }
 
@@ -60,11 +64,21 @@ internal static class App {
             PerformLexicalAnalysis(input);
         }
 
+        if (enabledOptions.Contains(Options.OnlySyntax)) {
+            PerformSyntaxAnalysis(input);
+        }
+
 //        var compiler = new Compiler(new StreamReader(Console.OpenStandardInput()));
-        
 //            TODO: parse flags
 //            var outputFilenameIndex = Array.FindIndex(args, s => s.Equals("-o"));
         return 0;
+    }
+
+    private static void PerformSyntaxAnalysis(StreamReader streamReader) {
+        var compiler = new Compiler(streamReader);
+        var startNode = compiler.GetAst();
+        //startNode.printSubtree()
+
     }
 
     private static void PerformLexicalAnalysis(StreamReader streamReader) {
