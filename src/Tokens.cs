@@ -257,9 +257,9 @@ public class OperatorToken : Token {
     public override string Lexeme { get; }
     public override string StringValue => Value.ToString();
     
-    public Symbols.Operation Value { get; }
+    public Symbols.Operators Value { get; }
 
-    public OperatorToken(string lexeme, Symbols.Operation op, int line, int column) : base(line, column) {
+    public OperatorToken(string lexeme, Symbols.Operators op, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         Value = op;
     }

@@ -21,7 +21,7 @@ public static class Symbols {
         Until, Uses, Var, While, With, Xor
     }
 
-    public enum Operation {
+    public enum Operators {
         Plus,                   // +
         Minus,                  // -
         Multiply,               // *
