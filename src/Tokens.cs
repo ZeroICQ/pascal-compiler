@@ -255,84 +255,39 @@ public class StringToken : Token {
 public class OperatorToken : Token {
     public override TokenType Type => TokenType.Operator;
     public override string Lexeme { get; }
-    public override string StringValue => _operation.ToString();
+    public override string StringValue => Value.ToString();
+    
+    public Symbols.Operation Value { get; }
 
-    public enum Operation {
-        Plus,                   // +
-        Minus,                  // -
-        Multiply,               // *
-        Divide,                 // /
-        Equal,                  // =
-        Less,                   // <
-        More,                   // >
-        OpenBracket,            // [
-        CloseBracket,           // ]
-        Dot,                    // .
-        OpenParenthesis,        // (
-        CloseParenthesis,       // )    
-        Caret,                  // ^
-        AtSign,                 // @
-        NotEqual,               // <>
-        BitwiseShiftLeft,       // <<
-        BitwiseShiftRight,      // >>
-        Exponential,            // **
-        SymmetricDifference,    // ><
-        LessOrEqual,            // <=
-        MoreOreEqual,           // >=
-        Assign,                 // :=
-        PlusAssign,             // +=
-        MinusAssign,            // -=
-        MultiplyAssign,         // *=
-        DivideAssign,           // /=
-        OpenParenthesisWithDot, // (.
-        CloseParenthesisWithDot // .)
-    }
-
-    private Operation _operation;
-
-    public OperatorToken(string lexeme, Operation op, int line, int column) : base(line, column) {
+    public OperatorToken(string lexeme, Symbols.Operation op, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        _operation = op;
+        Value = op;
     }
 }
 
 public class ReservedToken : Token {
-    public enum Words {
-        Absolute, And, Array, Asm, Begin, Case, Const, Constructor, Destructor, Div, Do, Downto, Else, End, File, For,
-        Function, Goto, If, Implementation, In, Inherited, Inline, Interface, Label, Mod, Nil, Not, Object, Of, Operator,
-        Or, Packed, Procedure, Program, Record, Reintroduce, Repeat, Self, Set, Shl, Shr, String, Then, To, Type, Unit,
-        Until, Uses, Var, While, With, Xor
-    }
     public override TokenType Type => TokenType.Reserved;
     public override string Lexeme { get; }
-    public override string StringValue => _value.ToString();
+    public override string StringValue => Value.ToString();
 
-    private Words _value;
+    public Symbols.Words Value { get; }
 
-    public ReservedToken(string lexeme, Words word, int line, int column) : base(line, column) {
+    public ReservedToken(string lexeme, Symbols.Words word, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        _value = word;
+        Value = word;
     }
 }
 
 public class SeparatorToken : Token {
     public override TokenType Type => TokenType.Separator;
     public override string Lexeme { get; }
-    public override string StringValue => _val.ToString();
+    public override string StringValue => Value.ToString();
 
-    public enum Separator {
-        Comma,     // ,
-        Colon,     // :
-        Semicolon  // ; 
-    }
+    public Symbols.Separators Value { get; }
 
-    private Separator _val;
-
-    public SeparatorToken(string lexeme, Separator sep, int line, int column) : base(line, column) {
+    public SeparatorToken(string lexeme, Symbols.Separators sep, int line, int column) : base(line, column) {
         Lexeme = lexeme;
-        _val = sep;
+        Value = sep;
     }
 }
-
-
 }

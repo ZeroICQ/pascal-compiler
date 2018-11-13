@@ -3,17 +3,8 @@ using Compiler;
 
 namespace Compiler {
 
-public abstract class LexerException : Exception {
-    public int Line { get; }
-    public int Column { get; }
-    public string Lexeme { get; }
-    public abstract override string Message { get; }
-
-    protected LexerException(string lexeme, int line, int column) {
-        Line = line;
-        Column = column;
-        Lexeme = lexeme;
-    }
+public abstract class LexerException : ParsingException {
+    protected LexerException(string lexeme, int line, int column) : base(lexeme, line, column) {}
 };
 
 public class UnknownLexemeException : LexerException {

@@ -8,9 +8,21 @@ public class Parser {
     
     public AstNode GetAst() {
         var root = new RootNode();
-        root.AppendChild(ParseFactor());        
+        while (!(_lexer.GetNextToken() is EofToken)) {
+            _lexer.Retract();
+            root.AppendChild(ParseFactor());
+
+        }
         return root;
     }
+
+//    private AstNode ParseSimpleExpr() {
+//        whi
+//    }
+//
+//    private AstNode ParseOperator() {
+//        
+//    }
 
     private AstNode ParseFactor() {
         var t = _lexer.GetNextToken();
@@ -19,6 +31,12 @@ public class Parser {
                     return new IntegerNode(integerToken.Value);
         }
         return new IntegerNode(0);
+    }
+    
+    // Requires
+
+    private void RequireRelational() {
+        
     }
 }
 }

@@ -1,19 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
 namespace Compiler {
-
-internal static class Symbols {
-    public static readonly HashSet<char> decDigits = new HashSet<char>("0123456789".ToCharArray());
-    public static readonly HashSet<char> octDigits = new HashSet<char>("01234567".ToCharArray());
-    public static readonly HashSet<char> hexDigits = new HashSet<char>("0123456789ABCDEFabcdef".ToCharArray());
-    public static readonly HashSet<char> letters = new HashSet<char>("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray());
-    public const int EOF = -1;
-}
-
 //{} - braces, [] - brackets, () - parentheses
 
 public class LexemesAutomata {
@@ -29,8 +19,23 @@ public class LexemesAutomata {
     }
 
     private bool _isRetracted = false;
-    private Token lastToke
+    private Token _lastToken;
+
+    public void Retract() {
+        _isRetracted = true;
+    }
+
     public Token GetNextToken() {
+        if (_isRetracted) {
+            _isRetracted = false;
+            return _lastToken;
+        }
+        
+        _lastToken = Parse();
+        return _lastToken;
+    }
+    
+    private Token Parse() {
         var currState = States.Start;
         
         while (true) {
@@ -76,7 +81,7 @@ public class LexemesAutomata {
                             currState = States.AfterStar;
                             break;
                         case '=':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Equal);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Equal);
                         case '<':
                             currState = States.AfterLess;
                             break;
@@ -84,22 +89,22 @@ public class LexemesAutomata {
                             currState = States.AfterMore;
                             break;
                         case '[':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.OpenBracket);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.OpenBracket);
                         case ']':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.CloseBracket);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.CloseBracket);
                         case '.':
                             currState = States.AfterDot;
                             break;
                         case ')':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.CloseParenthesis);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.CloseParenthesis);
                         case '^':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Caret);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Caret);
                         case '@':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.AtSign);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.AtSign);
                         case ';':
-                            return TokenFactory.BuildSeparator(_input, SeparatorToken.Separator.Semicolon);
+                            return TokenFactory.BuildSeparator(_input, Symbols.Separators.Semicolon);
                         case ',':
-                            return TokenFactory.BuildSeparator(_input, SeparatorToken.Separator.Comma);
+                            return TokenFactory.BuildSeparator(_input, Symbols.Separators.Comma);
                         case ':':
                             currState = States.AfterColon;
                             break;
@@ -119,62 +124,62 @@ public class LexemesAutomata {
                 case States.AfterLess:
                     switch (symbol) {
                         case '>':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.NotEqual);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.NotEqual);
                         case '<':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.BitwiseShiftLeft);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.BitwiseShiftLeft);
                         case '=':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.LessOrEqual);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.LessOrEqual);
                         default:
                             _input.Retract();
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Less);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Less);
                     }
                 //start after >
                 case States.AfterMore:
                     switch (symbol) {
                         case '>':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.BitwiseShiftRight);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.BitwiseShiftRight);
                         case '<':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.SymmetricDifference);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.SymmetricDifference);
                         case '=':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.MoreOreEqual);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.MoreOreEqual);
                         default:
                             _input.Retract();
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.More);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.More);
                     }
                 //starts after *
                 case States.AfterStar:
                     switch (symbol) {
                         case '*':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Exponential);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Exponential);
                         case '=':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.MultiplyAssign);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.MultiplyAssign);
                         default:
                             _input.Retract();
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Multiply);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Multiply);
                     }
                 //starts after :
                 case States.AfterColon:
                     if (symbol == '=')
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Assign);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.Assign);
                     else {
                         _input.Retract();
-                        return TokenFactory.BuildSeparator(_input, SeparatorToken.Separator.Colon);
+                        return TokenFactory.BuildSeparator(_input, Symbols.Separators.Colon);
                     }
                 //starts after +
                 case States.AfterPlus:
                     if (symbol == '=')
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.PlusAssign);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.PlusAssign);
                     else {
                         _input.Retract();
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Plus);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.Plus);
                     }
                 //start after -
                 case States.AfterMinus:
                     if (symbol == '=')
-                        return TokenFactory.BuildOperator(_input,OperatorToken.Operation.MinusAssign);
+                        return TokenFactory.BuildOperator(_input,Symbols.Operation.MinusAssign);
                     else {
                         _input.Retract();
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Minus);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.Minus);
                     }
                 //start after /
                 case States.AfterSlash:
@@ -184,19 +189,19 @@ public class LexemesAutomata {
                             currState = States.Start;
                             break;
                         case '=':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.DivideAssign); 
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.DivideAssign); 
                         default:
                             _input.Retract();
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Divide);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.Divide);
                     }
                     break;
                 
                 case States.AfterDot:
                     if (symbol == ')')
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.CloseParenthesisWithDot);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.CloseParenthesisWithDot);
                     else {
                         _input.Retract();
-                        return TokenFactory.BuildOperator(_input, OperatorToken.Operation.Dot);
+                        return TokenFactory.BuildOperator(_input, Symbols.Operation.Dot);
                     }
                 
                 case States.AfterParenthesis:
@@ -206,10 +211,10 @@ public class LexemesAutomata {
                             currState = States.Start;
                             break;
                         case '.':
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.OpenParenthesisWithDot);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.OpenParenthesisWithDot);
                         default:
                             _input.Retract();
-                            return TokenFactory.BuildOperator(_input, OperatorToken.Operation.OpenParenthesis);
+                            return TokenFactory.BuildOperator(_input, Symbols.Operation.OpenParenthesis);
                     }
                     break;
                     // -- END OF States.AfterParenthesis
@@ -397,8 +402,8 @@ public static class IdentityAutomata {
             
             input.Retract();
             var textInfo = CultureInfo.InvariantCulture.TextInfo;
-            if (Enum.TryParse(textInfo.ToTitleCase(input.Lexeme), true, out ReservedToken.Words reservedWord))        
-                if (Enum.IsDefined(typeof(ReservedToken.Words), reservedWord))  
+            if (Enum.TryParse(textInfo.ToTitleCase(input.Lexeme), true, out Symbols.Words reservedWord))        
+                if (Enum.IsDefined(typeof(Symbols.Words), reservedWord))  
                     return TokenFactory.BuildReserved(input, reservedWord);
             
             return TokenFactory.Build<IdentityToken>(input);
@@ -649,15 +654,15 @@ public static class TokenFactory {
         
     }
 
-    public static OperatorToken BuildOperator(InputBuffer input, OperatorToken.Operation op) {
+    public static OperatorToken BuildOperator(InputBuffer input, Symbols.Operation op) {
         return new OperatorToken(input.Lexeme, op, input.LexemeLine, input.LexemeColumn);
     }
     
-    public static SeparatorToken BuildSeparator(InputBuffer input, SeparatorToken.Separator sep) {
+    public static SeparatorToken BuildSeparator(InputBuffer input, Symbols.Separators sep) {
         return new SeparatorToken(input.Lexeme, sep, input.LexemeLine, input.LexemeColumn);
     }
 
-    public static ReservedToken BuildReserved(InputBuffer input, ReservedToken.Words word) {
+    public static ReservedToken BuildReserved(InputBuffer input, Symbols.Words word) {
         return new ReservedToken(input.Lexeme, word, input.LexemeLine, input.LexemeColumn);
     }
 }
