@@ -14,10 +14,11 @@ public class Parser {
 
     private AstNode ParseFactor() {
         var t = _lexer.GetNextToken();
-        switch (t.Type) {
-                case TokenType.Integer:
-                    return new NumberNode();
+        switch (t) {
+                case IntegerToken integerToken:
+                    return new IntegerNode(integerToken.Value);
         }
+        return new IntegerNode(0);
     }
 }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 [assembly:InternalsVisibleTo("Tests")]
 
@@ -23,6 +24,20 @@ internal class Compiler {
     public AstNode GetAst() {
         return new Parser(_lexer).GetAst();
     }
+
+    public void PrintAst() {
+        var nodeNumber = 0;
+        PrintSubAst(GetAst(), ref nodeNumber, 0);
+    }
+
+    private void PrintSubAst(AstNode node, ref int nodeNumber, int parentNodeNumber) {
+        int curNodeNumber = nodeNumber;
+        Console.WriteLine($"{nodeNumber},{parentNodeNumber}\t {node.StringValue}");
+        foreach (var child in node.Children) {
+            nodeNumber += 1;
+            PrintSubAst(child, ref nodeNumber, curNodeNumber);
+        }
+    }
 }
 
 internal static class App {
@@ -36,10 +51,7 @@ internal static class App {
         }
         
         ParseOptions(args);
-
         var inputFilePath = args.Last();
-
-
         StreamReader input = null;
 
         if (!inputFilePath.StartsWith('-')) {
@@ -58,7 +70,6 @@ internal static class App {
         else {
             input = new StreamReader(Console.OpenStandardInput());
         }
-
                 
         if (enabledOptions.Contains(Options.OnlyLexical)) {
             PerformLexicalAnalysis(input);
@@ -76,9 +87,7 @@ internal static class App {
 
     private static void PerformSyntaxAnalysis(StreamReader streamReader) {
         var compiler = new Compiler(streamReader);
-        var startNode = compiler.GetAst();
-        //startNode.printSubtree()
-
+        compiler.PrintAst();
     }
 
     private static void PerformLexicalAnalysis(StreamReader streamReader) {
@@ -98,18 +107,21 @@ internal static class App {
         } while (!(lt is EofToken));
     }
 
-    private static void ParseOptions(string[] args) {
+    private static void ParseOptions(IEnumerable<string> args) {
         foreach (var opt in args) {
-            if (opt == "-l") {
-                enabledOptions.Add(Options.OnlyLexical);
-                if (enabledOptions.Contains(Options.OnlySyntax))
-                    throw new ArgumentException();
-            }
-            
-            if (opt == "-s") {
-                enabledOptions.Add(Options.OnlySyntax);
-                if (enabledOptions.Contains(Options.OnlyLexical))
-                    throw new ArgumentException();
+            switch (opt) {
+                case "-l": {
+                    enabledOptions.Add(Options.OnlyLexical);
+                    if (enabledOptions.Contains(Options.OnlySyntax))
+                        throw new ArgumentException();
+                    break;
+                }
+                case "-s": {
+                    enabledOptions.Add(Options.OnlySyntax);
+                    if (enabledOptions.Contains(Options.OnlyLexical))
+                        throw new ArgumentException();
+                    break;
+                }
             }
         }
         

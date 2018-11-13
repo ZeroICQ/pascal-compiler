@@ -53,9 +53,9 @@ public abstract class NumberToken : Token {
 public class IntegerToken : NumberToken {
     public override TokenType Type => TokenType.Integer;
     public override string Lexeme { get; }
-    public override string StringValue => _value.ToString();
+    public override string StringValue => Value.ToString();
     
-    private readonly long _value;
+    public long Value { get; }
 
     public IntegerToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
@@ -63,16 +63,16 @@ public class IntegerToken : NumberToken {
         try {
             //hex
             if (lexeme.StartsWith('$')) 
-                _value = long.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
+                Value = long.Parse(lexeme.Substring(1), NumberStyles.HexNumber);
             //oct
             else if (lexeme.StartsWith('&'))
-                _value = Convert.ToInt64(lexeme.Substring(1), 8);
+                Value = Convert.ToInt64(lexeme.Substring(1), 8);
             //bin
             else if (lexeme.StartsWith('%'))
-                _value = Convert.ToInt64(lexeme.Substring(1), 2);
+                Value = Convert.ToInt64(lexeme.Substring(1), 2);
             //dec
             else
-                _value = long.Parse(lexeme);
+                Value = long.Parse(lexeme);
         }
         catch (OverflowException) {
             throw new IntegerLiteralOverflowException(Lexeme, Line, Column);

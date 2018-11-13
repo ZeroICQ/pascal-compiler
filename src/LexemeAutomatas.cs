@@ -27,6 +27,9 @@ public class LexemesAutomata {
         Start, AfterSlash, AfterParenthesis, AfterAmpersand, AfterLess, AfterMore, AfterStar, AfterColon,
         AfterPlus, AfterMinus, AfterDot
     }
+
+    private bool _isRetracted = false;
+    private Token lastToke
     public Token GetNextToken() {
         var currState = States.Start;
         
