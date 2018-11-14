@@ -23,8 +23,14 @@ internal class Compiler {
     }
 
     public void PrintAst() {
-        var ast = GetAst();
-        ast.Accept(new AstPrinter());
+        try {
+            var ast = GetAst();
+        }
+        catch (ParsingException e) {
+            Console.WriteLine(e.Message);
+        }
+        
+//        ast.Accept(new AstPrinter());
     }
 }
 

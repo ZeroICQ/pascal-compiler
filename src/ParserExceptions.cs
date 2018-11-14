@@ -5,7 +5,7 @@ public abstract class ParserException : ParsingException {
 };
 
 public class IllegalExprException : ParserException {
-    public override string Message => $"Illigal expression at {Line},{Column}";
+    public override string Message => $"Illegal expression {Lexeme} at {Line},{Column}";
     public IllegalExprException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 

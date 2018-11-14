@@ -1,120 +1,72 @@
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace Compiler {
 
 public abstract class AstNode {
     public abstract string StringValue { get; }
     public abstract void Accept(IAstVisitor visitor);
+    
 }
 
-public abstract class MultiChildrenNode : AstNode {
-    public List<AstNode> Children { get; } = new List<AstNode>();
+public abstract class ExprNode : AstNode {
+//    protected ExprNode(Token token) : base(token) {}
+    // type
+}
 
-    public void AppendChild(AstNode child) {
-        Children.Add(child);
-    }
+public abstract class StmntNode : AstNode {
+}
 
+public class BlockNode : StmntNode {
+    public override string StringValue => "Block";
+    private List<ExprNode> _expressions = new List<ExprNode>();
+    
     public override void Accept(IAstVisitor visitor) {
         visitor.Visit(this);
     }
+
+    public void AddExpression(ExprNode exprNode) {
+        _expressions.Add(exprNode);
+    }
 }
 
-public abstract class BinaryNode : AstNode {
+public class BinaryExprNode : ExprNode {
     public AstNode Left { get; }
     public AstNode Right { get; }
+    private Token _operator;
 
-    protected BinaryNode(AstNode left, AstNode right) {
+    public override string StringValue => _operator.StringValue;
+    public override void Accept(IAstVisitor visitor) {
+        visitor.Visit(this);
+    }
+
+    public BinaryExprNode(AstNode left, AstNode right, Token @operator) {
         Left = left;
         Right = right;
+        _operator = @operator;
     }
 }
 
-public class RootNode : MultiChildrenNode {
-    public override string StringValue => "[ROOT]";
-}
+public abstract class ConstantNode : ExprNode {
+    protected Token _token;
 
-public abstract class ConstantNode : AstNode {}
+    protected ConstantNode(Token token) {
+        _token = token;
+    }
+}
 
 public class IntegerNode : ConstantNode {
-    public override string StringValue => _value.ToString();
-    private readonly long _value;
+    private new IntegerToken _token;
     
-    public IntegerNode(long value) {
-        _value = value;
-    }
-
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
-    }
-}
-
-
-// OPERATORS
-public class LessNode : BinaryNode {
+    public override string StringValue => _token.StringValue;
     public override void Accept(IAstVisitor visitor) {
         visitor.Visit(this);
     }
 
-    public override string StringValue => Symbols.Operators.Less.ToString();
-    public LessNode(AstNode left, AstNode right) : base(left, right) {}
-}
-
-public class LessOrEqualNode : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
+    public IntegerNode(IntegerToken token) : base(token) {
+        _token = token;
     }
-
-    public override string StringValue => Symbols.Operators.LessOrEqual.ToString();
-    public LessOrEqualNode(AstNode left, AstNode right) : base(left, right) { }
 }
-
-
-public class MoreNode : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
-    }
-
-    public override string StringValue => Symbols.Operators.More.ToString();
-    public MoreNode(AstNode left, AstNode right) : base(left, right) { }
-}
-
-public class MoreOrEqual : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        throw new System.NotImplementedException();
-    }
-
-    public override string StringValue => Symbols.Operators.MoreOreEqual.ToString();
-    public MoreOrEqual(AstNode left, AstNode right) : base(left, right) { }
-}
-
-public class EqualNode : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
-    }
-
-    public override string StringValue => Symbols.Operators.Equal.ToString();
-    public EqualNode(AstNode left, AstNode right) : base(left, right) { }
-}
-
-public class NotEqualNode : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
-    }
-
-    public override string StringValue => Symbols.Operators.NotEqual.ToString();
-    public NotEqualNode(AstNode left, AstNode right) : base(left, right) { }
-}
-
-public class InNode : BinaryNode {
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
-    }
-
-    public override string StringValue => Symbols.Words.In.ToString();
-    public InNode(AstNode left, AstNode right) : base(left, right) { }
-
-}
-
 
 //public class VarRefNode : AstNode {
 //    
