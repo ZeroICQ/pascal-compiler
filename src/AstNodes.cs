@@ -5,7 +5,7 @@ namespace Compiler {
 
 public abstract class AstNode {
     public abstract string StringValue { get; }
-    public abstract void Accept(IAstVisitor visitor);
+    public abstract T Accept<T>(IAstVisitor<T> visitor);
     
 }
 
@@ -19,14 +19,14 @@ public abstract class StmntNode : AstNode {
 
 public class BlockNode : StmntNode {
     public override string StringValue => "Block";
-    private List<ExprNode> _expressions = new List<ExprNode>();
+    public List<ExprNode> Expressions { get; } = new List<ExprNode>();
     
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
     }
 
     public void AddExpression(ExprNode exprNode) {
-        _expressions.Add(exprNode);
+        Expressions.Add(exprNode);
     }
 }
 
@@ -36,8 +36,8 @@ public class BinaryExprNode : ExprNode {
     private Token _operator;
 
     public override string StringValue => _operator.StringValue;
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
     }
 
     public BinaryExprNode(AstNode left, AstNode right, Token @operator) {
@@ -59,8 +59,8 @@ public class IntegerNode : ConstantNode {
     private new IntegerToken _token;
     
     public override string StringValue => _token.StringValue;
-    public override void Accept(IAstVisitor visitor) {
-        visitor.Visit(this);
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
     }
 
     public IntegerNode(IntegerToken token) : base(token) {

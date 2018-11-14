@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -25,12 +26,12 @@ internal class Compiler {
     public void PrintAst() {
         try {
             var ast = GetAst();
+            var gg = ast.Accept(new PrintVisitor());
+            gg.Print();
         }
         catch (ParsingException e) {
             Console.WriteLine(e.Message);
         }
-        
-//        ast.Accept(new AstPrinter());
     }
 }
 

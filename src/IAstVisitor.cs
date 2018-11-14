@@ -1,7 +1,7 @@
 namespace Compiler {
-public interface IAstVisitor {
-    void Visit(StmntNode node);
-    void Visit(BinaryExprNode node);
-    void Visit(ConstantNode node);
+public interface IAstVisitor<out T> {
+    T Visit(BlockNode node);
+    T Visit(BinaryExprNode node);
+    T Visit(IntegerNode node);
 }
 }
