@@ -102,10 +102,10 @@ public class PrinterNode {
 
         curLine[start] = '┴';
         if (rightmost > start) {
-            curLine[rightmost] = Convert.ToChar(0x2510);;
+            curLine[rightmost] = '┐';
         }
         else if (rightmost > end) {
-            curLine[leftmost] = Convert.ToChar(0x250C);
+            curLine[leftmost] = '┌';
         }
     }
     
