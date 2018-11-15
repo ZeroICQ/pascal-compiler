@@ -73,14 +73,14 @@ public class PrinterNode {
             var isNeedSpace = i <= _children.Count - 2;            
             var end = offset + _children[i].Width / 2;
             
-            PrintEdge(canvas, depth + 1, start, end);
+            PrintEdge(canvas, depth + 1, start, end, i == 0 || i == _children.Count - 1);
             
             _children[i].Print(canvas, offset, depth + 2, isNeedSpace);
             offset += _children[i].Width + (isNeedSpace ? 2 : 0);
         }
     }
 
-    private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end) {
+    private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end, bool isEdge) {
         Console.OutputEncoding = Encoding.UTF8;
         
         if (canvas.Count - 1 < depth) {
@@ -102,10 +102,16 @@ public class PrinterNode {
 
         curLine[start] = '┴';
         if (rightmost > start) {
-            curLine[rightmost] = '┐';
+            if (isEdge)
+                curLine[rightmost] = '┐';
+            else 
+                curLine[rightmost] = '┬';
         }
         else if (rightmost > end) {
-            curLine[leftmost] = '┌';
+            if (isEdge)
+                curLine[leftmost] = '┌';
+            else 
+                curLine[leftmost] = '┬';
         }
     }
     

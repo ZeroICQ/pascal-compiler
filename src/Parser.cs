@@ -59,7 +59,6 @@ public class Parser {
                 return new IdentityNode(identityToken);
             default:
                 throw Illegal(t);
-                break;
         }
 
         throw Illegal(t);
