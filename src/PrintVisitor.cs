@@ -60,13 +60,47 @@ public class PrinterNode {
         if (space)
             canvas[depth].Insert(canvas[depth].Length, "  ");
         
+        var start = Width / 2 + offset;
         for (var i = 0; i < _children.Count; i++) {
-            var isNeedSpace = i <= _children.Count - 2;
-            _children[i].Print(canvas, offset, depth + 1, isNeedSpace);
+            var isNeedSpace = i <= _children.Count - 2;            
+            var end = offset + _children[i].Width / 2;
+            
+            PrintEdge(canvas, depth + 1, start, end);
+            
+            _children[i].Print(canvas, offset, depth + 2, isNeedSpace);
             offset += _children[i].Width + (isNeedSpace ? 2 : 0);
         }
     }
 
+    private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end) {
+        Console.OutputEncoding = Encoding.UTF8;
+        
+        if (canvas.Count - 1 < depth) {
+            canvas.Add(new StringBuilder());
+        }
+
+        var curLine = canvas[depth];
+        var leftmost = Math.Min(start, end);
+        var rightmost = Math.Max(start, end);
+
+        if (rightmost > curLine.Length - 1) {
+            curLine.Insert(curLine.Length, " ", rightmost - curLine.Length + 1);
+        }
+
+        for (int i = leftmost; i <= rightmost; i++) {
+            curLine[i] = Convert.ToChar(0x2500);
+        }
+        
+
+        curLine[start] = '┴';
+        if (rightmost > start) {
+            curLine[rightmost] = Convert.ToChar(0x2510);;
+        }
+        else if (rightmost > end) {
+            curLine[leftmost] = Convert.ToChar(0x250C);
+        }
+    }
+    
     private int ChildrenWidth() {
         var childrenWidth = 0;
         foreach (var c in _children) {
