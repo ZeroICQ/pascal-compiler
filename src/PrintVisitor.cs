@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace Compiler {
@@ -30,9 +31,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
 }
 
 public class PrinterNode {
-    public int Width {
-        get { return Math.Max(Value.Length, ChildrenWidth() + (_children.Count > 1 ? (_children.Count - 1) * 2 : 0)); }
-    }
+    public int Width => Math.Max(Value.Length, ChildrenWidth() + (_children.Count > 1 ? (_children.Count - 1) * 2 : 0));
     public string Value { get; }
     private List<PrinterNode> _children = new List<PrinterNode>();
 
@@ -44,24 +43,27 @@ public class PrinterNode {
         _children.Add(child);
     }
 
-    public void Print(bool IsEndl = true, int offset = 0, bool IsPrintSpace = false) {
+    public void Print(in List<StringBuilder> canvas, int offset = 0, int depth = 0, bool space = false) {
+        if (canvas.Count - 1 < depth) {
+            canvas.Add(new StringBuilder());
+        }
+        
         var leftPadding = (Width - Value.Length ) / 2;
-        // global
-        Console.Write(new string(' ', offset));
-        // local
-        Console.Write(new string(' ', leftPadding));
-        
-        Console.Write(Value);
-        if (IsPrintSpace)
-            Console.Write("  ");
-        
-        if (IsEndl)
-            Console.WriteLine();
+
+        if (canvas[depth].Length < offset + leftPadding) {
+            var lastIndex = canvas[depth].Length;
+            var needInsert = offset + leftPadding - canvas[depth].Length;
+            canvas[depth].Insert(lastIndex, " ", needInsert);
+        }
+
+        canvas[depth].Insert(offset + leftPadding, Value);
+        if (space)
+            canvas[depth].Insert(canvas[depth].Length, "  ");
         
         for (var i = 0; i < _children.Count; i++) {
-            var space = i <= _children.Count - 2;
-            _children[i].Print(i == _children.Count - 1, offset, space);
-            offset = _children[i].Width + (space ? 2 : 0);
+            var isNeedSpace = i <= _children.Count - 2;
+            _children[i].Print(canvas, offset, depth + 1, isNeedSpace);
+            offset += _children[i].Width + (isNeedSpace ? 2 : 0);
         }
     }
 

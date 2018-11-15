@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 [assembly:InternalsVisibleTo("Tests")]
 
@@ -26,8 +27,13 @@ internal class Compiler {
     public void PrintAst() {
         try {
             var ast = GetAst();
-            var gg = ast.Accept(new PrintVisitor());
-            gg.Print();
+            var visitorTree = ast.Accept(new PrintVisitor());
+            var canvas = new List<StringBuilder>();
+            visitorTree.Print(canvas);
+
+            foreach (var line in canvas) {
+                Console.WriteLine(line);
+            }
         }
         catch (ParsingException e) {
             Console.WriteLine(e.Message);
