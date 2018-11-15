@@ -28,6 +28,14 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(IntegerNode node) {
         return new PrinterNode(node.StringValue);
     }
+
+    public PrinterNode Visit(FloatNode node) {
+        return new PrinterNode(node.StringValue);
+    }
+
+    public PrinterNode Visit(IdentityNode node) {
+        return new PrinterNode(node.StringValue);
+    }
 }
 
 public class PrinterNode {
@@ -107,8 +115,6 @@ public class PrinterNode {
             childrenWidth += c.Width;
         }
         return childrenWidth; 
-    }
-    
+    }   
 }
-
 }

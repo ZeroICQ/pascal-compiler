@@ -274,7 +274,7 @@ public static class DecimalNumberAutomata {
                             }
                             else {
                                 input.Retract();
-                                return TokenFactory.Build<RealToken>(input);
+                                return TokenFactory.Build<FloatToken>(input);
                             }
                             break;
                         }
@@ -292,7 +292,7 @@ public static class DecimalNumberAutomata {
                         default: {
                             if (!Symbols.decDigits.Contains((char) symbol)) {
                                 input.Retract();
-                                return TokenFactory.Build<RealToken>(input);
+                                return TokenFactory.Build<FloatToken>(input);
                             }
 
                             break;
@@ -312,7 +312,7 @@ public static class DecimalNumberAutomata {
                 case States.AfterExponentAfterSign:
                     if (!Symbols.decDigits.Contains((char) symbol)) {
                         input.Retract();
-                        return TokenFactory.Build<RealToken>(input);
+                        return TokenFactory.Build<FloatToken>(input);
                     }
                     break;
             }

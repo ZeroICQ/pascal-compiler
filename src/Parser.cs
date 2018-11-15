@@ -48,69 +48,32 @@ public class Parser {
                         var exp = ParseExpression(0);
                         Require(Symbols.Operators.CloseParenthesis);
                         return exp;
-                        
                 }
 
                 break;
+            case FloatToken floatToken:
+                return new FloatNode(floatToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
+            case IdentityToken identityToken:
+                return new IdentityNode(identityToken);
             default:
-                Illegal(t);
+                throw Illegal(t);
                 break;
         }
 
-        return null;
+        throw Illegal(t);
     }
-    
-//    private AstNode ParseSimpleExpr() {
-//        var node = ParseTerm();
-//
-//        while (true) {
-//            var token = _lexer.GetNextToken();
-//            switch (token) {
-//                    case OperatorToken operatorToken:
-//                        switch (operatorToken.Value) {
-//                                case Symbols.Operators.Plus:
-//                                case Symbols.Operators.Minus:
-//                                    node = BuildNode(operatorToken, node, null);
-//                                    break;
-//                        }
-//                        break;
-//            }
-//            
-//            node.Ri
-//        }
-//        
-//        return node;
-//    }
-
-    // Checks
-
-    // Require
-    
-    // Factories
-//    private static AstNode BuildNode(Token token, params AstNode[] p) {
-//        switch (token) {
-//                case OperatorToken operatorToken:
-//                    switch (operatorToken.Value) {
-//                            case Symbols.Operators.More:
-//                                return new MoreNode(p[0], p[1]);
-//                            case Symbols.Operators.MoreOreEqual:
-//                                return new MoreNode(p[0], p[1]);
-//                    }
-//
-//        }
-//    }
 
     private void Require(Symbols.Operators op)  {
         var t = _lexer.GetNextToken();
         if (!(t is OperatorToken _op && _op.Value == op)) {
-            Illegal(t);
+            throw Illegal(t);
         }
     }
 
-    private void Illegal(Token token) {
-        throw new IllegalExprException(token.Lexeme, token.Line, token.Column);
+    private ParserException Illegal(Token token) {
+        return new IllegalExprException(token.Lexeme, token.Line, token.Column);
     }
     
     //priorities 

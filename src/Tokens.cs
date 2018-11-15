@@ -80,7 +80,7 @@ public class IntegerToken : NumberToken {
     }
 }
 
-public class RealToken : NumberToken {
+public class FloatToken : NumberToken {
     public override TokenType Type => TokenType.Real;
     public override string Lexeme { get; }
     public override string StringValue => _value.ToString(CultureInfo.InvariantCulture);
@@ -88,7 +88,7 @@ public class RealToken : NumberToken {
     private readonly double _value;
     static readonly NumberFormatInfo NumberFormat = new NumberFormatInfo {NumberDecimalSeparator = "."};
 
-    public RealToken(string lexeme, int line, int column) : base(line, column) {
+    public FloatToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         try {
             _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);

@@ -68,9 +68,31 @@ public class IntegerNode : ConstantNode {
     }
 }
 
-//public class VarRefNode : AstNode {
-//    
-//}
+public class FloatNode : ConstantNode {
+    private new FloatToken _token;
+    public override string StringValue => _token.StringValue;
+    
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+
+    public FloatNode(FloatToken token) : base(token) {
+        _token = token;
+    }
+}
+
+public class IdentityNode : ConstantNode {
+    private new IdentityToken _token;
+    public override string StringValue => _token.StringValue;
+    
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+
+    public IdentityNode(IdentityToken token) : base(token) {
+        _token = token;
+    }
+}
 
 
 //public StringNode : AstNode {
