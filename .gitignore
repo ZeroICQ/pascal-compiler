@@ -2,7 +2,3 @@
 **/bin
 **/obj
 reports
-
-/tests/*
-!/tests/*.pas
-!/tests/*.test

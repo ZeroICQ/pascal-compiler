@@ -1,0 +1,18 @@
+1,1     String  }           #125
+2,1     String  abc~&?!`";  'abc~&?!`";'
+3,1     String  {|          #123#124
+4,1     String  abc'%'xyz  'abc'''#37'''xyz'
+5,1     String  qwe'rty    'qwe''rty'
+6,1     String  here line starts
+    and here's its end.    'here line starts'#13#10'  and here''s its end.'
+7,1     String  'Poor'
+Kazimir    '''Poor'''#13#10'Kazimir'
+8,1     String  Hello   #$48'e'#&154#%1101100'o'
+8,32    String     i'm another string   'i''m another string'
+String exceeds line at 10,1
+11,1     Identifier      the     the
+11,5     Identifier      line    line
+String exceeds line at 11,9
+String exceeds line at 12,1
+Range check error at 13,1. Must be between -9223372036854775808 and 9223372036854775807
+13,27    Eof     EOF

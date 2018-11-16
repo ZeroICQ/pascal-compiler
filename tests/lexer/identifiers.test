@@ -1,0 +1,7 @@
+1,1     Identifier  hi              hi
+1,4     Identifier  there           there
+2,1     Identifier  it_is           it_is
+2,7     Identifier  two             two
+2,11    Identifier  pm              pm
+3,1     Identifier  i_love_lexer    I_LOVE_LEXER
+3,13    Eof         EOF

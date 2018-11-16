@@ -1,0 +1,21 @@
+2,1     Integer 123       123
+2,5     Integer 777       00777
+4,1     Real    300000    3e5
+4,5     Real    300000    3e+5
+5,1     Real    2.1       2.1
+6,1     Real    5         5.
+7,1     Real    0.08      8000e-5
+9,1     Real    500       5.e002
+10,1    Real    0.05      5.E-002
+14,1    Real    1.23      1.23
+15,1    Real    123       123.
+16,1    Real    1000      1e3
+17,1    Real    10000     1e+4
+18,1    Real    0.0001    1e-4
+19,1    Real    100000    1.e5
+20,1    Real    1.2E-05    1.2e-5
+21,1    Real    100000    1.0e+5
+22,1    Real    0.001     0.001
+23,1    Real    0         10e-1000
+Range check error at 24,1. Must be between -9223372036854775808 and 9223372036854775807
+25,1    Eof     EOF
