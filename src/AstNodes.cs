@@ -81,7 +81,7 @@ public class FloatNode : ConstantNode {
     }
 }
 
-public class IdentityNode : ConstantNode {
+public class IdentifierNode : ConstantNode {
     private new IdentityToken _token;
     public override string StringValue => _token.StringValue;
     
@@ -89,7 +89,7 @@ public class IdentityNode : ConstantNode {
         return visitor.Visit(this);
     }
 
-    public IdentityNode(IdentityToken token) : base(token) {
+    public IdentifierNode(IdentityToken token) : base(token) {
         _token = token;
     }
 }

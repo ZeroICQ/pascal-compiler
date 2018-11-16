@@ -1,7 +1,0 @@
-1,1     Integer     2748        $AbC
-2,1     Integer     28036591    $1abCDEF
-2,9     Identifier  g           G
-3,1     Integer     127         $7f
-3,5     Integer     2047        $7ff
-4,1     Integer     15728639    $efffff
-4,8     Eof         EOF

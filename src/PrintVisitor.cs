@@ -33,7 +33,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         return new PrinterNode(node.StringValue);
     }
 
-    public PrinterNode Visit(IdentityNode node) {
+    public PrinterNode Visit(IdentifierNode node) {
         return new PrinterNode(node.StringValue);
     }
 }

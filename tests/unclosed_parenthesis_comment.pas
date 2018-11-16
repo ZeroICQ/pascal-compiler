@@ -1,4 +1,0 @@
-(*
-identity
-//line comment
-{

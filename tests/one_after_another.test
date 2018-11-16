@@ -1,6 +1,0 @@
-1,1     Integer     123 123
-1,4     Identifier  id  id
-1,6     Integer     8   %1000
-1,39    Integer     8   &10
-1,42    Integer     16  $10
-1,47    Eof         EOF

@@ -1,9 +1,0 @@
-somevariable
-           {
-(*
-*)
-(*
-{{{{{{{
-identity
-//line comment
-{
