@@ -66,6 +66,7 @@ class Tester {
         pr.StartInfo.Arguments = $"{path} {flags}";
         pr.StartInfo.UseShellExecute = false;
         pr.StartInfo.RedirectStandardOutput = true;
+        pr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
         pr.Start();
         
         return pr;
