@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
@@ -8,7 +6,7 @@ public class Parser {
         _lexer = lexer;
     }
     
-    public AstNode GetAst() {
+    public AstNode Parse() {
         var root = new BlockNode();
         
         while (!(_lexer.GetNextToken() is EofToken)) {
@@ -27,7 +25,7 @@ public class Parser {
 
         while (true) {
             var op = _lexer.GetNextToken();
-            if (!_operators[priority].IsBelong(op)) {
+            if (!_operators[priority].Contains(op)) {
                 _lexer.Retract();
                 break;
             }
@@ -89,60 +87,57 @@ public class Parser {
 
 
 public abstract class Operator {
-    public abstract bool IsBelong(Token token);
+    public abstract bool Contains(Token token);
 }
 
 public class TermOperator : Operator {
-    public override bool IsBelong(Token token) {
+    public override bool Contains(Token token) {
         switch (token) {
-                case OperatorToken opToken:
-                    switch (opToken.Value) {
-                        case Symbols.Operators.Plus:
-                        case Symbols.Operators.Minus:
-                            return true;
-                        default:
-                            return false;
-                    }
-                case ReservedToken reservedToken:
-                    switch (reservedToken.Value) {
-                        case Symbols.Words.Or:
-                        case Symbols.Words.Xor:
-                            return true;
-                        default:
-                            return false;
-                    }
-            default:
-                    return false;
+            case OperatorToken opToken:
+                switch (opToken.Value) {
+                    case Symbols.Operators.Plus:
+                    case Symbols.Operators.Minus:
+                        return true;
+                }
+                break;
+            
+            case ReservedToken reservedToken:
+                switch (reservedToken.Value) {
+                    case Symbols.Words.Or:
+                    case Symbols.Words.Xor:
+                        return true;
+                }
+                break;
         }
+        
+        return false;
     }
 }
 
 public class FactorOperator : Operator {
-    public override bool IsBelong(Token token) {
+    public override bool Contains(Token token) {
         switch (token) {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
                     case Symbols.Operators.Multiply:
                     case Symbols.Operators.Divide:
                         return true;
-                    default:
-                        return false;
-                        
                 }
+                break;
+            
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
-                        case Symbols.Words.Div:
-                        case Symbols.Words.Mod:
-                        case Symbols.Words.And:
-                        case Symbols.Words.Shl:
-                        case Symbols.Words.Shr:
-                            return true;
-                        default:
-                            return false;
+                    case Symbols.Words.Div:
+                    case Symbols.Words.Mod:
+                    case Symbols.Words.And:
+                    case Symbols.Words.Shl:
+                    case Symbols.Words.Shr:
+                        return true;
                 }
-            default:
-                return false;
+                break;
         }
+
+        return false;
     }
 }
 

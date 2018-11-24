@@ -21,7 +21,7 @@ internal class Compiler {
     }
 
     public AstNode GetAst() {
-        return new Parser(_lexer).GetAst();
+        return new Parser(_lexer).Parse();
     }
 
     public void PrintAst() {
