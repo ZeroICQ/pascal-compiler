@@ -41,7 +41,7 @@ class Tester {
         try {
             commandLineParser.ParseCommandLine(args);
         }
-        catch (CommandLineException e) {
+        catch (CommandLineException) {
             commandLineParser.ShowUsageHeader = "dotnet Tester.dll [pathToCompiler] [pathToTestsRoot]";
             commandLineParser.ShowUsage();
         }
@@ -110,7 +110,7 @@ class Tester {
                 continue;
 
             var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
-            var pr = RunCompiler(compilerPath, $"-l {testFile}");
+            var pr = RunCompiler(compilerPath, $"-l -i {testFile}");
             var foundError = false;
             
             using (var answer = File.OpenText($"{testName}.test")) {
@@ -163,7 +163,7 @@ class Tester {
 
             var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
 
-            var pr = RunCompiler(compilerPath, $"-s {testFile}");
+            var pr = RunCompiler(compilerPath, $"-s -i  {testFile}");
             
             var foundError = false;
             using (var answer = File.OpenText($"{testName}.test")) {

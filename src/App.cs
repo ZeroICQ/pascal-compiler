@@ -1,51 +1,42 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using CommandLineParser.Arguments;
+using CommandLineParser.Exceptions;
+using CommandLineParser.Validation;
 
 namespace Compiler {
+
 internal static class App {
-    private enum  Options { OnlyLexical, OnlySyntax }
-    private static HashSet<Options> enabledOptions = new HashSet<Options>();
-    
     public static int  Main(string[] args) {
-        if (args.Length == 0) {
-            ShowUsage();
-            return 0;
-        }
+        var commandLineParser = new CommandLineParser.CommandLineParser();
         
-        ParseOptions(args);
-        var inputFilePath = args.Last();
-        StreamReader input = null;
+        var sourcePath = new FileArgument('i', "input", "Source file path") { Optional = false };
+        var lexicalAnalysis = new SwitchArgument('l', "lexical", false);
+        var syntaxAnalysis = new SwitchArgument('s', "syntax", false);
+        
+        commandLineParser.Arguments.Add(sourcePath);
+        commandLineParser.Arguments.Add(lexicalAnalysis);
+        commandLineParser.Arguments.Add(syntaxAnalysis);
 
-        if (!inputFilePath.StartsWith('-')) {
-            try {
-                input = File.OpenText(inputFilePath);
-            }
-            catch (FileNotFoundException ex) {
-                Console.WriteLine($"{ex.FileName} not found.");
-            }
-            catch (Exception e) {
-                Console.WriteLine(e);
-                throw;
-            }
+        var compileStageGroupCertification = new ArgumentGroupCertification("l,s", EArgumentGroupCondition.ExactlyOneUsed);
+        commandLineParser.Certifications.Add(compileStageGroupCertification);
 
+        try {
+            commandLineParser.ParseCommandLine(args);
         }
-        else {
-            input = new StreamReader(Console.OpenStandardInput());
-        }
-                
-        if (enabledOptions.Contains(Options.OnlyLexical)) {
-            PerformLexicalAnalysis(input);
+        catch (CommandLineException) {
+            commandLineParser.ShowUsage();
+            return 1;
         }
 
-        if (enabledOptions.Contains(Options.OnlySyntax)) {
-            PerformSyntaxAnalysis(input);
+        using (var input = new StreamReader(sourcePath.OpenFileRead())) {
+            if (lexicalAnalysis.Value)
+                PerformLexicalAnalysis(input);
+            
+            if (syntaxAnalysis.Value)
+                PerformSyntaxAnalysis(input);
         }
-
-//        var compiler = new Compiler(new StreamReader(Console.OpenStandardInput()));
-//            TODO: parse flags
-//            var outputFilenameIndex = Array.FindIndex(args, s => s.Equals("-o"));
+            
         return 0;
     }
 
@@ -69,35 +60,6 @@ internal static class App {
                 Console.WriteLine(ex.Message);
             }
         } while (!(lt is EofToken));
-    }
-
-    private static void ParseOptions(IEnumerable<string> args) {
-        foreach (var opt in args) {
-            switch (opt) {
-                case "-l": {
-                    enabledOptions.Add(Options.OnlyLexical);
-                    if (enabledOptions.Contains(Options.OnlySyntax))
-                        throw new ArgumentException();
-                    break;
-                }
-                case "-s": {
-                    enabledOptions.Add(Options.OnlySyntax);
-                    if (enabledOptions.Contains(Options.OnlyLexical))
-                        throw new ArgumentException();
-                    break;
-                }
-            }
-        }
-    }
-
-    private static void ShowUsage() {
-        Console.WriteLine("[USAGE]");
-        Console.WriteLine("dotnet compiler.dll [OPTIONS] source.pas");
-        Console.WriteLine("");
-        Console.WriteLine("[OPTIONS]");
-        Console.WriteLine("-l                perform only lexical analysis");
-        Console.WriteLine("-s                perform only syntax  analysis");
-        Console.WriteLine("-o filename       output file [WIP]");
     }
 }
 }
