@@ -406,7 +406,7 @@ public static class IdentityAutomata {
                 if (Enum.IsDefined(typeof(Symbols.Words), reservedWord))  
                     return TokenFactory.BuildReserved(input, reservedWord);
             
-            return TokenFactory.Build<IdentityToken>(input);
+            return TokenFactory.Build<IdentifierToken>(input);
         }
     }
 }

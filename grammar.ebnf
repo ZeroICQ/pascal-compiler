@@ -1,0 +1,139 @@
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+<program> ::= <main block> 
+
+<main block> ::= {<main block section>;}
+                  begin
+                  <statement part>
+                  end.
+
+	<main block section> ::= <type definition part> | 
+	                         <variable declaration part> | 
+	                         <constant definition part> | 
+	                         <procedure and function declaration part>
+
+		<type definition part> ::= [ type <type definition> {; <type definition>} ]
+
+			<type definition> ::= <identifier> = <type>
+
+				<identifier> ::= <letter> {<letter> | <digit>}
+
+					<letter> ::= _ | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z
+
+					<digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+				<type> ::= <simple type> | <array type> | <pointer type> | <record type>
+
+					<simple type> ::= <identifier>
+
+					<array type> ::= array "[" <index ranges> "]" of <type>
+
+						<index ranges> ::= <index range> {, <index range>}
+
+							<index range> ::= <integer> .. <integer>
+
+								<integer> ::= [<sign>] <unsigned integer>
+
+									<sign> ::= + | -
+
+									<unsigned integer> ::= (<dec integer> | <bin integer> | <hex integer>)
+
+										<dec integer> ::= <digit> {<digit>}
+
+										<bin integer> ::= %(0|1){(0|1)}
+
+										<hex integer> ::= $(<digit> | <hex letter>) {(<digit> | <hex letter>)}
+
+											<hex letter> ::= A | B | C | D | E | F | a | b | c | d | e | f 
+
+					<pointer type> ::= ^ <simple type>
+
+					<record type> ::= record [<field list>] end
+
+						<field list> ::= <field section> {; <field section>}
+
+							<field section> ::=  <identifier> {, <identifier>} : <type>
+
+		<constant definition part> ::= [ const <constant definition> {; <constant definition> } ]
+
+			<constant definition> ::= <identifier> : <type> = <initializer>
+
+				<initializer> ::= <string literal> | <record constant> | <array constant> | [<sign>] <identifier> | <expression>
+
+					<string literal> ::= <char literal> | <simple string literal> | [<char literal>]<string literal> | [<simple string literal>]<string literal>
+
+						<char literal> ::= #<dec integer>
+
+						<simple string literal> ::= '<character> {<character>}'
+
+					<expression> ::= <simple expression> | <simple expression> <relational operator> <simple expression>
+
+						<relational operator> ::= = | "<>" | "<" | <= | >= | ">" 
+
+						<simple expression> ::= <term> | <sign> <term>| <simple expression> <adding operator> <term>
+
+							<adding operator> ::= + | - | or
+
+							<term> ::= <factor> | <term> <multiplying operator> <factor>
+
+								<multiplying operator> ::= * | / | div | mod | and
+
+								<factor> ::= <identifier> | <unsigned number> | ( <expression> ) | <function call> | <record access> | <array access> | not <factor>
+
+									<unsigned number> ::= <unsigned integer> | <unsigned float>
+
+										<unsigned float> ::= <unsigned integer> [. <unsigned integer>] [(E|e) <integer>] 
+
+									<function call> ::= <identifier> | <identifier "(" <expression> {, <expression>} ")"
+
+									<record access> ::= (<identifier> | <function call>) . <identifier>
+
+									<array access> ::= <identifier> "[" <expression> {,<expression>} "]"
+
+		<variable declaration part> ::= [ var <variable declaration> {; <variable declaration> } ]
+
+			<variable declaration> ::= <identifier> {,<identifier>} : <type> | <identifier> : <type> = <initializer>
+
+		<procedure and function declaration part> ::= {<procedure declaration > | <function declaration > ;}
+
+			<procedure declaration> ::= <procedure heading> <block>
+
+				<procedure heading> ::= procedure <identifier> ["(" <formal parameter section> {;<formal parameter section>}")"];
+
+					<formal parameter section> ::= [[var] <identifier> {, <identifier>} : <simple type>]
+
+				<block> ::= {<block section>;} <compound statement>
+
+					<block section> ::= <type definition part> | <variable declaration part> | <constant definition part>
+
+					<compound statement> ::= begin <statement part> end;
+
+						<statement part> ::= [<statement> {; <statement>}]
+
+							<statement> ::= <simple statement> | <structured statement>
+
+								<simple statement> ::= <assignment statement> | <function call>
+
+									<assignment statement> ::= <assignable> := <expression>
+
+										<assignable> := <identifier> | <expression>^
+
+								<structured statement> ::= <compound statement> | <if statement> | <while statement> | <repeat statemant> | <for statement>
+
+									<if statement> ::= if <expression> then <statement> [ else <statement> ]
+
+									<while statement> ::= while <expression> do <statement>
+
+									<repeat statement> ::= repeat <statement part> until <expression>
+
+									<for statement> ::= for <identifier> := <for bounds> do <statement>
+
+										<for bounds> ::= <expresion> (to | downto) <expression>
+
+			<function declaration> ::= <function heading> <block>
+
+				<function heading> ::= function <identifier> ["(" <formal parameter section> {;<formal parameter section>}")"] : <simple type>;

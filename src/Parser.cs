@@ -53,7 +53,7 @@ public class Parser {
                 return new FloatNode(floatToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
-            case IdentityToken identityToken:
+            case IdentifierToken identityToken:
                 return new IdentifierNode(identityToken);
             default:
                 throw Illegal(t);

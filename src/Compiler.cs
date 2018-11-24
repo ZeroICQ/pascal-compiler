@@ -20,13 +20,13 @@ internal class Compiler {
         return _lexer.GetNextToken();
     }
 
-    public AstNode GetAst() {
+    public AstNode Parse() {
         return new Parser(_lexer).Parse();
     }
 
     public void PrintAst() {
         try {
-            var ast = GetAst();
+            var ast = Parse();
             var visitorTree = ast.Accept(new PrintVisitor());
             var canvas = new List<StringBuilder>();
             visitorTree.Print(canvas);
