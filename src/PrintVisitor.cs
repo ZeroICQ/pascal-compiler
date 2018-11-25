@@ -6,9 +6,8 @@ using System.Threading;
 
 namespace Compiler {
 public class PrintVisitor : IAstVisitor<PrinterNode> {
-    
     public PrinterNode Visit(BlockNode node) {
-        var pNode = new PrinterNode(node.StringValue);
+        var pNode = new PrinterNode("Block");
 
         foreach (var expr in node.Expressions) {
             var child = expr.Accept(this);
@@ -19,23 +18,80 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(BinaryExprNode node) {
-        var pNode = new PrinterNode(node.StringValue);
+        var pNode = new PrinterNode(node.Operation.StringValue);
         pNode.AddChild(node.Left.Accept(this));
         pNode.AddChild(node.Right.Accept(this));
         return pNode;
     }
 
     public PrinterNode Visit(IntegerNode node) {
-        return new PrinterNode(node.StringValue);
+        return new PrinterNode(node.Token.StringValue);
     }
 
     public PrinterNode Visit(FloatNode node) {
-        return new PrinterNode(node.StringValue);
+        return new PrinterNode(node.Token.StringValue);
+    }
+
+    public PrinterNode Visit(CharNode node) {
+        return new PrinterNode(node.Token.StringValue);
     }
 
     public PrinterNode Visit(IdentifierNode node) {
-        return new PrinterNode(node.StringValue);
+        return new PrinterNode(node.Token.StringValue);
     }
+
+    public PrinterNode Visit(FunctionCallNode node) {
+        var pNode = new PrinterNode(node.Name.StringValue);
+        foreach (var arg in node.Args) {
+            pNode.AddChild(arg.Accept(this));
+        }
+        return pNode;
+    }
+
+    public PrinterNode Visit(CastNode node) {
+        return Visit((UnaryOperationNode) node);
+    }
+
+    public PrinterNode Visit(AccessNode node) {
+        var pNode = node.Name.Accept(this);
+        pNode.AddChild(new PrinterNode(node.Field.StringValue));
+        return pNode;
+    }
+
+    public PrinterNode Visit(IndexNode node) {
+        var pNode = node.Operand.Accept(this);
+        pNode.AddChild(node.Index.Accept(this));
+        return pNode;
+    }
+
+    public PrinterNode Visit(UnaryOperationNode node) {
+        var pNode = new PrinterNode(node.Operation.StringValue);
+        pNode.AddChild(node.Operand.Accept(this));
+        return pNode;
+    }
+    
+    public PrinterNode Visit(AssignNode node) {
+        var pNode = new PrinterNode(":=");
+        pNode.AddChild(node.Left.Accept(this));
+        pNode.AddChild(node.Right.Accept(this));
+        return pNode;
+    }
+
+    public PrinterNode Visit(IfNode node) {
+        var pNode = new PrinterNode("if");
+        pNode.AddChild(node.Condition.Accept(this));
+        pNode.AddChild(node.TrueBranch.Accept(this));
+        pNode.AddChild(node.FalseBranch.Accept(this));
+        return pNode;
+    }
+
+    public PrinterNode Visit(WhileNode node) {
+        var pNode = new PrinterNode("While");
+        pNode.AddChild(node.Condition.Accept(this));
+        pNode.AddChild(node.Block.Accept(this));
+        return pNode;
+    }
+
 }
 
 public class PrinterNode {
