@@ -1,4 +1,14 @@
+<program> ::= <main block>
 
+<main block> ::= begin
+                 <statements>
+                 end.
+                 
+    <statements> ::= {statement}
+    
+    <statement> ::= <simple statement> | <structured statement>
+    
+    <simple statement> := <assignment statement> | <procedure statement> 
 
 
 

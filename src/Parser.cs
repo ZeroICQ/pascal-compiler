@@ -7,7 +7,12 @@ public class Parser {
     }
     
     public AstNode Parse() {
-        var root = new BlockNode();
+        var program = new BlockNode();
+
+        if (!(t is ReservedToken reservedToken && reservedToken.Value == Symbols.Words.Begin)) {
+            
+        }
+        
         
         while (!(_lexer.GetNextToken() is EofToken)) {
             _lexer.Retract();
@@ -17,7 +22,7 @@ public class Parser {
     }
 
     private ExprNode ParseExpression(int priority) {
-        if (priority >= _operators.Length) {
+        if (priority >= TokenPriorities.Length) {
             return ParseFactor();
         }
         
@@ -25,7 +30,7 @@ public class Parser {
 
         while (true) {
             var op = _lexer.GetNextToken();
-            if (!_operators[priority].Contains(op)) {
+            if (!TokenPriorities[priority].Contains(op)) {
                 _lexer.Retract();
                 break;
             }
@@ -62,35 +67,52 @@ public class Parser {
         throw Illegal(t);
     }
 
+    //priorities 
+
+    private static readonly TokenGroup[] TokenPriorities;
+
+    static Parser() {
+        TokenPriorities = new TokenGroup[] {
+            new TermTokenGroup(), 
+            new FactorTokenGroup(), 
+        };
+    }
+
     private void Require(Symbols.Operators op)  {
         var t = _lexer.GetNextToken();
+        
         if (!(t is OperatorToken _op && _op.Value == op)) {
-            throw Illegal(t);
+            _lexer.Retract();
+            throw new IllegalExprException(t.Lexeme, t.Line, t.Column, op.ToString());
         }
+    }
+
+    private void Require(Symbols.Words word) {
+        var t = _lexer.GetNextToken();
+        
+        if (!(t is ReservedToken _w && _w.Value == word)) {
+            _lexer.Retract();
+            throw new IllegalExprException(t.Lexeme, t.Line, t.Column, word.ToString());
+        }
+    }
+
+    private void Require<T>() where T : TokenGroup, new() {
+        var t = _lexer.GetNextToken();
+        var tokenGroup = new T();
+        tokenGroup.Contains(t);
     }
 
     private ParserException Illegal(Token token) {
         return new IllegalExprException(token.Lexeme, token.Line, token.Column);
     }
-    
-    //priorities 
-    private static readonly Operator[] _operators;
-
-    static Parser() {
-        _operators = new Operator[] {
-            new TermOperator(), 
-            new FactorOperator(), 
-        };
-    }
-    
 }
 
 
-public abstract class Operator {
+public abstract class TokenGroup {
     public abstract bool Contains(Token token);
 }
 
-public class TermOperator : Operator {
+public class TermTokenGroup : TokenGroup {
     public override bool Contains(Token token) {
         switch (token) {
             case OperatorToken opToken:
@@ -114,7 +136,7 @@ public class TermOperator : Operator {
     }
 }
 
-public class FactorOperator : Operator {
+public class FactorTokenGroup : TokenGroup {
     public override bool Contains(Token token) {
         switch (token) {
             case OperatorToken operatorToken:
