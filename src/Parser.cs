@@ -8,16 +8,20 @@ public class Parser {
     
     public AstNode Parse() {
         var program = new BlockNode();
+        //todo: add declarations part 
 
-        if (!(t is ReservedToken reservedToken && reservedToken.Value == Symbols.Words.Begin)) {
-            
-        }
+        Require(Symbols.Words.Begin);
+        
+        
         
         
         while (!(_lexer.GetNextToken() is EofToken)) {
             _lexer.Retract();
             root.AddExpression(ParseExpression(0));
         }
+        
+        Require(Symbols.Words.End);
+        Require(Symbols.Operators.Dot);
         return root;
     }
 
