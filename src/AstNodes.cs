@@ -151,28 +151,30 @@ public class IndexNode : ExprNode {
 }
 
 // statements
-public abstract class StmntNode : AstNode {
+public abstract class StatementNode : AstNode {
 }
 
-public class BlockNode : StmntNode {
-    public List<ExprNode> Expressions { get; } = new List<ExprNode>();
+public class BlockNode : StatementNode {
+    public List<StatementNode> Statements { get; } = new List<StatementNode>();
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
     }
 
-    public void AddExpression(ExprNode exprNode) {
-        Expressions.Add(exprNode);
+    public void AddStatement(StatementNode statementNode) {
+        Statements.Add(statementNode);
     }
 }
 
-public class AssignNode : StmntNode {
-    public ExprNode Left { get; }
+public class AssignNode : StatementNode {
+    public IdentifierToken Left { get; }
     public ExprNode Right { get; }
+    public OperatorToken Operation { get; }
     
-    public AssignNode(ExprNode left, ExprNode right) {
+    public AssignNode(IdentifierToken left, OperatorToken op, ExprNode right) {
         Left = left;
         Right = right;
+        Operation = op;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
@@ -181,7 +183,7 @@ public class AssignNode : StmntNode {
     
 }
 
-public class IfNode : StmntNode {
+public class IfNode : StatementNode {
     public ExprNode Condition { get; }
     public BlockNode TrueBranch { get; }
     public BlockNode FalseBranch { get; }
@@ -197,7 +199,7 @@ public class IfNode : StmntNode {
     }
 }
 
-public class WhileNode : StmntNode {
+public class WhileNode : StatementNode {
     public ExprNode Condition { get; }
     public BlockNode Block { get; }
 

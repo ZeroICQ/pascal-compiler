@@ -1,3 +1,5 @@
+using System.Reflection.PortableExecutable;
+
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
@@ -7,22 +9,55 @@ public class Parser {
     }
     
     public AstNode Parse() {
-        var program = new BlockNode();
-        //todo: add declarations part 
-
+        var program = ParseCompoundStatement();
+        Require(Symbols.Operators.Dot);
+        return program;
+    }
+    
+    // retracts
+    private BlockNode ParseCompoundStatement() {
+        var compoundStatement = new BlockNode();
+        
         Require(Symbols.Words.Begin);
-        
-        
-        
-        
-        while (!(_lexer.GetNextToken() is EofToken)) {
+
+        while (!Check(_lexer.GetNextToken(), Symbols.Words.End)) {
             _lexer.Retract();
-            root.AddExpression(ParseExpression(0));
+            compoundStatement.AddStatement(ParseStatement());
+            Require(Symbols.Separators.Semicolon);
         }
         
+        _lexer.Retract();
         Require(Symbols.Words.End);
-        Require(Symbols.Operators.Dot);
-        return root;
+        return compoundStatement;
+    }
+
+    private StatementNode ParseStatement() {
+        //TODO: parse simple statements: assignment, procedure; Structured
+        //now:
+        var t = _lexer.GetNextToken();
+                
+        switch (t) {
+            
+            case IdentifierToken identifier:
+                
+                switch (_lexer.GetNextToken()) {
+                    
+                    case OperatorToken op:
+                        
+                        switch (op.Value) {
+                            case Symbols.Operators.Assign:
+                            case Symbols.Operators.PlusAssign:
+                            case Symbols.Operators.MinusAssign:
+                            case  Symbols.Operators.MultiplyAssign:
+                            case  Symbols.Operators.DivideAssign:
+                            return new AssignNode(identifier, op, ParseExpression(0));
+                        }
+                        break;
+                }
+                break;
+        }
+
+        throw Illegal(t);
     }
 
     private ExprNode ParseExpression(int priority) {
@@ -84,30 +119,59 @@ public class Parser {
 
     private void Require(Symbols.Operators op)  {
         var t = _lexer.GetNextToken();
-        
-        if (!(t is OperatorToken _op && _op.Value == op)) {
+
+        if (!Check(t, op)) {
             _lexer.Retract();
-            throw new IllegalExprException(t.Lexeme, t.Line, t.Column, op.ToString());
+            throw new IllegalExprException(t.Lexeme, t.Line, t.Column, op.ToString());            
         }
+        
     }
 
     private void Require(Symbols.Words word) {
         var t = _lexer.GetNextToken();
         
-        if (!(t is ReservedToken _w && _w.Value == word)) {
+        if (!Check(t, word)) {
             _lexer.Retract();
             throw new IllegalExprException(t.Lexeme, t.Line, t.Column, word.ToString());
         }
     }
 
-    private void Require<T>() where T : TokenGroup, new() {
+    private void Require(Symbols.Separators sep) {
         var t = _lexer.GetNextToken();
-        var tokenGroup = new T();
-        tokenGroup.Contains(t);
+        if (!Check(t, sep)) {
+            throw new IllegalExprException(t.Lexeme, t.Line, t.Column, sep.ToString());
+        }
     }
 
+    private void Require<T>() where T : TokenGroup, new() {
+        var t = _lexer.GetNextToken();
+        if (!Check<T>(t)) {
+            _lexer.Retract();
+            throw Illegal(t);
+        }
+        
+    }
+    
     private ParserException Illegal(Token token) {
         return new IllegalExprException(token.Lexeme, token.Line, token.Column);
+    }
+
+    private bool Check(Token t, Symbols.Operators op) {
+        return t is OperatorToken _op && _op.Value == op;
+        
+    }
+
+    private bool Check(Token t, Symbols.Words word) {
+        return t is ReservedToken _w && _w.Value == word;
+    }
+    
+    private bool Check(Token t, Symbols.Separators sep) {
+        return t is SeparatorToken _s && _s.Value == sep;
+    }
+
+    private bool Check<T>(Token t) where T : TokenGroup, new() {
+        var tokenGroup = new T();
+        return tokenGroup.Contains(t);
     }
 }
 

@@ -9,7 +9,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(BlockNode node) {
         var pNode = new PrinterNode("Block");
 
-        foreach (var expr in node.Expressions) {
+        foreach (var expr in node.Statements) {
             var child = expr.Accept(this);
             pNode.AddChild(child);
         }
@@ -71,8 +71,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
     
     public PrinterNode Visit(AssignNode node) {
-        var pNode = new PrinterNode(":=");
-        pNode.AddChild(node.Left.Accept(this));
+        var pNode = new PrinterNode(node.Operation.StringValue);
+        pNode.AddChild(new PrinterNode(node.Left.StringValue));
         pNode.AddChild(node.Right.Accept(this));
         return pNode;
     }
@@ -129,14 +129,14 @@ public class PrinterNode {
             var isNeedSpace = i <= _children.Count - 2;            
             var end = offset + _children[i].Width / 2;
             
-            PrintEdge(canvas, depth + 1, start, end, i == 0 || i == _children.Count - 1);
+            PrintEdge(canvas, depth + 1, start, end, i == 0, i == _children.Count - 1);
             
             _children[i].Print(canvas, offset, depth + 2, isNeedSpace);
             offset += _children[i].Width + (isNeedSpace ? 2 : 0);
         }
     }
 
-    private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end, bool isEdge) {
+    private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end, bool isLeftEdge, bool isRightEdge) {
         Console.OutputEncoding = Encoding.UTF8;
         
         if (canvas.Count - 1 < depth) {
@@ -158,13 +158,13 @@ public class PrinterNode {
 
         curLine[start] = '┴';
         if (rightmost > start) {
-            if (isEdge)
+            if (isRightEdge)
                 curLine[rightmost] = '┐';
             else 
                 curLine[rightmost] = '┬';
         }
         else if (rightmost > end) {
-            if (isEdge)
+            if (isLeftEdge)
                 curLine[leftmost] = '┌';
             else 
                 curLine[leftmost] = '┬';

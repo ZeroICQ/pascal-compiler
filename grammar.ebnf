@@ -1,26 +1,64 @@
 <program> ::= <main block>
 
-<main block> ::= begin
-                 <statements>
-                 end.
+<main block> ::= <compound statement> "."
+
+    <compound statement> ::= "begin" <statement> {; <statement>} "end"
                  
-    <statements> ::= {statement}
-    
         <statement> ::= <simple statement> | <structured statement>
     
             <simple statement> ::= <assignment statement> | <procedure statement>
                 
                 <assignment statement> ::= <assignable> <assignment operators> <expression>
                                            
-                    <assignable> := <identifier> | <expression>
+                    <assignable> := <variable reference>
                     
-                        <identifier> ::= <letter> {<letter> | <digit>}
+                        <identifier> ::= <letter> {<letter> | <dec digit>}
                     
                             <letter> ::= _ | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z
                         
-                            <digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+                            <dec digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
                             
-                        <assignment operators> :: = ":=" | "+=" | "-=" | "*=" | "/="
+                    <assignment operators> :: = ":=" | "+=" | "-=" | "*=" | "/="
+                
+                        <expression> ::= <simple expression> [<relational operator> <simple expression>]
+    
+                            <relational operator> ::= "=" | "<>" | "<" | "<=" | ">=" | ">" 
+    
+                            <simple expression> ::= <term> { ("+" | "-" | "or" | "xor")  <term>}
+                                
+                                <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
+                                    
+                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant>
+                                        
+                                        <unsigned constant> ::= <unsigned number>
+                                        
+                                            <unsigned number> ::= <unsigned integer> | <unsigned float>
+                                            
+                                                <unsigned float> ::= <unsigned integer> [. <unsigned integer>] [(E|e) <integer>]
+                                                 
+                                                    <unsigned integer> ::= <digit> {<digit>}
+                                                    
+                                                        <digit> ::= <dec integer> | <bin integer> | <hex integer> | <oct integer> 
+                
+                                                            <dec integer> ::= <dec digit> {<dec digit>}
+                    
+                                                            <bin integer> ::= "%"(0|1){(0|1)}
+                    
+                                                            <hex integer> ::= "$"(<digit> | <hex letter>) {(<digit> | <hex letter>)}
+                    
+                                                                <hex letter> ::= A | B | C | D | E | F | a | b | c | d | e | f
+                                                                
+                                                            <oct integer> ::= "&"() 
+
+                                            
+                                    
+                                        <variable reference> := <identifier>
+                                
+            
+            <structured statement> ::= <compound statement>
+                
+                
+                
 
 
 
