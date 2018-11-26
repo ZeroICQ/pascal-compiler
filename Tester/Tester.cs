@@ -129,7 +129,7 @@ class Tester {
                         continue;
                     
                     foundError = true;
-                    PrintDiff(expectedResult.ToString(), gotResult.ToString(), testName);
+                    PrintDiff(expectedLine, gotLine, testName);
                     break;
                 }
                 

@@ -1,5 +1,3 @@
-using System.Reflection.PortableExecutable;
-
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
@@ -37,7 +35,7 @@ public class Parser {
         var t = _lexer.GetNextToken();
                 
         switch (t) {
-            
+            // case assignment
             case IdentifierToken identifier:
                 
                 switch (_lexer.GetNextToken()) {
@@ -55,6 +53,15 @@ public class Parser {
                         break;
                 }
                 break;
+            // compound
+            case ReservedToken reserved:
+                switch (reserved.Value) {
+                    case Symbols.Words.Begin:
+                        _lexer.Retract();
+                        return ParseCompoundStatement();
+                }
+                break;
+                
         }
 
         throw Illegal(t);

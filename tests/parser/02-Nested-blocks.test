@@ -1,0 +1,9 @@
+               Block
+         ┌───────┴─────────┐
+      Block             Assign
+   ┌─────┴───┐           ┌─┴──────┐
+Block     Assign    first_outer  22
+   ┴       ┌─┴───┐
+Assign  second  10
+┌──┴
+a  2

@@ -1,0 +1,9 @@
+                                     Block
+   ┌─────────┬───────────┬──────────────┴────────────────────────────┐
+Assign  PlusAssign  MinusAssign      MultiplyAssign            DivideAssign
+┌──┴    ┌──┬─┴      ┌────┴             ┌────┴───────┐     ┌──────────┴┐
+a  1    b  a        c  Plus      long_variable   Minus    _       Multiply
+                       ┌─┴┐                       ┌─┴──┐           ┌──┴───────┐
+                       2  4                     Minus  c     long_variable  Plus
+                                                ┌─┴┐                        ┌─┴┐
+                                                a  b                        a  b
