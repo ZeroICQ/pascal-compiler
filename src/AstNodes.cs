@@ -12,8 +12,14 @@ public abstract class ExprNode : AstNode {
 
 }
 
+public abstract class VariableReferenceNode : ExprNode {
+//    public override T Accept<T>(IAstVisitor<T> visitor) {
+//        return visitor.Visit(this);
+//    }
+}
+
 //--- Expressions ---
-public class IdentifierNode : ExprNode {
+public class IdentifierNode : VariableReferenceNode {
     public IdentifierToken Token { get; }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
@@ -121,11 +127,11 @@ public class CastNode : UnaryOperationNode {
     }
 }
 
-public class AccessNode : ExprNode {
-    public ExprNode Name { get; }
+public class AccessNode : VariableReferenceNode {
+    public VariableReferenceNode Name { get; }
     public IdentifierToken Field { get; }
 
-    public AccessNode(ExprNode name, IdentifierToken field) {
+    public AccessNode(VariableReferenceNode name, IdentifierToken field) {
         Name = name;
         Field = field;
     }
@@ -136,11 +142,11 @@ public class AccessNode : ExprNode {
 }
 
 // a[3]
-public class IndexNode : ExprNode {
-    public ExprNode Operand { get; }
+public class IndexNode : VariableReferenceNode {
+    public VariableReferenceNode Operand { get; }
     public ExprNode Index { get; }
 
-    public IndexNode(ExprNode operand, ExprNode index) {
+    public IndexNode(VariableReferenceNode operand, ExprNode index) {
         Operand = operand;
         Index = index;
     }
@@ -167,11 +173,11 @@ public class BlockNode : StatementNode {
 }
 
 public class AssignNode : StatementNode {
-    public IdentifierToken Left { get; }
+    public VariableReferenceNode Left { get; }
     public ExprNode Right { get; }
     public OperatorToken Operation { get; }
     
-    public AssignNode(IdentifierToken left, OperatorToken op, ExprNode right) {
+    public AssignNode(VariableReferenceNode left, OperatorToken op, ExprNode right) {
         Left = left;
         Right = right;
         Operation = op;

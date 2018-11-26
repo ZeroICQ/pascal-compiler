@@ -53,7 +53,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(AccessNode node) {
-        var pNode = node.Name.Accept(this);
+        var pNode = new PrinterNode("Access");
+        pNode.AddChild(node.Name.Accept(this));
         pNode.AddChild(new PrinterNode(node.Field.StringValue));
         return pNode;
     }
@@ -72,7 +73,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     
     public PrinterNode Visit(AssignNode node) {
         var pNode = new PrinterNode(node.Operation.StringValue);
-        pNode.AddChild(new PrinterNode(node.Left.StringValue));
+        pNode.AddChild(node.Left.Accept(this));
         pNode.AddChild(node.Right.Accept(this));
         return pNode;
     }
