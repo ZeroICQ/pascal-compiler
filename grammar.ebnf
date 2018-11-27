@@ -10,7 +10,7 @@
                 
                 <assignment statement> ::= <assignable> <assignment operators> <expression>
                                            
-                    <assignable> := <variable reference>
+                    <assignable> := <expression>
                     
                         <identifier> ::= <letter> {<letter> | <dec digit>}
                     
@@ -54,7 +54,10 @@
                                     
                                         <variable reference> := <identifier>
                                 
-            
+                    <procedure statement> ::= <expression> <actual parameter list>
+                    
+                        <actual parameter list> ::= "(" <expression> {"," <expression>}")"
+                    
             <structured statement> ::= <compound statement>
                 
                 

@@ -7,7 +7,8 @@ using System.Threading;
 namespace Compiler {
 public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(BlockNode node) {
-        var pNode = new PrinterNode("Block");
+        var blockTitle = node.IsMain ? "Main Block" : "Block";
+        var pNode = new PrinterNode(blockTitle);
 
         foreach (var expr in node.Statements) {
             var child = expr.Accept(this);
@@ -93,6 +94,15 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         return pNode;
     }
 
+    public PrinterNode Visit(ProcedureCallNode node) {
+        var pNode = new PrinterNode("Procedure");
+        
+        pNode.AddChild(node.Name.Accept(this));
+        foreach (var arg in node.Args) {
+            pNode.AddChild(arg.Accept(this));
+        }
+        return pNode;
+    }
 }
 
 public class PrinterNode {

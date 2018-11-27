@@ -17,5 +17,6 @@ public interface IAstVisitor<out T> {
     T Visit(AssignNode node);
     T Visit (IfNode node);
     T Visit(WhileNode node);
+    T Visit(ProcedureCallNode node);
 }
 }

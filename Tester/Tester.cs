@@ -7,7 +7,6 @@ using CommandLineParser.Arguments;
 using CommandLineParser.Exceptions;
 using CommandLineParser.Validation;
 using DiffPlex;
-using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 
 namespace Tester {
@@ -74,7 +73,9 @@ class Tester {
 
     private static void PrintDiff(string expectedLine, string gotLine, string testName) {
         var diffBuilder = new InlineDiffBuilder(new Differ());
+        
         var diff = diffBuilder.BuildDiffModel(expectedLine, gotLine);
+        
 
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"[!] Error in {testName}");

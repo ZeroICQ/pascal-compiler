@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection.Metadata;
 
 namespace Compiler {
 
@@ -12,14 +11,9 @@ public abstract class ExprNode : AstNode {
 
 }
 
-public abstract class VariableReferenceNode : ExprNode {
-//    public override T Accept<T>(IAstVisitor<T> visitor) {
-//        return visitor.Visit(this);
-//    }
-}
 
 //--- Expressions ---
-public class IdentifierNode : VariableReferenceNode {
+public class IdentifierNode : ExprNode {
     public IdentifierToken Token { get; }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
@@ -127,11 +121,11 @@ public class CastNode : UnaryOperationNode {
     }
 }
 
-public class AccessNode : VariableReferenceNode {
-    public VariableReferenceNode Name { get; }
+public class AccessNode : ExprNode {
+    public ExprNode Name { get; }
     public IdentifierToken Field { get; }
 
-    public AccessNode(VariableReferenceNode name, IdentifierToken field) {
+    public AccessNode(ExprNode name, IdentifierToken field) {
         Name = name;
         Field = field;
     }
@@ -142,11 +136,11 @@ public class AccessNode : VariableReferenceNode {
 }
 
 // a[3]
-public class IndexNode : VariableReferenceNode {
-    public VariableReferenceNode Operand { get; }
+public class IndexNode : ExprNode {
+    public ExprNode Operand { get; }
     public ExprNode Index { get; }
 
-    public IndexNode(VariableReferenceNode operand, ExprNode index) {
+    public IndexNode(ExprNode operand, ExprNode index) {
         Operand = operand;
         Index = index;
     }
@@ -162,6 +156,7 @@ public abstract class StatementNode : AstNode {
 
 public class BlockNode : StatementNode {
     public List<StatementNode> Statements { get; } = new List<StatementNode>();
+    public bool IsMain { get; set; } = false;
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
@@ -173,11 +168,11 @@ public class BlockNode : StatementNode {
 }
 
 public class AssignNode : StatementNode {
-    public VariableReferenceNode Left { get; }
+    public ExprNode Left { get; }
     public ExprNode Right { get; }
     public OperatorToken Operation { get; }
     
-    public AssignNode(VariableReferenceNode left, OperatorToken op, ExprNode right) {
+    public AssignNode(ExprNode left, OperatorToken op, ExprNode right) {
         Left = left;
         Right = right;
         Operation = op;
@@ -218,6 +213,22 @@ public class WhileNode : StatementNode {
         return visitor.Visit(this);
     }
 }
+
+
+public class ProcedureCallNode : StatementNode {
+    public ExprNode Name { get; }
+    public List<ExprNode> Args { get; } 
+    
+    public ProcedureCallNode(ExprNode name, List<ExprNode> args) {
+        Name = name;
+        Args = args;
+    }
+    
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+}
+
 
 // TODO: for, continue, break, return;
 

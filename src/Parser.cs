@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
@@ -7,9 +9,10 @@ public class Parser {
     }
     
     public AstNode Parse() {
-        var program = ParseCompoundStatement();
+        var mainBlock = ParseCompoundStatement();
         Require(Symbols.Operators.Dot);
-        return program;
+        mainBlock.IsMain = true;
+        return mainBlock;
     }
     
     // retracts
@@ -31,13 +34,12 @@ public class Parser {
 
     private StatementNode ParseStatement() {
         //TODO: parse simple statements: assignment, procedure; Structured
-        //now:
         var t = _lexer.GetNextToken();
                 
         switch (t) {
             case IdentifierToken identifier:
                 _lexer.Retract();
-                var variableReference = ParseVariableReference();
+                var left = ParseExpression(0);
                 
                 // now it can be either procedure statement or assign
                 var nextToken = _lexer.GetNextToken();
@@ -50,7 +52,14 @@ public class Parser {
                             case Symbols.Operators.MinusAssign:
                             case  Symbols.Operators.MultiplyAssign:
                             case  Symbols.Operators.DivideAssign:
-                                return new AssignNode(variableReference, op, ParseExpression(0));
+                                return new AssignNode(left, op, ParseExpression(0));
+                            
+                            case Symbols.Operators.OpenParenthesis:
+                                //function call
+                                _lexer.Retract();
+                                var paramList = ParseParamList();
+                                return new ProcedureCallNode(left, paramList);
+                                
                         }
                         break;
                 }
@@ -69,66 +78,100 @@ public class Parser {
 
         throw Illegal(t);
     }
-
     
-    private enum AssignNodeStates {Start, AfterDot, AfterBracket}
-    // id{.id}{[expression]}, 
-    public VariableReferenceNode ParseVariableReference() {
-        
-        VariableReferenceNode varRef;
-        
-        //get first
-        Token t;
-        switch (t = _lexer.GetNextToken()) {
-            case IdentifierToken identifier:
-                varRef = new IdentifierNode(identifier);
-                break;
-            default:
-                _lexer.Retract();
-                throw Illegal(t);
-        }
+    private enum ParseParamListStates {Start, AfterFirst}
+    // parse (expr {, expr})
+    private List<ExprNode> ParseParamList() {
+        var parameters = new List<ExprNode>();
+        Require(Symbols.Operators.OpenParenthesis);
 
-        var state = AssignNodeStates.Start;
+        var state = ParseParamListStates.Start;
 
-        //parse variable part
         while (true) {
-            t = _lexer.GetNextToken();
+            var t = _lexer.GetNextToken();
             
             switch (state) {
-                
-                case AssignNodeStates.Start:
-
-                    if (Check(t, Symbols.Operators.Dot))
-                        state = AssignNodeStates.AfterDot;
-                    else if (Check(t, Symbols.Operators.OpenBracket))
-                        state = AssignNodeStates.AfterBracket;
-                    else {
-                        _lexer.Retract();
-                        return varRef;
-                    } 
-                    break;
-                
-                case AssignNodeStates.AfterDot:
-
-                    switch (t) {
-                        case IdentifierToken identifierToken:
-                            state = AssignNodeStates.Start;
-                            varRef = new AccessNode(varRef, identifierToken);
-                            break;
-                        default:
-                            throw Illegal(t);
-                    }
-                    break;
+                case ParseParamListStates.Start:
+                    if (Check(t, Symbols.Operators.CloseParenthesis))
+                        return parameters;
+                    _lexer.Retract();
                     
-                case AssignNodeStates.AfterBracket:
-                    var expr = ParseExpression(0);
-                    Require(Symbols.Operators.CloseBracket);
-                    varRef = new IndexNode(varRef, expr);
-                    state = AssignNodeStates.Start;
+                    state = ParseParamListStates.AfterFirst;
+                    parameters.Add(ParseExpression(0));
+                    break;
+                
+                case ParseParamListStates.AfterFirst:
+                    if (Check(t, Symbols.Operators.CloseParenthesis))
+                        return parameters;
+                    _lexer.Retract();
+                    
+                    Require(Symbols.Separators.Comma);
+                    parameters.Add(ParseExpression(0));
                     break;
             }
+            
         }
     }
+
+    
+//    private enum AssignNodeStates {Start, AfterDot, AfterBracket}
+//    // id{.id}{[expression]}, 
+//    public VariableReferenceNode ParseVariableReference() {
+//        
+//        VariableReferenceNode varRef;
+//        
+//        //get first
+//        Token t;
+//        switch (t = _lexer.GetNextToken()) {
+//            case IdentifierToken identifier:
+//                varRef = new IdentifierNode(identifier);
+//                break;
+//            default:
+//                _lexer.Retract();
+//                throw Illegal(t);
+//        }
+//
+//        var state = AssignNodeStates.Start;
+//
+//        //parse variable part
+//        while (true) {
+//            t = _lexer.GetNextToken();
+//            
+//            switch (state) {
+//                
+//                case AssignNodeStates.Start:
+//
+//                    if (Check(t, Symbols.Operators.Dot))
+//                        state = AssignNodeStates.AfterDot;
+//                    else if (Check(t, Symbols.Operators.OpenBracket))
+//                        state = AssignNodeStates.AfterBracket;
+//                    else {
+//                        _lexer.Retract();
+//                        return varRef;
+//                    } 
+//                    break;
+//                
+//                case AssignNodeStates.AfterDot:
+//
+//                    switch (t) {
+//                        case IdentifierToken identifierToken:
+//                            state = AssignNodeStates.Start;
+//                            varRef = new AccessNode(varRef, identifierToken);
+//                            break;
+//                        default:
+//                            throw Illegal(t);
+//                    }
+//                    break;
+//                    
+//                case AssignNodeStates.AfterBracket:
+//                    var expr = ParseExpression(0);
+//                    Require(Symbols.Operators.CloseBracket);
+//                    varRef = new IndexNode(varRef, expr);
+//                    state = AssignNodeStates.Start;
+//                    break;
+//            }
+//        }
+//    }
     
 
     private ExprNode ParseExpression(int priority) {
