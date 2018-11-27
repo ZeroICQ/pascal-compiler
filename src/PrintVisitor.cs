@@ -42,7 +42,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(FunctionCallNode node) {
-        var pNode = new PrinterNode(node.Name.StringValue);
+        var pNode = new PrinterNode("Function");
+        pNode.AddChild(node.Name.Accept(this));
         foreach (var arg in node.Args) {
             pNode.AddChild(arg.Accept(this));
         }
@@ -61,7 +62,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(IndexNode node) {
-        var pNode = node.Operand.Accept(this);
+        var pNode = new PrinterNode("Index");
+        pNode.AddChild(node.Operand.Accept(this));
         pNode.AddChild(node.Index.Accept(this));
         return pNode;
     }
@@ -163,7 +165,8 @@ public class PrinterNode {
         }
 
         for (int i = leftmost; i <= rightmost; i++) {
-            curLine[i] = Convert.ToChar(0x2500);
+            if (curLine[i] == ' ')
+                curLine[i] = Convert.ToChar(0x2500);
         }
         
 

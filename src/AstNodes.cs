@@ -100,10 +100,10 @@ public class BinaryExprNode : ExprNode {
 }
 
 public class FunctionCallNode : ExprNode {
-    public IdentifierToken Name { get; }
+    public ExprNode Name { get; }
     public List<ExprNode> Args { get; } 
     
-    public FunctionCallNode(IdentifierToken name, List<ExprNode> args) {
+    public FunctionCallNode(ExprNode name, List<ExprNode> args) {
         Name = name;
         Args = args;
     }

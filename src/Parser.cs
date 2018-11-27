@@ -40,6 +40,11 @@ public class Parser {
             case IdentifierToken identifier:
                 _lexer.Retract();
                 var left = ParseExpression(0);
+
+                // todo: remove crunch?
+                if (left is FunctionCallNode f) {
+                    return new ProcedureCallNode(f.Name, f.Args);
+                }
                 
                 // now it can be either procedure statement or assign
                 var nextToken = _lexer.GetNextToken();
@@ -55,15 +60,15 @@ public class Parser {
                                 return new AssignNode(left, op, ParseExpression(0));
                             
                             case Symbols.Operators.OpenParenthesis:
-                                //function call
-                                _lexer.Retract();
+                                //procedure call
                                 var paramList = ParseParamList();
                                 return new ProcedureCallNode(left, paramList);
                                 
                         }
                         break;
                 }
-                break;
+
+                throw Illegal(nextToken);
                 
             // compound
             case ReservedToken reserved:
@@ -81,9 +86,9 @@ public class Parser {
     
     private enum ParseParamListStates {Start, AfterFirst}
     // parse (expr {, expr})
+    // starts after (->[..]
     private List<ExprNode> ParseParamList() {
         var parameters = new List<ExprNode>();
-        Require(Symbols.Operators.OpenParenthesis);
 
         var state = ParseParamListStates.Start;
 
@@ -114,64 +119,75 @@ public class Parser {
     }
 
     
-//    private enum AssignNodeStates {Start, AfterDot, AfterBracket}
-//    // id{.id}{[expression]}, 
-//    public VariableReferenceNode ParseVariableReference() {
-//        
-//        VariableReferenceNode varRef;
-//        
-//        //get first
-//        Token t;
-//        switch (t = _lexer.GetNextToken()) {
-//            case IdentifierToken identifier:
-//                varRef = new IdentifierNode(identifier);
-//                break;
-//            default:
-//                _lexer.Retract();
-//                throw Illegal(t);
-//        }
-//
-//        var state = AssignNodeStates.Start;
-//
-//        //parse variable part
-//        while (true) {
-//            t = _lexer.GetNextToken();
-//            
-//            switch (state) {
-//                
-//                case AssignNodeStates.Start:
-//
-//                    if (Check(t, Symbols.Operators.Dot))
-//                        state = AssignNodeStates.AfterDot;
-//                    else if (Check(t, Symbols.Operators.OpenBracket))
-//                        state = AssignNodeStates.AfterBracket;
-//                    else {
-//                        _lexer.Retract();
-//                        return varRef;
-//                    } 
-//                    break;
-//                
-//                case AssignNodeStates.AfterDot:
-//
-//                    switch (t) {
-//                        case IdentifierToken identifierToken:
-//                            state = AssignNodeStates.Start;
-//                            varRef = new AccessNode(varRef, identifierToken);
-//                            break;
-//                        default:
-//                            throw Illegal(t);
-//                    }
-//                    break;
-//                    
-//                case AssignNodeStates.AfterBracket:
-//                    var expr = ParseExpression(0);
-//                    Require(Symbols.Operators.CloseBracket);
-//                    varRef = new IndexNode(varRef, expr);
-//                    state = AssignNodeStates.Start;
-//                    break;
-//            }
-//        }
-//    }
+    private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
+    // id{.id | [expression]}, 
+    public ExprNode ParseVariableReference() {
+        
+        ExprNode varRef;
+        
+        //get first
+        Token t;
+        switch (t = _lexer.GetNextToken()) {
+            case IdentifierToken identifier:
+                varRef = new IdentifierNode(identifier);
+                break;
+            default:
+                _lexer.Retract();
+                throw Illegal(t);
+        }
+
+        var state = ParseVarRefStates.Start;
+
+        //parse variable part
+        while (true) {
+            t = _lexer.GetNextToken();
+            
+            switch (state) {
+                
+                case ParseVarRefStates.Start:
+
+                    if (Check(t, Symbols.Operators.Dot))
+                        state = ParseVarRefStates.AfterDot;
+                    else if (Check(t, Symbols.Operators.OpenBracket))
+                        state = ParseVarRefStates.AfterBracket;
+                    else if (Check(t, Symbols.Operators.OpenParenthesis))
+                        state = ParseVarRefStates.AfterParenthesis;
+                    else {
+                        _lexer.Retract();
+                        return varRef;
+                    } 
+                    break;
+                
+                case ParseVarRefStates.AfterDot:
+
+                    switch (t) {
+                        case IdentifierToken identifierToken:
+                            state = ParseVarRefStates.Start;
+                            varRef = new AccessNode(varRef, identifierToken);
+                            break;
+                        default:
+                            throw Illegal(t);
+                    }
+                    break;
+                    
+                case ParseVarRefStates.AfterBracket:
+                    _lexer.Retract();
+                    var expr = ParseExpression(0);
+                    Require(Symbols.Operators.CloseBracket);
+                    varRef = new IndexNode(varRef, expr);
+                    state = ParseVarRefStates.Start;
+                    break;
+                
+                case ParseVarRefStates.AfterParenthesis:
+                    _lexer.Retract();
+                    var paramList = ParseParamList();
+                    
+                    varRef = new FunctionCallNode(varRef, paramList);
+                    state = ParseVarRefStates.Start;
+                    break;
+            }
+        }
+    }
     
 
     private ExprNode ParseExpression(int priority) {
@@ -195,8 +211,11 @@ public class Parser {
         return node;
     }
 
+    // (expr), float, Integer, Identifier
+    // todo: unary
     private ExprNode ParseFactor() {
         var t = _lexer.GetNextToken();
+        
         switch (t) {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
@@ -205,18 +224,24 @@ public class Parser {
                         Require(Symbols.Operators.CloseParenthesis);
                         return exp;
                 }
-
                 break;
+            
             case FloatToken floatToken:
                 return new FloatNode(floatToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
             case IdentifierToken identityToken:
-                return new IdentifierNode(identityToken);
+                //identifier, access or index
+                _lexer.Retract();
+                return ParseVariableReference();
+                
+                
+                
             default:
                 throw Illegal(t);
         }
-
+        
+        _lexer.Retract();
         throw Illegal(t);
     }
 

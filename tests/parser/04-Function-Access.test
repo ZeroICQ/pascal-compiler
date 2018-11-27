@@ -1,0 +1,17 @@
+                                               Main Block
+                            ┌───────────────────────┴────────────────────┬────────────────────────┐
+                         Assign                                      Procedure               Procedure
+┌───────────────────────────┴┐                                     ┌─────┴─────────┐            ┌─┴─────┐
+a                        Multiply                               Access          Access        Index     3
+                           ┌─┴─────────────────────────┐       ┌───┴─────┐       ┌─┴────┐      ┌┴────┐
+                       Function                       10  some_record  field   Index   vv  Function  2
+                       ┌───┴─────────────────────┐                              ┌┴──┐      ┌──┬┴
+                     Index                    Access                          arg1  2      a  1
+                     ┌─┴───────────────────┐  ┌──┴
+                 Function                 28  f  d
+            ┌────────┴──────┬─────────┐
+         Access          Access     arg2
+        ┌───┴─────┐       ┌─┴────┐
+   some_record  field   Index   vv
+                         ┌┴──┐
+                       arg1  2

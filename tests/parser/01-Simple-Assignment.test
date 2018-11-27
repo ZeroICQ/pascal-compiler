@@ -1,5 +1,5 @@
                                    Main Block
-   ┌─────────┬───────────┬──────────────┴────────────────────────────┐
+   ┌─────────┬───────────┬──────────────┴───┬────────────────────────┐
 Assign  PlusAssign  MinusAssign      MultiplyAssign            DivideAssign
 ┌──┴    ┌──┬─┴      ┌────┴             ┌────┴───────┐     ┌──────────┴┐
 a  1    b  a        c  Plus      long_variable   Minus    _       Multiply
