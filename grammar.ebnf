@@ -28,7 +28,7 @@
                                 
                                 <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
                                     
-                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call>
+                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <arr>
                                         
                                         <unsigned constant> ::= <unsigned number>
                                         
@@ -50,8 +50,12 @@
                                                                 
                                                             <oct integer> ::= "&"() 
 
-                                            <function call> ::= <expression> <actual parameter list>    
-                                    
+                                            <function call> ::= <expression> <actual parameter list>
+                                                
+                                        <record access> ::= (<identifier> | <function call>) "." <identifier>
+                                        
+                                        <array access> ::= (<identifier> | <record access>) "[" <expression> "]"
+                                        
                                         <variable reference> := <identifier>
                                 
                     <procedure statement> ::= <expression> <actual parameter list>

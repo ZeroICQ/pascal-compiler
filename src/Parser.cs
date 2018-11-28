@@ -117,7 +117,6 @@ public class Parser {
             
         }
     }
-
     
     private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
     // id{.id | [expression]}, 
@@ -190,7 +189,7 @@ public class Parser {
     }
     
 
-    private ExprNode ParseExpression(int priority) {
+    private ExprNode ParseExpression(int priority = 0) {
         if (priority >= TokenPriorities.Length) {
             return ParseFactor();
         }
@@ -223,6 +222,11 @@ public class Parser {
                         var exp = ParseExpression(0);
                         Require(Symbols.Operators.CloseParenthesis);
                         return exp;
+                    //unary plus,minus
+                    case Symbols.Operators.Plus:
+                    case Symbols.Operators.Minus:
+                        var expr = ParseExpression();
+                        return new UnaryOperationNode(operatorToken, expr);
                 }
                 break;
             
