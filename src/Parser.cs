@@ -111,20 +111,18 @@ public class Parser {
         }
         
         // assign
-        var assignToken = _lexer.GetNextToken();
-        // todo: continue
-        OperatorToken operator
-        if (assignToken is OperatorToken op && op.Value == Symbols.Operators.Assign) {
-            
+        var assignOperatorToken = _lexer.GetNextToken();
+
+        AssignNode assignOperator;
+        if (assignOperatorToken is OperatorToken op && op.Value == Symbols.Operators.Assign) {
+            assignOperator = new AssignNode(initialVariable, op, ParseExpression());
         }
-        else
+        else {
+            throw Illegal(assignOperatorToken); 
+        }
 
-        Require(Symbols.Operators.Assign);
-
-        var initialValue = ParseExpression();
-
+        // direction
         var directionToken = _lexer.GetNextToken();
-
         ForNode.DirectionType direction;
         
         if (Check(directionToken, Symbols.Words.To)) {
@@ -137,17 +135,15 @@ public class Parser {
             throw Illegal(directionToken);
         }
         
+        
+        // final value
         var finalValue = ParseExpression();
         
         Require(Symbols.Words.Do);
 
         var statement = ParseStatement();
         
-        return new ForNode(
-            new AssignNode(initialVariable, new OperatorToken(":=",), ),
-            direction,
-            
-            ); 
+        return new ForNode(assignOperator, direction, finalValue, statement); 
     }
 
     private WhileNode ParseWhileStatement() {

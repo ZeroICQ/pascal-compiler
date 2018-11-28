@@ -1,0 +1,9 @@
+                 Main Block
+           ┌──────────┴────────────┐
+        For To                For Downto
+   ┌─────┬─┴─────┐          ┌────┬─┴────┐
+Assign  10  MinusAssign  Assign  0    Block
+┌──┴        ┌──┬─┴       ┌──┴┐          ┴
+x  2        x  1         x  200     Procedure
+                                      ┌─┴─┐
+                                    proc  x
