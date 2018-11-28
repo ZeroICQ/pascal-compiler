@@ -325,6 +325,9 @@ public class Parser {
                     case Symbols.Operators.Minus:
                         var expr = ParseExpression();
                         return new UnaryOperationNode(operatorToken, expr);
+                    
+                    case Symbols.Operators.AtSign:
+                        return new UnaryOperationNode(operatorToken, ParseVariableReference());
                 }
                 break;
             
@@ -341,7 +344,7 @@ public class Parser {
                 break;
             
             case IdentifierToken identityToken:
-                //identifier, access or index
+                //identifier, access or index or typecast
                 _lexer.Retract();
                 return ParseVariableReference();
             default:

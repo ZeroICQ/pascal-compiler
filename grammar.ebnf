@@ -38,7 +38,7 @@
                                 
                                 <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
                                     
-                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <array access> | "not" <factor>
+                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <array access> | "not" <factor> | <value typecast> | <address factor>
                                         
                                         <unsigned constant> ::= <unsigned number>
                                         
@@ -67,6 +67,13 @@
                                         <array access> ::= (<identifier> | <record access>) "[" <expression> "]"
                                         
                                         <variable reference> := <identifier>
+                                        
+                                        <value typecast> ::= <type identifier> "(" <expression> ")"
+                                            
+                                            <type identifier> ::= <identifier>
+                                            
+                                        <address factor> ::= "@" <variable reference>
+                                        
                                 
                     <procedure statement> ::= <expression> <actual parameter list>
                     
