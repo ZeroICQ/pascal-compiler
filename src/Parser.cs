@@ -320,7 +320,7 @@ public class Parser {
                         var exp = ParseExpression();
                         Require(Symbols.Operators.CloseParenthesis);
                         return exp;
-                    //unary plus,minus
+                    //unary plus,minus, not
                     case Symbols.Operators.Plus:
                     case Symbols.Operators.Minus:
                         var expr = ParseExpression();
@@ -332,6 +332,14 @@ public class Parser {
                 return new FloatNode(floatToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
+            
+            case ReservedToken reservedToken:
+                switch (reservedToken.Value) {
+                    case Symbols.Words.Not:
+                        return new UnaryOperationNode(reservedToken, ParseExpression());
+                }
+                break;
+            
             case IdentifierToken identityToken:
                 //identifier, access or index
                 _lexer.Retract();

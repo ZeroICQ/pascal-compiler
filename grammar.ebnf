@@ -38,7 +38,7 @@
                                 
                                 <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
                                     
-                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <arr>
+                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <array access> | "not" <factor>
                                         
                                         <unsigned constant> ::= <unsigned number>
                                         

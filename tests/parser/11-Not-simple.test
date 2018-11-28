@@ -1,0 +1,11 @@
+Main Block
+     ┴
+MinusAssign
+┌───┬┴
+x  Not
+    ┴
+   Not
+    ┴
+   Not
+   ┌┴
+   1
