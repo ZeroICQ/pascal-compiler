@@ -1,0 +1,9 @@
+               Main Block
+           ┌────────┴────────────┐
+         While                While
+     ┌─────┴──────┐        ┌─────┴──┐
+   More        Block     true  PlusAssign
+    ┌┴────┐       ┴            ┌──┬─┴
+Function  2  PlusAssign        a  2
+┌───┴        ┌──┬─┴
+a            a  1

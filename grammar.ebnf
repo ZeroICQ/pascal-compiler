@@ -1,7 +1,17 @@
 <program> ::= <main block>
 
-<main block> ::= <compound statement> "."
+<main block> ::= {<declaration part>} <compound statement> "."
 
+    <declaration part> ::= <variable declaration part> ";"
+        
+        <variable declaration part> ::= "var" <variable declaration> {variable declaration}
+        
+            <variable declaration> ::= <multiple variables> | <single variable>
+                
+                <multiple variables> ::= <identifier> {"," <identifier>} ":" <identifier>
+                
+                <single variable> ::= <identifier> ":" <identifier> {"=" <expression>}
+                
     <compound statement> ::= "begin" <statement> {; <statement>} "end"
                  
         <statement> ::= <simple statement> | <structured statement>
@@ -62,8 +72,23 @@
                     
                         <actual parameter list> ::= "(" <expression> {"," <expression>}")"
                     
-            <structured statement> ::= <compound statement>
+            <structured statement> ::= <compound statement> | <if statement> | <repetitive statement>
+            
+                <if statement> ::= "if" <expression> "then" <statement> {"else" <statement>}
                 
+                <repetitive statement> ::= <while statement> | <for statement>
+                    
+                    <while statement> ::= "while" <expression> "do" <statement>  
+                    
+                    <for statement> ::= "for" <control variable> ":=" <initial value> ("to" | "downto") <final value> "do" <statement>
+                        
+                        <control variable> ::= <variable identifier>                
+                        
+                        <initial value> ::= <expression>
+                        
+                        <final value> ::= <expression>
+                        
+                        
                 
                 
 

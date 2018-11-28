@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CommandLineParser.Arguments;
 
 namespace Compiler {
 public class Parser {
@@ -9,6 +10,7 @@ public class Parser {
     }
     
     public AstNode Parse() {
+        // todo: add declarations 
         var mainBlock = ParseCompoundStatement();
         Require(Symbols.Operators.Dot);
         mainBlock.IsMain = true;
@@ -39,7 +41,7 @@ public class Parser {
         switch (t) {
             case IdentifierToken identifier:
                 _lexer.Retract();
-                var left = ParseExpression(0);
+                var left = ParseExpression();
 
                 // todo: remove crunch?
                 if (left is FunctionCallNode f) {
@@ -57,31 +59,117 @@ public class Parser {
                             case Symbols.Operators.MinusAssign:
                             case  Symbols.Operators.MultiplyAssign:
                             case  Symbols.Operators.DivideAssign:
-                                return new AssignNode(left, op, ParseExpression(0));
+                                return new AssignNode(left, op, ParseExpression());
                             
                             case Symbols.Operators.OpenParenthesis:
                                 //procedure call
                                 var paramList = ParseParamList();
                                 return new ProcedureCallNode(left, paramList);
-                                
                         }
                         break;
                 }
 
                 throw Illegal(nextToken);
                 
-            // compound
+            // statements that starts with reserved words
             case ReservedToken reserved:
                 switch (reserved.Value) {
                     case Symbols.Words.Begin:
                         _lexer.Retract();
                         return ParseCompoundStatement();
+                    
+                    // if
+                    case Symbols.Words.If:
+                        _lexer.Retract();
+                        return ParseIfStatement();
+                    // while
+                    case Symbols.Words.While:
+                        _lexer.Retract();
+                        return ParseWhileStatement(); 
+                    case Symbols.Words.For:
+                        _lexer.Retract();
+                        return ParseForStatement();
                 }
                 break;
                 
         }
 
         throw Illegal(t);
+    }
+
+    private ForNode ParseForStatement() {
+        Require(Symbols.Words.For);
+
+        var initialVariableToken = _lexer.GetNextToken();
+        IdentifierNode initialVariable;
+        // initial
+        if (initialVariableToken is IdentifierToken idToken) {
+            initialVariable = new IdentifierNode(idToken); 
+        }
+        else {
+            throw Illegal(initialVariableToken);
+        }
+        
+        // assign
+        var assignToken = _lexer.GetNextToken();
+        // todo: continue
+        OperatorToken operator
+        if (assignToken is OperatorToken op && op.Value == Symbols.Operators.Assign) {
+            
+        }
+        else
+
+        Require(Symbols.Operators.Assign);
+
+        var initialValue = ParseExpression();
+
+        var directionToken = _lexer.GetNextToken();
+
+        ForNode.DirectionType direction;
+        
+        if (Check(directionToken, Symbols.Words.To)) {
+            direction = ForNode.DirectionType.To;
+        } 
+        else if (Check(directionToken, Symbols.Words.Downto)) {
+            direction = ForNode.DirectionType.Downto;
+        }
+        else {
+            throw Illegal(directionToken);
+        }
+        
+        var finalValue = ParseExpression();
+        
+        Require(Symbols.Words.Do);
+
+        var statement = ParseStatement();
+        
+        return new ForNode(
+            new AssignNode(initialVariable, new OperatorToken(":=",), ),
+            direction,
+            
+            ); 
+    }
+
+    private WhileNode ParseWhileStatement() {
+        Require(Symbols.Words.While);
+        var condition = ParseExpression();
+        Require(Symbols.Words.Do);
+        var st = ParseStatement();
+        return new WhileNode(condition, st);
+    }
+
+    private IfNode ParseIfStatement() {
+        Require(Symbols.Words.If);
+        var condition = ParseExpression();
+        Require(Symbols.Words.Then);
+        var trueStatement = ParseStatement();
+                        
+        if (Check(_lexer.GetNextToken(), Symbols.Words.Else)) {
+            var falseStatement = ParseStatement();
+            return new IfNode(condition, trueStatement, falseStatement);
+        }
+        _lexer.Retract();
+        return new IfNode(condition, trueStatement);
     }
     
     private enum ParseParamListStates {Start, AfterFirst}
@@ -102,7 +190,7 @@ public class Parser {
                     _lexer.Retract();
                     
                     state = ParseParamListStates.AfterFirst;
-                    parameters.Add(ParseExpression(0));
+                    parameters.Add(ParseExpression());
                     break;
                 
                 case ParseParamListStates.AfterFirst:
@@ -111,7 +199,7 @@ public class Parser {
                     _lexer.Retract();
                     
                     Require(Symbols.Separators.Comma);
-                    parameters.Add(ParseExpression(0));
+                    parameters.Add(ParseExpression());
                     break;
             }
             
@@ -171,7 +259,7 @@ public class Parser {
                     
                 case ParseVarRefStates.AfterBracket:
                     _lexer.Retract();
-                    var expr = ParseExpression(0);
+                    var expr = ParseExpression();
                     Require(Symbols.Operators.CloseBracket);
                     varRef = new IndexNode(varRef, expr);
                     state = ParseVarRefStates.Start;
@@ -188,13 +276,28 @@ public class Parser {
         }
     }
     
+    private ExprNode ParseExpression() {
+        var expr = ParseSimpleExpression();
+        
+        while (true) {
+            var op = _lexer.GetNextToken();
 
-    private ExprNode ParseExpression(int priority = 0) {
+            if (!Check<ConditionalOperatorsTokenGroup>(op)) {
+                _lexer.Retract();
+                break;
+            }
+            expr = new BinaryExprNode(expr, ParseSimpleExpression(), op);
+        }
+
+        return expr;
+    }
+
+    private ExprNode ParseSimpleExpression(int priority = 0) {
         if (priority >= TokenPriorities.Length) {
             return ParseFactor();
         }
         
-        var node = ParseExpression(priority + 1);
+        var node = ParseSimpleExpression(priority + 1);
 
         while (true) {
             var op = _lexer.GetNextToken();
@@ -203,7 +306,7 @@ public class Parser {
                 break;
             }
             
-            var right = ParseExpression(priority + 1);;
+            var right = ParseSimpleExpression(priority + 1);;
             node = new BinaryExprNode(node, right, op);
         }
 
@@ -211,7 +314,6 @@ public class Parser {
     }
 
     // (expr), float, Integer, Identifier
-    // todo: unary
     private ExprNode ParseFactor() {
         var t = _lexer.GetNextToken();
         
@@ -219,7 +321,7 @@ public class Parser {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
                     case Symbols.Operators.OpenParenthesis:
-                        var exp = ParseExpression(0);
+                        var exp = ParseExpression();
                         Require(Symbols.Operators.CloseParenthesis);
                         return exp;
                     //unary plus,minus
@@ -238,9 +340,6 @@ public class Parser {
                 //identifier, access or index
                 _lexer.Retract();
                 return ParseVariableReference();
-                
-                
-                
             default:
                 throw Illegal(t);
         }
@@ -323,6 +422,26 @@ public abstract class TokenGroup {
     public abstract bool Contains(Token token);
 }
 
+public class ConditionalOperatorsTokenGroup : TokenGroup {
+    public override bool Contains(Token token) {
+        switch (token) {
+            case OperatorToken op:
+                switch (op.Value) {
+                    case Symbols.Operators.Less:
+                    case Symbols.Operators.LessOrEqual:
+                    case Symbols.Operators.More:
+                    case Symbols.Operators.MoreOreEqual:
+                    case Symbols.Operators.Equal:
+                    case Symbols.Operators.NotEqual:
+                        return true;
+                }
+                break;
+        }
+
+        return false;
+    }
+}
+
 public class TermTokenGroup : TokenGroup {
     public override bool Contains(Token token) {
         switch (token) {
@@ -373,6 +492,4 @@ public class FactorTokenGroup : TokenGroup {
         return false;
     }
 }
-
-
 }

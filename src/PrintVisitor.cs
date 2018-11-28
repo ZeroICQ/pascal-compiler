@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
 
 namespace Compiler {
 public class PrintVisitor : IAstVisitor<PrinterNode> {
@@ -82,10 +80,13 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(IfNode node) {
-        var pNode = new PrinterNode("if");
+        var pNode = new PrinterNode("If");
         pNode.AddChild(node.Condition.Accept(this));
         pNode.AddChild(node.TrueBranch.Accept(this));
-        pNode.AddChild(node.FalseBranch.Accept(this));
+        
+        if (node.FalseBranch != null)
+            pNode.AddChild(node.FalseBranch.Accept(this));
+        
         return pNode;
     }
 
@@ -103,6 +104,14 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         foreach (var arg in node.Args) {
             pNode.AddChild(arg.Accept(this));
         }
+        return pNode;
+    }
+
+    public PrinterNode Visit(ForNode node) {
+        var pNode = new PrinterNode($"For {node.Direction.ToString()}");
+        pNode.AddChild(node.Initial.Accept(this));
+        pNode.AddChild(node.Final.Accept(this));
+        pNode.AddChild(node.Body.Accept(this));
         return pNode;
     }
 }

@@ -1,0 +1,11 @@
+                             Main Block
+                                  ┴
+                                 If
+      ┌───────────────┬───────────┴───────────────┐
+  Function          Block                       Block
+    ┌─┴────┐      ┌───┴─────┐        ┌────────────┴─────┐
+condition  a  Procedure  Assign  Procedure             If
+                 ┌┴───┐   ┌─┴─┐     ┌┴───┐          ┌───┴────────┐
+              branch  1  as  21  branch  2      Function      Assign
+                                                    ┴          ┌─┴─┐
+                                            nested_condition  os  22

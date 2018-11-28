@@ -1,0 +1,7 @@
+         Main Block
+              ┴
+             If
+      ┌───────┴──┬───────┐
+  Function    Assign  Assign
+    ┌─┴────┐  ┌──┴    ┌──┴
+condition  a  a  2    a  1

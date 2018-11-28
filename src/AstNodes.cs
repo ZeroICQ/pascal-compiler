@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Compiler {
 
@@ -181,15 +182,15 @@ public class AssignNode : StatementNode {
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
     }
-    
 }
 
 public class IfNode : StatementNode {
     public ExprNode Condition { get; }
-    public BlockNode TrueBranch { get; }
-    public BlockNode FalseBranch { get; }
+    public StatementNode TrueBranch { get; }
+    // nullable
+    public StatementNode FalseBranch { get; }
 
-    public IfNode(ExprNode condition, BlockNode trueBranch, BlockNode falseBranch) {
+    public IfNode(ExprNode condition, StatementNode trueBranch, StatementNode falseBranch = null) {
         Condition = condition;
         TrueBranch = trueBranch;
         FalseBranch = falseBranch;
@@ -202,9 +203,9 @@ public class IfNode : StatementNode {
 
 public class WhileNode : StatementNode {
     public ExprNode Condition { get; }
-    public BlockNode Block { get; }
+    public StatementNode Block { get; }
 
-    public WhileNode(ExprNode condition, BlockNode block) {
+    public WhileNode(ExprNode condition, StatementNode block) {
         Condition = condition;
         Block = block;
     }
@@ -214,7 +215,6 @@ public class WhileNode : StatementNode {
     }
 }
 
-
 public class ProcedureCallNode : StatementNode {
     public ExprNode Name { get; }
     public List<ExprNode> Args { get; } 
@@ -222,6 +222,26 @@ public class ProcedureCallNode : StatementNode {
     public ProcedureCallNode(ExprNode name, List<ExprNode> args) {
         Name = name;
         Args = args;
+    }
+    
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+}
+
+public class ForNode : StatementNode {
+    public enum DirectionType {To, Downto}
+    
+    public AssignNode Initial { get; }
+    public DirectionType Direction { get; }
+    public ExprNode Final { get; }    
+    public StatementNode Body { get; }
+
+    public ForNode(AssignNode initial, DirectionType direction, ExprNode final, StatementNode body) {
+        Initial = initial;
+        Direction = direction;
+        Final = final;
+        Body = body;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {

@@ -1,0 +1,7 @@
+                                                 Main Block
+      ┌──────────────────┬──────────────────┬─────────┴────────┬───────────────────┬─────────────────┐
+     If                 If                 If                 If                  If                If
+  ┌───┴──┐           ┌───┴──────┐       ┌───┴──┐          ┌────┴─────┐         ┌───┴────┐       ┌────┴──┐
+More  Assign   MoreOreEqual  Assign   Less  Assign   LessOrEqual  Assign   NotEqual  Assign   Equal  Assign
+┌─┴┐  ┌──┴─┐   ┌──┬──┴       ┌──┴─┐   ┌─┴┐  ┌──┴─┐   ┌──┬─┴       ┌──┴─┐   ┌──┬┴     ┌──┴─┐   ┌─┴┐   ┌──┴─┐
+a  b  a  true  a  b          a  true  a  b  a  true  a  b         a  true  a  b      a  true  a  b   a  true
