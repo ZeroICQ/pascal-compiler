@@ -156,7 +156,7 @@ class Tester {
     static void TestParser(string compilerPath, string testDir) {
         var defaultForegroundColor = Console.ForegroundColor;
         
-        var testFiles = Directory.GetFiles($"{testDir}/parser");
+        var testFiles = Directory.GetFiles($"{testDir}/parser").Reverse();
 
         foreach (var testFile in testFiles) {
             if (!testFile.EndsWith(".pas"))
