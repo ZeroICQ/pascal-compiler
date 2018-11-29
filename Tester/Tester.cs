@@ -199,8 +199,6 @@ class Tester {
                 Console.ForegroundColor = defaultForegroundColor;
             }
             pr.WaitForExit();// Waits here for the process to exit.
-            
-            
         }
     }
 }

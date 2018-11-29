@@ -345,7 +345,14 @@ public class Parser {
             case IdentifierToken identityToken:
                 //identifier, access or index or typecast
                 _lexer.Retract();
-                return ParseVariableReference();
+                var varRef = ParseVariableReference();
+                
+                // check for dereferencing (^)
+                var next = _lexer.GetNextToken(); 
+                if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
+                    return new UnaryOperationNode(op, varRef);
+                _lexer.Retract();
+                return varRef;
             default:
                 throw Illegal(t);
         }
