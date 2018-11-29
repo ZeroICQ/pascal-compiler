@@ -323,8 +323,7 @@ public class Parser {
                     //unary plus,minus, not
                     case Symbols.Operators.Plus:
                     case Symbols.Operators.Minus:
-                        var expr = ParseExpression();
-                        return new UnaryOperationNode(operatorToken, expr);
+                        return new UnaryOperationNode(operatorToken, ParseFactor());
                     
                     case Symbols.Operators.AtSign:
                         return new UnaryOperationNode(operatorToken, ParseVariableReference());

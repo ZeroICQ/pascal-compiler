@@ -1,0 +1,15 @@
+        Main Block
+             ┴
+          Assign
+┌────────────┴─┐
+a            Less
+             ┌─┴──────────┐
+           Minus          6
+            ┌┴─────────┐
+         Minus         5
+          ┌─┴───────┐
+        Plus        4
+     ┌────┴───┐
+   Minus  Multiply
+   ┌─┴    ┌──┬┴
+   1      2  3

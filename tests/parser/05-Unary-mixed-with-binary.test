@@ -1,17 +1,15 @@
-             Main Block
-     ┌───────────┬┴───────────┐
-  Assign      Assign       Assign
-┌────┴─┐     ┌───┴┐    ┌──────┴┐
-c   Minus    c  Minus  l     Minus
-   ┌───┴┐         ┴            ┴
-   a  Minus     Minus        Minus
-        ┴         ┴       ┌────┴─┐
-      Minus     Minus     c    Plus
-        ┴         ┴              ┴
-      Plus      Minus         Minus
-      ┌─┴         ┴              ┴
-      b         Minus        Multiply
-                ┌─┴          ┌───┴┐
-                c            a  Minus
-                                 ┌┴
-                                10
+                 Main Block
+     ┌───────────┬────┴───────────┐
+  Assign      Assign           Assign
+┌────┴─┐     ┌───┴┐    ┌──────────┴┐
+c   Minus    c  Minus  l         Minus
+   ┌───┴┐         ┴         ┌──────┴───┐
+   a  Minus     Minus     Minus    Multiply
+        ┴         ┴       ┌─┴      ┌───┴──┐
+      Minus     Minus     c      Plus   Minus
+        ┴         ┴                ┴     ┌┴
+      Plus      Minus            Minus  10
+      ┌─┴         ┴              ┌─┴
+      b         Minus            a
+                ┌─┴
+                c
