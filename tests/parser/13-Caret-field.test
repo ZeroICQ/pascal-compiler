@@ -1,0 +1,13 @@
+Main Block
+     ┴
+  Assign
+┌────┴─┐
+c   Caret
+       ┴
+    Caret
+       ┴
+    Access
+     ┌─┴──┐
+   Caret  b
+   ┌─┴
+   a

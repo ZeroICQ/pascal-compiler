@@ -68,7 +68,8 @@ public class Parser {
                         }
                         break;
                 }
-
+                
+                _lexer.Retract();
                 throw Illegal(nextToken);
                 
             // statements that starts with reserved words
@@ -203,10 +204,15 @@ public class Parser {
     }
     
     private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
-    // id{.id | [expression]}, 
+    // id{.id | [expression] | (arg,...)}, 
     public ExprNode ParseVariableReference() {
-        
         ExprNode varRef;
+        
+        // check for dereferencing (^)
+//        var next = _lexer.GetNextToken(); 
+//        if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
+//            return new UnaryOperationNode(op, factor);
+//        _lexer.Retract();
         
         //get first
         Token t;
@@ -235,6 +241,9 @@ public class Parser {
                         state = ParseVarRefStates.AfterBracket;
                     else if (Check(t, Symbols.Operators.OpenParenthesis))
                         state = ParseVarRefStates.AfterParenthesis;
+                    else if (t is OperatorToken op && op.Value == Symbols.Operators.Caret) {
+                        varRef = new UnaryOperationNode(op, varRef);
+                    }
                     else {
                         _lexer.Retract();
                         return varRef;
@@ -290,7 +299,15 @@ public class Parser {
 
     private ExprNode ParseSimpleExpression(int priority = 0) {
         if (priority >= TokenPriorities.Length) {
-            return ParseFactor();
+            var factor = ParseFactor();
+            
+            // check for dereferencing (^)
+            var next = _lexer.GetNextToken(); 
+            if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
+                return new UnaryOperationNode(op, factor);
+            
+            _lexer.Retract();
+            return factor;
         }
         
         var node = ParseSimpleExpression(priority + 1);
@@ -343,17 +360,10 @@ public class Parser {
                 break;
             
             case IdentifierToken identityToken:
-                //identifier, access or index or typecast
+                // identifier, access or index or typecast
                 _lexer.Retract();
-                var varRef = ParseVariableReference();
-                
-                // check for dereferencing (^)
-                var next = _lexer.GetNextToken(); 
-                if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
-                    return new UnaryOperationNode(op, varRef);
-                _lexer.Retract();
-                return varRef;
-            default:
+                return ParseVariableReference();
+           default:
                 throw Illegal(t);
         }
         
