@@ -249,6 +249,17 @@ public class ForNode : StatementNode {
     }
 }
 
+public class ControlSequence : StatementNode {
+    public ReservedToken ControlWord { get; }
+
+    public ControlSequence(ReservedToken word) {
+        ControlWord = word;
+    }
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+}
+
 
 // TODO: for, continue, break, return;
 

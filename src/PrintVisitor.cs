@@ -114,6 +114,11 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         pNode.AddChild(node.Body.Accept(this));
         return pNode;
     }
+    
+    public PrinterNode Visit(ControlSequence node) {
+        var pNode = new PrinterNode(node.ControlWord.StringValue);
+        return pNode;
+    }
 }
 
 public class PrinterNode {

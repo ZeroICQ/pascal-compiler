@@ -92,7 +92,6 @@ public class Parser {
                         return ParseForStatement();
                 }
                 break;
-                
         }
 
         throw Illegal(t);
