@@ -13,7 +13,7 @@ public class Parser {
     public AstNode Parse() {
         // todo: add declarations 
         var mainBlock = ParseCompoundStatement();
-        Require(Symbols.Operators.Dot);
+        Require(Constants.Operators.Dot);
         mainBlock.IsMain = true;
         return mainBlock;
     }
@@ -22,19 +22,19 @@ public class Parser {
     private BlockNode ParseCompoundStatement() {
         var compoundStatement = new BlockNode();
         
-        Require(Symbols.Words.Begin);
+        Require(Constants.Words.Begin);
         
         compoundStatement.AddStatement(ParseStatement());
         while (true) {
-            var hasSemicolon = Check(_lexer.GetNextToken(), Symbols.Separators.Semicolon);
+            var hasSemicolon = Check(_lexer.GetNextToken(), Constants.Separators.Semicolon);
             
             if (!hasSemicolon) {
                 _lexer.Retract();
-                Require(Symbols.Words.End);
+                Require(Constants.Words.End);
                 return compoundStatement;
             }
 
-            if (Check(_lexer.GetNextToken(), Symbols.Words.End))
+            if (Check(_lexer.GetNextToken(), Constants.Words.End))
                 return compoundStatement;
             
             _lexer.Retract();
@@ -62,14 +62,14 @@ public class Parser {
                 switch (nextToken) {
                     case OperatorToken op:
                         switch (op.Value) {
-                            case Symbols.Operators.Assign:
-                            case Symbols.Operators.PlusAssign:
-                            case Symbols.Operators.MinusAssign:
-                            case  Symbols.Operators.MultiplyAssign:
-                            case  Symbols.Operators.DivideAssign:
+                            case Constants.Operators.Assign:
+                            case Constants.Operators.PlusAssign:
+                            case Constants.Operators.MinusAssign:
+                            case  Constants.Operators.MultiplyAssign:
+                            case  Constants.Operators.DivideAssign:
                                 return new AssignNode(left, op, ParseExpression());
                             
-                            case Symbols.Operators.OpenParenthesis:
+                            case Constants.Operators.OpenParenthesis:
                                 //procedure call
                                 var paramList = ParseParamList();
                                 return new ProcedureCallNode(left, paramList);
@@ -83,26 +83,26 @@ public class Parser {
             // statements that starts with reserved words
             case ReservedToken reserved:
                 switch (reserved.Value) {
-                    case Symbols.Words.Begin:
+                    case Constants.Words.Begin:
                         _lexer.Retract();
                         return ParseCompoundStatement();
                     
                     // if
-                    case Symbols.Words.If:
+                    case Constants.Words.If:
                         _lexer.Retract();
                         return ParseIfStatement();
                     // while
-                    case Symbols.Words.While:
+                    case Constants.Words.While:
                         _lexer.Retract();
                         return ParseWhileStatement(); 
-                    case Symbols.Words.For:
+                    case Constants.Words.For:
                         _lexer.Retract();
                         return ParseForStatement();
-                    case Symbols.Words.End:
+                    case Constants.Words.End:
                         _lexer.Retract();
                         return new EmptyStatementNode();
-                    case Symbols.Words.Continue:
-                    case Symbols.Words.Break:
+                    case Constants.Words.Continue:
+                    case Constants.Words.Break:
                         if (_cycles_counter == 0) {
                             throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
                         }
@@ -115,7 +115,7 @@ public class Parser {
     }
 
     private ForNode ParseForStatement() {
-        Require(Symbols.Words.For);
+        Require(Constants.Words.For);
 
         var initialVariableToken = _lexer.GetNextToken();
         IdentifierNode initialVariable;
@@ -131,7 +131,7 @@ public class Parser {
         var assignOperatorToken = _lexer.GetNextToken();
 
         AssignNode assignOperator;
-        if (assignOperatorToken is OperatorToken op && op.Value == Symbols.Operators.Assign) {
+        if (assignOperatorToken is OperatorToken op && op.Value == Constants.Operators.Assign) {
             assignOperator = new AssignNode(initialVariable, op, ParseExpression());
         }
         else {
@@ -142,10 +142,10 @@ public class Parser {
         var directionToken = _lexer.GetNextToken();
         ForNode.DirectionType direction;
         
-        if (Check(directionToken, Symbols.Words.To)) {
+        if (Check(directionToken, Constants.Words.To)) {
             direction = ForNode.DirectionType.To;
         } 
-        else if (Check(directionToken, Symbols.Words.Downto)) {
+        else if (Check(directionToken, Constants.Words.Downto)) {
             direction = ForNode.DirectionType.Downto;
         }
         else {
@@ -156,7 +156,7 @@ public class Parser {
         // final value
         var finalValue = ParseExpression();
         
-        Require(Symbols.Words.Do);
+        Require(Constants.Words.Do);
 
         _cycles_counter += 1;
         var statement = ParseStatement();
@@ -165,9 +165,9 @@ public class Parser {
     }
 
     private WhileNode ParseWhileStatement() {
-        Require(Symbols.Words.While);
+        Require(Constants.Words.While);
         var condition = ParseExpression();
-        Require(Symbols.Words.Do);
+        Require(Constants.Words.Do);
         _cycles_counter += 1;
         var st = ParseStatement();
         _cycles_counter -= 1;
@@ -176,12 +176,12 @@ public class Parser {
     }
 
     private IfNode ParseIfStatement() {
-        Require(Symbols.Words.If);
+        Require(Constants.Words.If);
         var condition = ParseExpression();
-        Require(Symbols.Words.Then);
+        Require(Constants.Words.Then);
         var trueStatement = ParseStatement();
                         
-        if (Check(_lexer.GetNextToken(), Symbols.Words.Else)) {
+        if (Check(_lexer.GetNextToken(), Constants.Words.Else)) {
             var falseStatement = ParseStatement();
             return new IfNode(condition, trueStatement, falseStatement);
         }
@@ -202,7 +202,7 @@ public class Parser {
             
             switch (state) {
                 case ParseParamListStates.Start:
-                    if (Check(t, Symbols.Operators.CloseParenthesis))
+                    if (Check(t, Constants.Operators.CloseParenthesis))
                         return parameters;
                     _lexer.Retract();
                     
@@ -211,11 +211,11 @@ public class Parser {
                     break;
                 
                 case ParseParamListStates.AfterFirst:
-                    if (Check(t, Symbols.Operators.CloseParenthesis))
+                    if (Check(t, Constants.Operators.CloseParenthesis))
                         return parameters;
                     _lexer.Retract();
                     
-                    Require(Symbols.Separators.Comma);
+                    Require(Constants.Separators.Comma);
                     parameters.Add(ParseExpression());
                     break;
             }
@@ -249,13 +249,13 @@ public class Parser {
                 
                 case ParseVarRefStates.Start:
 
-                    if (Check(t, Symbols.Operators.Dot))
+                    if (Check(t, Constants.Operators.Dot))
                         state = ParseVarRefStates.AfterDot;
-                    else if (Check(t, Symbols.Operators.OpenBracket))
+                    else if (Check(t, Constants.Operators.OpenBracket))
                         state = ParseVarRefStates.AfterBracket;
-                    else if (Check(t, Symbols.Operators.OpenParenthesis))
+                    else if (Check(t, Constants.Operators.OpenParenthesis))
                         state = ParseVarRefStates.AfterParenthesis;
-                    else if (t is OperatorToken op && op.Value == Symbols.Operators.Caret) {
+                    else if (t is OperatorToken op && op.Value == Constants.Operators.Caret) {
                         varRef = new UnaryOperationNode(op, varRef);
                     }
                     else {
@@ -282,12 +282,12 @@ public class Parser {
                     varRef = new IndexNode(varRef, expr);
                     
                     // [index1, index2][index3] is also allowed
-                    while (Check(_lexer.GetNextToken(), Symbols.Separators.Comma)) {
+                    while (Check(_lexer.GetNextToken(), Constants.Separators.Comma)) {
                         varRef = new IndexNode(varRef, ParseExpression());
                     }
                     
                     _lexer.Retract();
-                    Require(Symbols.Operators.CloseBracket);
+                    Require(Constants.Operators.CloseBracket);
                     state = ParseVarRefStates.Start;
                     break;
                 
@@ -323,7 +323,7 @@ public class Parser {
             
             // check for dereferencing (^)
             var next = _lexer.GetNextToken(); 
-            if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
+            if (next is OperatorToken op && op.Value == Constants.Operators.Caret)
                 return new UnaryOperationNode(op, factor);
             
             _lexer.Retract();
@@ -353,16 +353,16 @@ public class Parser {
         switch (t) {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
-                    case Symbols.Operators.OpenParenthesis:
+                    case Constants.Operators.OpenParenthesis:
                         var exp = ParseExpression();
-                        Require(Symbols.Operators.CloseParenthesis);
+                        Require(Constants.Operators.CloseParenthesis);
                         return exp;
                     //unary plus,minus, not
-                    case Symbols.Operators.Plus:
-                    case Symbols.Operators.Minus:
+                    case Constants.Operators.Plus:
+                    case Constants.Operators.Minus:
                         return new UnaryOperationNode(operatorToken, ParseFactor());
                     
-                    case Symbols.Operators.AtSign:
+                    case Constants.Operators.AtSign:
                         return new UnaryOperationNode(operatorToken, ParseVariableReference());
                 }
                 break;
@@ -379,7 +379,7 @@ public class Parser {
             
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
-                    case Symbols.Words.Not:
+                    case Constants.Words.Not:
                         return new UnaryOperationNode(reservedToken, ParseExpression());
                 }
                 break;
@@ -407,7 +407,7 @@ public class Parser {
         };
     }
 
-    private void Require(Symbols.Operators op)  {
+    private void Require(Constants.Operators op)  {
         var t = _lexer.GetNextToken();
 
         if (!Check(t, op)) {
@@ -417,7 +417,7 @@ public class Parser {
         
     }
 
-    private void Require(Symbols.Words word) {
+    private void Require(Constants.Words word) {
         var t = _lexer.GetNextToken();
         
         if (!Check(t, word)) {
@@ -426,7 +426,7 @@ public class Parser {
         }
     }
 
-    private void Require(Symbols.Separators sep) {
+    private void Require(Constants.Separators sep) {
         var t = _lexer.GetNextToken();
         if (!Check(t, sep)) {
             throw new IllegalExprException(t.Lexeme, t.Line, t.Column, sep.ToString());
@@ -442,7 +442,7 @@ public class Parser {
         
     }
 
-    private void Optional(Symbols.Separators sep) {
+    private void Optional(Constants.Separators sep) {
         var t = _lexer.GetNextToken();
         if (Check(t, sep))
             return;
@@ -453,16 +453,16 @@ public class Parser {
         return new IllegalExprException(token.Lexeme, token.Line, token.Column);
     }
 
-    private bool Check(Token t, Symbols.Operators op) {
+    private bool Check(Token t, Constants.Operators op) {
         return t is OperatorToken _op && _op.Value == op;
         
     }
 
-    private bool Check(Token t, Symbols.Words word) {
+    private bool Check(Token t, Constants.Words word) {
         return t is ReservedToken _w && _w.Value == word;
     }
     
-    private bool Check(Token t, Symbols.Separators sep) {
+    private bool Check(Token t, Constants.Separators sep) {
         return t is SeparatorToken _s && _s.Value == sep;
     }
 
@@ -482,12 +482,12 @@ public class ConditionalOperatorsTokenGroup : TokenGroup {
         switch (token) {
             case OperatorToken op:
                 switch (op.Value) {
-                    case Symbols.Operators.Less:
-                    case Symbols.Operators.LessOrEqual:
-                    case Symbols.Operators.More:
-                    case Symbols.Operators.MoreOreEqual:
-                    case Symbols.Operators.Equal:
-                    case Symbols.Operators.NotEqual:
+                    case Constants.Operators.Less:
+                    case Constants.Operators.LessOrEqual:
+                    case Constants.Operators.More:
+                    case Constants.Operators.MoreOreEqual:
+                    case Constants.Operators.Equal:
+                    case Constants.Operators.NotEqual:
                         return true;
                 }
                 break;
@@ -502,16 +502,16 @@ public class TermTokenGroup : TokenGroup {
         switch (token) {
             case OperatorToken opToken:
                 switch (opToken.Value) {
-                    case Symbols.Operators.Plus:
-                    case Symbols.Operators.Minus:
+                    case Constants.Operators.Plus:
+                    case Constants.Operators.Minus:
                         return true;
                 }
                 break;
             
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
-                    case Symbols.Words.Or:
-                    case Symbols.Words.Xor:
+                    case Constants.Words.Or:
+                    case Constants.Words.Xor:
                         return true;
                 }
                 break;
@@ -526,19 +526,19 @@ public class FactorTokenGroup : TokenGroup {
         switch (token) {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
-                    case Symbols.Operators.Multiply:
-                    case Symbols.Operators.Divide:
+                    case Constants.Operators.Multiply:
+                    case Constants.Operators.Divide:
                         return true;
                 }
                 break;
             
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
-                    case Symbols.Words.Div:
-                    case Symbols.Words.Mod:
-                    case Symbols.Words.And:
-                    case Symbols.Words.Shl:
-                    case Symbols.Words.Shr:
+                    case Constants.Words.Div:
+                    case Constants.Words.Mod:
+                    case Constants.Words.And:
+                    case Constants.Words.Shl:
+                    case Constants.Words.Shr:
                         return true;
                 }
                 break;

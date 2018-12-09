@@ -145,7 +145,7 @@ public class StringToken : Token {
                     }
                     break;
                 case States.Dec:
-                    if (Symbols.decDigits.Contains((char) symbol)) {
+                    if (Constants.decDigits.Contains((char) symbol)) {
                         controlSeq.Append((char) symbol);
                     } 
                     else {
@@ -162,7 +162,7 @@ public class StringToken : Token {
                     }
                     break;
                 case States.Hex:
-                    if (Symbols.hexDigits.Contains((char) symbol)) {
+                    if (Constants.hexDigits.Contains((char) symbol)) {
                         controlSeq.Append((char) symbol);
                     }
                     else {
@@ -179,7 +179,7 @@ public class StringToken : Token {
                     }
                     break;
                 case States.Oct:
-                    if (Symbols.octDigits.Contains((char) symbol)) {
+                    if (Constants.octDigits.Contains((char) symbol)) {
                         controlSeq.Append((char) symbol);
                     }
                     else {
@@ -257,9 +257,9 @@ public class OperatorToken : Token {
     public override string Lexeme { get; }
     public override string StringValue => Value.ToString();
     
-    public Symbols.Operators Value { get; }
+    public Constants.Operators Value { get; }
 
-    public OperatorToken(string lexeme, Symbols.Operators op, int line, int column) : base(line, column) {
+    public OperatorToken(string lexeme, Constants.Operators op, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         Value = op;
     }
@@ -270,9 +270,9 @@ public class ReservedToken : Token {
     public override string Lexeme { get; }
     public override string StringValue => Value.ToString();
 
-    public Symbols.Words Value { get; }
+    public Constants.Words Value { get; }
 
-    public ReservedToken(string lexeme, Symbols.Words word, int line, int column) : base(line, column) {
+    public ReservedToken(string lexeme, Constants.Words word, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         Value = word;
     }
@@ -283,9 +283,9 @@ public class SeparatorToken : Token {
     public override string Lexeme { get; }
     public override string StringValue => Value.ToString();
 
-    public Symbols.Separators Value { get; }
+    public Constants.Separators Value { get; }
 
-    public SeparatorToken(string lexeme, Symbols.Separators sep, int line, int column) : base(line, column) {
+    public SeparatorToken(string lexeme, Constants.Separators sep, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         Value = sep;
     }

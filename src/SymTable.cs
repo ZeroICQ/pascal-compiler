@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 namespace Compiler {
-public class CyclesStack {
+public class SymStack {
     private Stack<BlockNode> _stack;
 
     public void Push(BlockNode stmnt) {

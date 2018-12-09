@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 namespace Compiler {
-public static class Symbols {
+public static class Constants {
     public static readonly HashSet<char> decDigits = new HashSet<char>("0123456789".ToCharArray());
     public static readonly HashSet<char> octDigits = new HashSet<char>("01234567".ToCharArray());
     public static readonly HashSet<char> hexDigits = new HashSet<char>("0123456789ABCDEFabcdef".ToCharArray());
