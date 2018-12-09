@@ -4,6 +4,7 @@ using CommandLineParser.Arguments;
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
+    private ulong _cycles_counter = 0;
 
     public Parser(LexemesAutomata lexer) {
         _lexer = lexer;
@@ -39,10 +40,6 @@ public class Parser {
             _lexer.Retract();
             compoundStatement.AddStatement(ParseStatement());
         }
-        
-        _lexer.Retract();
-        Require(Symbols.Words.End);
-        return compoundStatement;
     }
 
     private StatementNode ParseStatement() {
@@ -104,6 +101,12 @@ public class Parser {
                     case Symbols.Words.End:
                         _lexer.Retract();
                         return new EmptyStatementNode();
+                    case Symbols.Words.Continue:
+                    case Symbols.Words.Break:
+                        if (_cycles_counter == 0) {
+                            throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
+                        }
+                        return new ControlSequence(reserved);
                 }
                 break;
         }
@@ -155,8 +158,9 @@ public class Parser {
         
         Require(Symbols.Words.Do);
 
+        _cycles_counter += 1;
         var statement = ParseStatement();
-        
+        _cycles_counter -= 1;
         return new ForNode(assignOperator, direction, finalValue, statement); 
     }
 
@@ -164,7 +168,10 @@ public class Parser {
         Require(Symbols.Words.While);
         var condition = ParseExpression();
         Require(Symbols.Words.Do);
+        _cycles_counter += 1;
         var st = ParseStatement();
+        _cycles_counter -= 1;
+        
         return new WhileNode(condition, st);
     }
 

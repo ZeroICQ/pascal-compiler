@@ -15,7 +15,7 @@ public static class Symbols {
     }
 
     public enum Words {
-        Absolute, And, Array, Asm, Begin, Case, Const, Constructor, Destructor, Div, Do, Downto, Else, End, File, For,
+        Absolute, And, Array, Asm, Begin, Break, Case, Const, Constructor, Continue, Destructor, Div, Do, Downto, Else, End, File, For,
         Function, Goto, If, Implementation, In, Inherited, Inline, Interface, Label, Mod, Nil, Not, Object, Of, Operator,
         Or, Packed, Procedure, Program, Record, Reintroduce, Repeat, Self, Set, Shl, Shr, String, Then, To, Type, Unit,
         Until, Uses, Var, While, With, Xor

@@ -17,4 +17,9 @@ public class IllegalExprException : ParserException {
     
 }
 
+public class NotAllowedException : ParserException {
+    public override string Message => $"{Lexeme} not allowed at {Line},{Column}.";
+    public NotAllowedException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
 }
