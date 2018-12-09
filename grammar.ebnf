@@ -36,8 +36,12 @@
                                 
                                 <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
                                     
-                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <record access> | <array access> | "not" <factor> | <value typecast> | <address factor>
+                                    <factor> ::= "(" <expression> ")" | <variable reference> | <unsigned constant> | <function call> | <char constant> | <string constant> | <record access> | <array access> | "not" <factor> | <value typecast> | <address factor>
                                         
+                                        <char constant> := "'" <ASCII char> "'"
+
+                                        <string constant> := "'" <ASCII char> {<ASCII char>} "'"
+
                                         <unsigned constant> ::= <unsigned number>
                                         
                                             <unsigned number> ::= <unsigned integer> | <unsigned float>
