@@ -1,0 +1,13 @@
+          Main Block
+        ┌──────┴────────┐
+     Assign          Assign
+┌───────┴─┐        ┌────┴─┐
+b      Index       c   Index
+        ┌─┴─────┐       ┌─┴──┐
+      Index     4     Index  2
+       ┌┴────┐        ┌─┴┐
+    Index    3        o  b
+     ┌─┴──┐
+   Index  2
+   ┌─┴┐
+   a  1

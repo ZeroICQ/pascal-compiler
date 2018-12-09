@@ -1,0 +1,3 @@
+begin
+    c := ar[][]
+end.

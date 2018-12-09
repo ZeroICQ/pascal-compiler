@@ -279,15 +279,22 @@ public class Parser {
                 case ParseVarRefStates.AfterBracket:
                     _lexer.Retract();
                     var expr = ParseExpression();
-                    Require(Symbols.Operators.CloseBracket);
                     varRef = new IndexNode(varRef, expr);
+                    
+                    // [index1, index2][index3] is also allowed
+                    while (Check(_lexer.GetNextToken(), Symbols.Separators.Comma)) {
+                        varRef = new IndexNode(varRef, ParseExpression());
+                    }
+                    
+                    _lexer.Retract();
+                    Require(Symbols.Operators.CloseBracket);
+                    
                     state = ParseVarRefStates.Start;
                     break;
                 
                 case ParseVarRefStates.AfterParenthesis:
                     _lexer.Retract();
                     var paramList = ParseParamList();
-                    
                     varRef = new FunctionCallNode(varRef, paramList);
                     state = ParseVarRefStates.Start;
                     break;

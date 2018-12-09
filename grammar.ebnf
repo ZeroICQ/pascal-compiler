@@ -62,9 +62,9 @@
                                                 
                                         <record access> ::= (<variable reference> | <function call>) "." <identifier>
                                         
-                                        <array access> ::= (<variable reference> | <record access>) "[" <expression> "]"
+                                        <array access> ::= (<variable reference> | <record access>) "[" <expression> {","" <expression>} "]"
                                         
-                                        <variable reference> := <identifier> { ("." <identifier>) | <expression> | <actual parameter list> | "^"}
+                                        <variable reference> := (<identifier> | <record access> | <array access> | <function call>) ["^"]
                                         
                                         <value typecast> ::= <type identifier> "(" <expression> ")"
                                             
