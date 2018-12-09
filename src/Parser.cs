@@ -22,11 +22,22 @@ public class Parser {
         var compoundStatement = new BlockNode();
         
         Require(Symbols.Words.Begin);
+        
+        compoundStatement.AddStatement(ParseStatement());
+        while (true) {
+            var hasSemicolon = Check(_lexer.GetNextToken(), Symbols.Separators.Semicolon);
+            
+            if (!hasSemicolon) {
+                _lexer.Retract();
+                Require(Symbols.Words.End);
+                return compoundStatement;
+            }
 
-        while (!Check(_lexer.GetNextToken(), Symbols.Words.End)) {
+            if (Check(_lexer.GetNextToken(), Symbols.Words.End))
+                return compoundStatement;
+            
             _lexer.Retract();
             compoundStatement.AddStatement(ParseStatement());
-            Require(Symbols.Separators.Semicolon);
         }
         
         _lexer.Retract();
@@ -90,6 +101,9 @@ public class Parser {
                     case Symbols.Words.For:
                         _lexer.Retract();
                         return ParseForStatement();
+                    case Symbols.Words.End:
+                        _lexer.Retract();
+                        return new EmptyStatementNode();
                 }
                 break;
         }
@@ -414,6 +428,13 @@ public class Parser {
             throw Illegal(t);
         }
         
+    }
+
+    private void Optional(Symbols.Separators sep) {
+        var t = _lexer.GetNextToken();
+        if (Check(t, sep))
+            return;
+        _lexer.Retract();
     }
     
     private ParserException Illegal(Token token) {

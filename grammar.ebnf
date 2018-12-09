@@ -12,21 +12,19 @@
                 
                 <single variable> ::= <identifier> ":" <identifier> {"=" <expression>}
                 
-    <compound statement> ::= "begin" <statement> {; <statement>} "end"
+    <compound statement> ::= "begin" <statement> {; <statement>} {";"} "end"
                  
         <statement> ::= <simple statement> | <structured statement>
     
             <simple statement> ::= <assignment statement> | <procedure statement>
                 
-                <assignment statement> ::= <assignable> <assignment operators> <expression>
+                <assignment statement> ::= <variable reference> <assignment operators> <expression>
                                            
-                    <assignable> := <expression>
+                    <identifier> ::= <letter> {<letter> | <dec digit>}
+                
+                        <letter> ::= _ | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z
                     
-                        <identifier> ::= <letter> {<letter> | <dec digit>}
-                    
-                            <letter> ::= _ | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z
-                        
-                            <dec digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+                        <dec digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
                             
                     <assignment operators> :: = ":=" | "+=" | "-=" | "*=" | "/="
                 
@@ -58,7 +56,9 @@
                     
                                                                 <hex letter> ::= A | B | C | D | E | F | a | b | c | d | e | f
                                                                 
-                                                            <oct integer> ::= "&"() 
+                                                            <oct integer> ::= "&" <oct digit> { <oct digit> }
+                                                            
+                                                                <oct digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
 
                                             <function call> ::= <expression> <actual parameter list>
                                                 

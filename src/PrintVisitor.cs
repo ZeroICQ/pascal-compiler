@@ -119,6 +119,10 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         var pNode = new PrinterNode(node.ControlWord.StringValue);
         return pNode;
     }
+
+    public PrinterNode Visit(EmptyStatementNode node) {
+        return new PrinterNode("Empty statement");
+    }
 }
 
 public class PrinterNode {

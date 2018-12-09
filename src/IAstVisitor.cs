@@ -20,5 +20,6 @@ public interface IAstVisitor<out T> {
     T Visit(ProcedureCallNode node);
     T Visit(ForNode node);
     T Visit(ControlSequence node);
+    T Visit(EmptyStatementNode node);
 }
 }

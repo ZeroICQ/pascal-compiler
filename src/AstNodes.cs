@@ -260,6 +260,13 @@ public class ControlSequence : StatementNode {
     }
 }
 
+public class EmptyStatementNode : StatementNode {
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+    
+}
+
 
 // TODO: for, continue, break, return;
 
