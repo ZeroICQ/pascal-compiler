@@ -1,10 +1,13 @@
-using System;
 using System.Collections.Generic;
 
 namespace Compiler {
 
 public class SymStack {
-    private Stack<SymTable> _stack;
+    private Stack<SymTable> _stack = new Stack<SymTable>();
+
+    public SymStack() {
+        _stack.Push(new SymTable());
+    }
 
     public void Push() {
         _stack.Push(new SymTable());
@@ -31,7 +34,7 @@ public class SymStack {
         return null;
     }
 
-    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ConstExprNode value = null) {
+    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ExprNode value = null) {
         var type = FindType(typeToken.Value);
         
         if (type == null)
@@ -43,11 +46,16 @@ public class SymStack {
         
         _stack.Peek().Add(symVar);
     }
+
+    public void AddType(SymType symType) {
+        //todo: check?
+        _stack.Peek().Add(symType);
+    }
 }
 
 internal class SymTable {
-    private Dictionary<string, Symbol> _sym_map;
-    private List<Symbol> _sym_list;
+    private Dictionary<string, Symbol> _sym_map = new Dictionary<string, Symbol>();
+    private List<Symbol> _sym_list = new List<Symbol>();
     
     public void Add(Symbol symbol) {
         _sym_map.Add(symbol.Name, symbol);
@@ -89,9 +97,9 @@ public class SymVar : Symbol {
     public override string Name { get; }
     public SymType Type;
     // nullable
-    public ConstExprNode InitialValue { get; }
+    public ExprNode InitialValue { get; }
     
-    public SymVar(string name, SymType type, ConstExprNode initialValue) {
+    public SymVar(string name, SymType type, ExprNode initialValue) {
         Name = name;
         Type = type;
         InitialValue = initialValue;
