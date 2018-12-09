@@ -217,17 +217,11 @@ public class Parser {
     }
     
     private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
-    // id{.id | [expression] | (arg,...)}, 
-    public ExprNode ParseVariableReference() {
+    // id {.id | [expression] | (arg,...)}, 
+    private ExprNode ParseVariableReference() {
         ExprNode varRef;
         
-        // check for dereferencing (^)
-//        var next = _lexer.GetNextToken(); 
-//        if (next is OperatorToken op && op.Value == Symbols.Operators.Caret)
-//            return new UnaryOperationNode(op, factor);
-//        _lexer.Retract();
-        
-        //get first
+        //get first mandatory identifier
         Token t;
         switch (t = _lexer.GetNextToken()) {
             case IdentifierToken identifier:

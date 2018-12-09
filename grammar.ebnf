@@ -3,16 +3,16 @@
 <main block> ::= {<declaration part>} <compound statement> "."
 
     <declaration part> ::= <variable declaration part> ";"
-        
+
         <variable declaration part> ::= "var" <variable declaration> {variable declaration}
-        
+
             <variable declaration> ::= <multiple variables> | <single variable>
                 
                 <multiple variables> ::= <identifier> {"," <identifier>} ":" <identifier>
                 
                 <single variable> ::= <identifier> ":" <identifier> {"=" <expression>}
                 
-    <compound statement> ::= "begin" <statement> {; <statement>} {";"} "end"
+    <compound statement> ::= "begin" <statement> {; <statement>} [ ";" ] "end"
                  
         <statement> ::= <simple statement> | <structured statement>
     
@@ -32,7 +32,7 @@
     
                             <relational operator> ::= "=" | "<>" | "<" | "<=" | ">=" | ">" 
     
-                            <simple expression> ::= <term> { ("+" | "-" | "or" | "xor")  <term>}
+                            <simple expression> ::= (<term> { ("+" | "-" | "or" | "xor")  <term>}) [ "^" ]
                                 
                                 <term> ::= <factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <factor>}
                                     
@@ -42,11 +42,9 @@
                                         
                                             <unsigned number> ::= <unsigned integer> | <unsigned float>
                                             
-                                                <unsigned float> ::= <unsigned integer> [. <unsigned integer>] [(E|e) <integer>]
+                                                <unsigned float> ::= <dec integer> [. <dec integer>] [(E|e) <dec integer>]
                                                  
-                                                    <unsigned integer> ::= <digit> {<digit>}
-                                                    
-                                                        <digit> ::= <dec integer> | <bin integer> | <hex integer> | <oct integer> 
+                                                    <unsigned integer> ::= <dec integer> | <bin integer> | <hex integer> | <oct integer> 
                 
                                                             <dec integer> ::= <dec digit> {<dec digit>}
                     
@@ -60,24 +58,23 @@
                                                             
                                                                 <oct digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
 
-                                            <function call> ::= <expression> <actual parameter list>
+                                            <function call> ::= <variable reference> <actual parameter list>
                                                 
-                                        <record access> ::= (<identifier> | <function call>) "." <identifier>
+                                        <record access> ::= (<variable reference> | <function call>) "." <identifier>
                                         
-                                        <array access> ::= (<identifier> | <record access>) "[" <expression> "]"
+                                        <array access> ::= (<variable reference> | <record access>) "[" <expression> "]"
                                         
-                                        <variable reference> := <identifier>
+                                        <variable reference> := <identifier> { ("." <identifier>) | <expression> | <actual parameter list> | "^"}
                                         
                                         <value typecast> ::= <type identifier> "(" <expression> ")"
                                             
                                             <type identifier> ::= <identifier>
                                             
                                         <address factor> ::= "@" <variable reference>
-                                        
                                 
-                    <procedure statement> ::= <expression> <actual parameter list>
+                    <procedure statement> ::= <variable reference> <actual parameter list>
                     
-                        <actual parameter list> ::= "(" <expression> {"," <expression>}")"
+                        <actual parameter list> ::= "(" [<expression> {"," <expression>} ] ")"
                     
             <structured statement> ::= <compound statement> | <if statement> | <repetitive statement>
             
@@ -89,15 +86,14 @@
                     
                     <for statement> ::= "for" <control variable> ":=" <initial value> ("to" | "downto") <final value> "do" <statement>
                         
-                        <control variable> ::= <variable identifier>                
+                        <control variable> ::= <variable identifier>
+
+                            <variable identifier> ::= <identifier>
                         
                         <initial value> ::= <expression>
                         
                         <final value> ::= <expression>
                         
-                        
-                
-                
 
 
 
