@@ -58,6 +58,18 @@ public class FloatNode : ConstantNode {
     }
 }
 
+public class StringNode : ConstantNode {
+    public StringToken Token { get; }
+
+    public StringNode(StringToken token) : base(token) {
+        Token = token;
+    }
+        
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+}
+
 public class CharNode : ConstantNode {
     public StringToken Token { get; }
 

@@ -11,7 +11,7 @@ public interface IAstVisitor<out T> {
     T Visit(CastNode node);
     T Visit(AccessNode node);
     T Visit(IndexNode node);
-    T Visit(CharNode node);
+    T Visit(StringNode node);
     T Visit(UnaryOperationNode node);
     
     T Visit(AssignNode node);
@@ -21,5 +21,6 @@ public interface IAstVisitor<out T> {
     T Visit(ForNode node);
     T Visit(ControlSequence node);
     T Visit(EmptyStatementNode node);
+    T Visit(CharNode node);
 }
 }

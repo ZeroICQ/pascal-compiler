@@ -31,7 +31,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         return new PrinterNode(node.Token.StringValue);
     }
 
-    public PrinterNode Visit(CharNode node) {
+    public PrinterNode Visit(StringNode node) {
         return new PrinterNode(node.Token.StringValue);
     }
 
@@ -122,6 +122,10 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
 
     public PrinterNode Visit(EmptyStatementNode node) {
         return new PrinterNode("Empty statement");
+    }
+
+    public PrinterNode Visit(CharNode node) {
+        return new PrinterNode(node.Token.StringValue);
     }
 }
 

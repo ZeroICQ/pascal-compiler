@@ -288,7 +288,6 @@ public class Parser {
                     
                     _lexer.Retract();
                     Require(Symbols.Operators.CloseBracket);
-                    
                     state = ParseVarRefStates.Start;
                     break;
                 
@@ -372,6 +371,11 @@ public class Parser {
                 return new FloatNode(floatToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
+            case StringToken stringToken:
+                if (stringToken.Lexeme.Length == 1)
+                    return new CharNode(stringToken);
+                else 
+                    return new StringNode(stringToken); 
             
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
