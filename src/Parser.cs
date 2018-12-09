@@ -1,21 +1,88 @@
 using System.Collections.Generic;
+using System.Linq;
 using CommandLineParser.Arguments;
 
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
-    private ulong _cycles_counter = 0;
+    private ulong _cyclesCounter = 0;
+    private SymStack _symStack;
 
     public Parser(LexemesAutomata lexer) {
         _lexer = lexer;
+        
+        _symStack = new SymStack();
+        Prelude();
+    }
+
+    private void Prelude() {
+        _symStack.AddVariable(new SymInt());        
+        _symStack.AddVariable(new SymChar());        
+        _symStack.AddVariable(new SymFloat());        
     }
     
-    public AstNode Parse() {
-        // todo: add declarations 
+    public AstNode Parse() { 
+        ParseDeclarations();
+        
         var mainBlock = ParseCompoundStatement();
         Require(Constants.Operators.Dot);
         mainBlock.IsMain = true;
         return mainBlock;
+    }
+
+
+    private void ParseDeclarations() {
+        while (true) {
+            var t = _lexer.GetNextToken();
+            
+            if (Check(t, Constants.Words.Var)) {
+                ParseVariableDeclarations();
+                continue;
+            }
+            
+            break;
+        }
+
+        _lexer.Retract();
+    }
+
+    // start after "var"
+    private enum ParseVariableDeclarationsStates {Start, SingleVariable, MultipleVariables} 
+    private void ParseVariableDeclarations() {
+        var state = ParseVariableDeclarationsStates.Start;
+        
+        var identifiers = new List<IdentifierToken>();
+        
+        while (true) {
+            var t = _lexer.GetNextToken();
+            switch (state) {
+                case ParseVariableDeclarationsStates.Start:
+
+                    if (t is IdentifierToken identifierToken)
+                        identifiers.Add(identifierToken);
+                    else
+                        throw Illegal(t);
+
+                    if (Check(_lexer.GetNextToken(), Constants.Separators.Comma))
+                        state = ParseVariableDeclarationsStates.MultipleVariables;
+                    else if (Check(_lexer.GetNextToken(), Constants.Separators.Colon))
+                        state = ParseVariableDeclarationsStates.SingleVariable;
+                    else {
+                        _lexer.Retract();
+                        throw Illegal(t);
+                    }
+                    break;
+                //after "var identifier :"->[...]
+                case ParseVariableDeclarationsStates.SingleVariable:
+                    if (t is IdentifierToken typeToken) {
+                        // todo: make
+                        var initialExpr = ParseConstExpr();
+                    }
+
+                    throw Illegal(t);
+            }
+        }
+
     }
     
     // retracts
@@ -43,7 +110,6 @@ public class Parser {
     }
 
     private StatementNode ParseStatement() {
-        //TODO: parse simple statements: assignment, procedure; Structured
         var t = _lexer.GetNextToken();
                 
         switch (t) {
@@ -103,7 +169,7 @@ public class Parser {
                         return new EmptyStatementNode();
                     case Constants.Words.Continue:
                     case Constants.Words.Break:
-                        if (_cycles_counter == 0) {
+                        if (_cyclesCounter == 0) {
                             throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
                         }
                         return new ControlSequence(reserved);
@@ -158,9 +224,9 @@ public class Parser {
         
         Require(Constants.Words.Do);
 
-        _cycles_counter += 1;
+        _cyclesCounter += 1;
         var statement = ParseStatement();
-        _cycles_counter -= 1;
+        _cyclesCounter -= 1;
         return new ForNode(assignOperator, direction, finalValue, statement); 
     }
 
@@ -168,9 +234,9 @@ public class Parser {
         Require(Constants.Words.While);
         var condition = ParseExpression();
         Require(Constants.Words.Do);
-        _cycles_counter += 1;
+        _cyclesCounter += 1;
         var st = ParseStatement();
-        _cycles_counter -= 1;
+        _cyclesCounter -= 1;
         
         return new WhileNode(condition, st);
     }

@@ -22,4 +22,14 @@ public class NotAllowedException : ParserException {
     public NotAllowedException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
+public class TypeNotFoundException : ParserException {
+    public override string Message => $"Type {Lexeme} at {Line},{Column} was not found"; 
+    public TypeNotFoundException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
+public class DuplicateIdentifierException : ParserException {
+    public override string Message => $"Duplicate identifier {Lexeme} at {Line},{Column}";
+    public DuplicateIdentifierException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
 }

@@ -34,19 +34,23 @@ public class IdentifierToken : Token {
     public override TokenType Type => TokenType.Identifier;
     public override string Lexeme { get; }
 
-    public override string StringValue => _value;
-    private string _value;
+    public override string StringValue => Value;
+    public string Value { get; }
     
     public IdentifierToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         if (lexeme.StartsWith('&'))
-            _value = lexeme.Substring(1).ToLower();
+            Value = lexeme.Substring(1).ToLower();
         else
-            _value = lexeme.ToLower();
+            Value = lexeme.ToLower();
     }
 }
 
-public abstract class NumberToken : Token {
+public abstract class ConstantToken : Token {
+    protected ConstantToken(int line, int column) : base(line, column) {}
+}
+
+public abstract class NumberToken : ConstantToken {
     protected NumberToken(int line, int column) : base(line, column) {}
 }
 
@@ -99,7 +103,7 @@ public class FloatToken : NumberToken {
     }
 }
 
-public class StringToken : Token {
+public class StringToken : ConstantToken {
     private enum States {AfterHash, Dec, Hex, Oct, Bin, StringStart, QuotedString, AfterQMark} 
         
     public override TokenType Type => TokenType.String;

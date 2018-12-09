@@ -4,13 +4,15 @@
 
     <declaration part> ::= <variable declaration part> ";"
 
-        <variable declaration part> ::= "var" <variable declaration> {variable declaration}
+        <variable declaration part> ::= "var" <variable declaration> ";" {variable declaration ";"}
 
             <variable declaration> ::= <multiple variables> | <single variable>
                 
-                <multiple variables> ::= <identifier> {"," <identifier>} ":" <identifier>
+                <multiple variables> ::= <identifier> {"," <identifier>} ":" <type>
                 
-                <single variable> ::= <identifier> ":" <identifier> {"=" <expression>}
+                <single variable> ::= <identifier> ":" <type> {"=" <const expression>}
+
+                <type> ::= <identifier>
                 
     <compound statement> ::= "begin" <statement> {; <statement>} [ ";" ] "end"
                  
@@ -27,7 +29,15 @@
                         <dec digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
                             
                     <assignment operators> :: = ":=" | "+=" | "-=" | "*=" | "/="
-                
+
+                        <const expression> ::= <const simple expression> [<relational operator> <const simple expression>]
+
+                            <const simple expression> ::= <simple expression> ::= (<const term> { ("+" | "-" | "or" | "xor")  <const term>})
+
+                                    <const term> ::= <const factor> {("*" | "/" | "div" | "mod" | "and" | "shl" | "shr") <const factor>}
+
+                                    <const factor> ::= "(" <const expression> ")" | <unsigned constant> | <char constant> | <string constant> | "not" <factor> 
+                        
                         <expression> ::= <simple expression> [<relational operator> <simple expression>]
     
                             <relational operator> ::= "=" | "<>" | "<" | "<=" | ">=" | ">" 
