@@ -31,7 +31,7 @@ public class SymStack {
         return null;
     }
 
-    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ConstantToken value = null) {
+    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ConstExprNode value = null) {
         var type = FindType(typeToken.Value);
         
         if (type == null)
@@ -39,8 +39,9 @@ public class SymStack {
         
         if (_stack.Peek().Find(variableToken.Value) != null)
             throw new DuplicateIdentifierException(variableToken.Lexeme, variableToken.Line, variableToken.Line);
-
-        var symVar = new SymVar(variableToken.Value, type);
+        var symVar = new SymVar(variableToken.Value, type, value);
+        
+        _stack.Peek().Add(symVar);
     }
 }
 
@@ -87,11 +88,13 @@ public class SymChar : SymScalar {
 public class SymVar : Symbol {
     public override string Name { get; }
     public SymType Type;
-    public ExprNode InitialValue { get; }
+    // nullable
+    public ConstExprNode InitialValue { get; }
     
-    public SymVar(string name, SymType type, ExprNode) {
+    public SymVar(string name, SymType type, ConstExprNode initialValue) {
         Name = name;
         Type = type;
+        InitialValue = initialValue;
     }
 }
 

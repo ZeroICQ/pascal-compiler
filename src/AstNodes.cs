@@ -9,9 +9,7 @@ public abstract class AstNode {
 }
 
 public abstract class ExprNode : AstNode {
-
 }
-
 
 //--- Expressions ---
 public class IdentifierNode : ExprNode {
