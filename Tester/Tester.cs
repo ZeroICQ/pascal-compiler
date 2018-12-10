@@ -164,7 +164,7 @@ class Tester {
 
             var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
 
-            var pr = RunCompiler(compilerPath, $"-s -i  {testFile}");
+            var pr = RunCompiler(compilerPath, $"-c -s -i  {testFile}");
             
             var foundError = false;
             using (var answer = File.OpenText($"{testName}.test")) {

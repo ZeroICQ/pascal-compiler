@@ -1,18 +1,19 @@
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using CommandLineParser.Arguments;
 
 namespace Compiler {
 public class Parser {
     private LexemesAutomata _lexer;
     private ulong _cyclesCounter = 0;
     private SymStack _symStack;
+    private bool _checkSemantics;
 
-    public Parser(LexemesAutomata lexer) {
+    public Parser(LexemesAutomata lexer, bool checkSemantics) {
         _lexer = lexer;
         _symStack = new SymStack();
+        _checkSemantics = checkSemantics;
         Prelude();
+        // Global namespace
+        _symStack.Push();
     }
 
     private void Prelude() {
@@ -47,6 +48,7 @@ public class Parser {
     }
 
     // start after "var"
+    // todo: add arrays
     private enum ParseVariableDeclarationsStates {Start, SingleVariable, MultipleVariables} 
     private void ParseVariableDeclarations() {
         var state = ParseVariableDeclarationsStates.Start;

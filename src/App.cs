@@ -13,10 +13,12 @@ internal static class App {
         var sourcePath = new FileArgument('i', "input", "Source file path") { Optional = false };
         var lexicalAnalysis = new SwitchArgument('l', "lexical", false);
         var syntaxAnalysis = new SwitchArgument('s', "syntax", false);
+        var semanticsCheck = new SwitchArgument('c', "semantics", "turn off semantics check", true);
         
         commandLineParser.Arguments.Add(sourcePath);
         commandLineParser.Arguments.Add(lexicalAnalysis);
         commandLineParser.Arguments.Add(syntaxAnalysis);
+        commandLineParser.Arguments.Add(semanticsCheck);
 
         var compileStageGroupCertification = new ArgumentGroupCertification("l,s", EArgumentGroupCondition.ExactlyOneUsed);
         commandLineParser.Certifications.Add(compileStageGroupCertification);
@@ -34,19 +36,19 @@ internal static class App {
                 PerformLexicalAnalysis(input);
             
             if (syntaxAnalysis.Value)
-                PerformSyntaxAnalysis(input);
+                PerformSyntaxAnalysis(input, semanticsCheck.Value);
         }
             
         return 0;
     }
 
-    private static void PerformSyntaxAnalysis(StreamReader streamReader) {
-        var compiler = new Compiler(streamReader);
+    private static void PerformSyntaxAnalysis(StreamReader streamReader, bool checkSemantics) {
+        var compiler = new Compiler(streamReader, checkSemantics);
         compiler.PrintAst();
     }
 
     private static void PerformLexicalAnalysis(StreamReader streamReader) {
-        var compiler = new Compiler(streamReader);
+        var compiler = new Compiler(streamReader, false);
             
         Token lt = null;
             

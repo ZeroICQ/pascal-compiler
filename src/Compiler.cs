@@ -11,9 +11,11 @@ namespace Compiler {
 
 internal class Compiler {
     private LexemesAutomata _lexer;
+    private bool _checkSemantics;
     
-    public Compiler(in TextReader input) {
+    public Compiler(in TextReader input, bool checkSemantics) {
         _lexer = new LexemesAutomata(new InputBuffer(input));
+        _checkSemantics = checkSemantics;
     }
     
     public Token GetNextToken() {
@@ -21,7 +23,7 @@ internal class Compiler {
     }
 
     public AstNode Parse() {
-        return new Parser(_lexer).Parse();
+        return new Parser(_lexer, _checkSemantics).Parse();
     }
 
     public void PrintAst() {
