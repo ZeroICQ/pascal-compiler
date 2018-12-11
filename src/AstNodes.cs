@@ -9,6 +9,8 @@ public abstract class AstNode {
 }
 
 public abstract class ExprNode : AstNode {
+    public SymType Type { get; set; }
+
 }
 
 //--- Expressions ---

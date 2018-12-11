@@ -4,9 +4,16 @@ namespace Compiler {
 
 public class SymStack {
     private Stack<SymTable> _stack = new Stack<SymTable>();
+    // standard types
+    private SymInt _symInt = new SymInt();
+    private SymChar _symChar = new SymChar();
+    private SymFloat _symFloat = new SymFloat();
 
     public SymStack() {
         _stack.Push(new SymTable());
+        AddType(_symInt);        
+        AddType(_symChar);        
+        AddType(_symFloat);        
     }
 
     public void Push() {

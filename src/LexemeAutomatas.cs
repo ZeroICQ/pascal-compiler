@@ -650,8 +650,6 @@ public static class TokenFactory {
         catch (TargetInvocationException e) {
             throw e.InnerException;
         }
-        
-        
     }
 
     public static OperatorToken BuildOperator(InputBuffer input, Constants.Operators op) {
