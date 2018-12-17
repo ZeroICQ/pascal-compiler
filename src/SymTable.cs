@@ -119,4 +119,18 @@ public class SymVar : Symbol {
     }
 }
 
+public class SymArray : SymType {
+    private readonly long _startIndex;
+    private readonly long _endIndex;
+    private readonly SymType _type;
+    
+    public override string Name => $"array of {_type.Name}";
+
+    public SymArray(long startIndex, long endIndex, SymType type) {
+        _startIndex = startIndex;
+        _endIndex = endIndex;
+        _type = type;
+    }
+}
+
 }  

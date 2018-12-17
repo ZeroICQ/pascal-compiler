@@ -93,6 +93,36 @@ public class Parser {
                         state = ParseVariableDeclarationsStates.Start;
                         break;
                     }
+                    else if (t is ReservedToken reservedToken) {
+                        Require(Constants.Words.Array);
+                        Require(Constants.Operators.OpenBracket);
+
+                        long startIndex;
+                        if (_lexer.GetNextToken() is IntegerToken integerStart) {
+                            startIndex = integerStart.Value;
+                        }
+                        else {
+                            _lexer.Retract();
+                            throw Illegal(t);
+                        }
+                        
+                        Require(Constants.Operators.Dot);
+                        Require(Constants.Operators.Dot);
+
+                        long endIndex;
+                        if (_lexer.GetNextToken() is IntegerToken integerEnd) {
+                            endIndex = integerEnd.Value;
+                        }
+                        else {
+                            _lexer.Retract();
+                            throw Illegal(t);
+                        }
+                        
+                        Require(Constants.Operators.CloseBracket);
+                        
+                        Require(Constants.Words.Of);
+                        
+                    }
                     
                     _lexer.Retract();
                     throw Illegal(t);
