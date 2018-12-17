@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 
 namespace Compiler {
@@ -17,7 +18,10 @@ public class TypeChecker {
 
     private bool CheckAssignment(ref ExprNode left, ref ExprNode right, Constants.Operators op) {
         // todo: assign can also be +=, -= etc...
-        return TryCast(ref left, ref right);
+        if (op == Constants.Operators.DivideAssign) {
+            TryCast(_stack.SymFloat, ref right);
+        }
+        return TryCast(left.Type, ref right);
     }
     
     // binary operations 
@@ -34,15 +38,19 @@ public class TypeChecker {
                 switch (operatorToken.Value) { 
                     case Constants.Operators.Plus:
                     case Constants.Operators.Minus:
-                    case Constants.Operators.Divide:
                     case Constants.Operators.Multiply:
-                        var leftToRightTry = TryCast(ref left, ref right);
+                        var leftToRightTry = TryCast(left.Type, ref right);
                         
                         if (!leftToRightTry) {
-                            return TryCast(ref right, ref left);
+                            return TryCast(right.Type, ref left);
                         }
 
                         return leftToRightTry;
+                    
+                    case Constants.Operators.Divide:
+                        TryCast(_stack.SymFloat, ref left);
+                        TryCast(_stack.SymFloat, ref right);
+                        return true;
                 }
                 break;
 //            case ReservedToken reservedToken:
@@ -53,15 +61,16 @@ public class TypeChecker {
     }
 
     // try cast target to source
-    private bool TryCast(ref ExprNode source, ref ExprNode target) {
-        switch (source.Type) {
+    private bool TryCast(SymType targetType, ref ExprNode source) {
+        switch (targetType) {
             // scalars
             // float
             case SymFloat _:
-                switch (target.Type) {
+                switch (source.Type) {
                     case SymInt _:
-                        target = new CastNode(new IdentifierToken(_stack.SymFloat.Name, 0, 0), target);
-                        target.Type = _stack.SymFloat;
+                        var t = ExprNode.GetClosestToken(source);
+                        source = new CastNode(new IdentifierToken(_stack.SymFloat.Name, t.Line, t.Column), source);
+                        source.Type = _stack.SymFloat;
                         return true;
 
                     case SymFloat _:
@@ -72,7 +81,7 @@ public class TypeChecker {
             // end float
             // int
             case SymInt _:
-                switch (target.Type) {
+                switch (source.Type) {
                     case SymInt _:
                         return true;
                 }

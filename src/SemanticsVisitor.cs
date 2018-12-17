@@ -31,7 +31,6 @@ public class SemanticsVisitor : IAstVisitor<bool> {
          
         _typeChecker.RequireBinary(ref node.Left, ref node.Right, node.Operation);
         
-        // todo rmk to match cast
         node.Type = node.Left.Type;
         return true;
     }
