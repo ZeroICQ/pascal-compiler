@@ -1,0 +1,7 @@
+     Main Block
+          ┴
+       Assign
+    ┌─────┴────┐
+    a          b
+    ┴          ┴
+a:integer  b:integer

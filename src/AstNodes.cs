@@ -10,6 +10,7 @@ public abstract class AstNode {
 
 public abstract class ExprNode : AstNode {
     public SymType Type { get; set; }
+    public bool IsLvalue { get; set; } = false;
 
 }
 
@@ -48,7 +49,7 @@ public class IntegerNode : ConstantNode {
 }
 
 public class FloatNode : ConstantNode {
-    public FloatToken Token;
+    public FloatToken Token { get; }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
@@ -98,11 +99,11 @@ public class UnaryOperationNode : ExprNode {
 }
 
 public class BinaryExprNode : ExprNode {
-    public AstNode Left { get; }
-    public AstNode Right { get; }
+    public ExprNode Left { get; }
+    public ExprNode Right { get; }
     public Token Operation { get; }
 
-    public BinaryExprNode(AstNode left, AstNode right, Token operation) {
+    public BinaryExprNode(ExprNode left, ExprNode right, Token operation) {
         Left = left;
         Right = right;
         Operation = operation;
@@ -182,8 +183,8 @@ public class BlockNode : StatementNode {
 }
 
 public class AssignNode : StatementNode {
-    public ExprNode Left { get; }
-    public ExprNode Right { get; }
+    public ExprNode Left;
+    public ExprNode Right;
     public OperatorToken Operation { get; }
     
     public AssignNode(ExprNode left, OperatorToken op, ExprNode right) {

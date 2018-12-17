@@ -162,7 +162,72 @@ public class Parser {
         var t = _lexer.GetNextToken();
                 
         switch (t) {
-            case IdentifierToken identifier:
+// todo: remove            
+//            case IdentifierToken identifier:
+//                _lexer.Retract();
+//                var left = ParseExprWithCheck(false);
+//
+//                // todo: remove crunch?
+//                if (left is FunctionCallNode f) {
+//                    return new ProcedureCallNode(f.Name, f.Args);
+//                }
+//                
+//                // now it can be either procedure statement or assign
+//                var nextToken = _lexer.GetNextToken();
+//
+//                switch (nextToken) {
+//                    case OperatorToken op:
+//                        switch (op.Value) {
+//                            case Constants.Operators.Assign:
+//                            case Constants.Operators.PlusAssign:
+//                            case Constants.Operators.MinusAssign:
+//                            case  Constants.Operators.MultiplyAssign:
+//                            case  Constants.Operators.DivideAssign:
+//                                return new AssignNode(left, op, ParseExprWithCheck(false));
+//                            
+//                            case Constants.Operators.OpenParenthesis:
+//                                //procedure call
+//                                var paramList = ParseParamList();
+//                                return new ProcedureCallNode(left, paramList);
+//                        }
+//                        break;
+//                }
+//                
+//                _lexer.Retract();
+//                throw Illegal(nextToken);
+                
+            // statements that starts with reserved words
+            case ReservedToken reserved:
+                switch (reserved.Value) {
+                    case Constants.Words.Begin:
+                        _lexer.Retract();
+                        return ParseCompoundStatement();
+                    
+                    // if
+                    case Constants.Words.If:
+                        _lexer.Retract();
+                        return ParseIfStatement();
+                    // while
+                    case Constants.Words.While:
+                        _lexer.Retract();
+                        return ParseWhileStatement(); 
+                    case Constants.Words.For:
+                        _lexer.Retract();
+                        return ParseForStatement();
+                    case Constants.Words.End:
+                        _lexer.Retract();
+                        return new EmptyStatementNode();
+                    case Constants.Words.Continue:
+                    case Constants.Words.Break:
+                        if (_cyclesCounter == 0) {
+                            throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
+                        }
+                        return new ControlSequence(reserved);
+                }
+                break;
+            
+            // assignment
+            default:
                 _lexer.Retract();
                 var left = ParseExprWithCheck(false);
 
@@ -194,36 +259,6 @@ public class Parser {
                 
                 _lexer.Retract();
                 throw Illegal(nextToken);
-                
-            // statements that starts with reserved words
-            case ReservedToken reserved:
-                switch (reserved.Value) {
-                    case Constants.Words.Begin:
-                        _lexer.Retract();
-                        return ParseCompoundStatement();
-                    
-                    // if
-                    case Constants.Words.If:
-                        _lexer.Retract();
-                        return ParseIfStatement();
-                    // while
-                    case Constants.Words.While:
-                        _lexer.Retract();
-                        return ParseWhileStatement(); 
-                    case Constants.Words.For:
-                        _lexer.Retract();
-                        return ParseForStatement();
-                    case Constants.Words.End:
-                        _lexer.Retract();
-                        return new EmptyStatementNode();
-                    case Constants.Words.Continue:
-                    case Constants.Words.Break:
-                        if (_cyclesCounter == 0) {
-                            throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
-                        }
-                        return new ControlSequence(reserved);
-                }
-                break;
         }
 
         throw Illegal(t);
@@ -341,6 +376,7 @@ public class Parser {
     private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
     // id {.id | [expression] | (arg,...)}, 
     private ExprNode ParseVariableReference() {
+        // ASK: really?
         ExprNode varRef;
         
         //get first mandatory identifier
@@ -502,7 +538,7 @@ public class Parser {
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
             case StringToken stringToken:
-                if (stringToken.Lexeme.Length == 1)
+                if (stringToken.StringValue.Length == 1)
                     return new CharNode(stringToken);
                 else 
                     return new StringNode(stringToken); 

@@ -55,7 +55,9 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(CastNode node) {
-        return Visit((UnaryOperationNode) node);
+        var pNode = new PrinterNode($"({node.Operation.StringValue})");
+        pNode.AddChild(node.Operand.Accept(this));
+        return pNode;
     }
 
     public PrinterNode Visit(AccessNode node) {

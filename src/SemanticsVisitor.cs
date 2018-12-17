@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Reflection;
 
 namespace Compiler {
@@ -21,23 +20,40 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(BinaryExprNode node) {
-        throw new System.NotImplementedException();
+        if (node.Left.Type == null)
+            node.Left.Accept(this);
+
+        if (node.Right.Type == null)
+            node.Right.Accept(this);
+        
+        // todo add switch check for all operation + casts
+        if (!ReferenceEquals(node.Left.Type, node.Right.Type))
+            throw Incompatible(node.Left.Type, node.Right.Type, node.Right);
+        
+        // todo rmk to match cast
+        node.Type = node.Left.Type;
+        return true;
     }
 
     public bool Visit(IntegerNode node) {
-        throw new System.NotImplementedException();
+        node.Type = _stack.SymInt;
+        return true;
     }
 
     public bool Visit(FloatNode node) {
-        throw new System.NotImplementedException();
+        node.Type = _stack.SymFloat;
+        return true;
     }
 
     public bool Visit(IdentifierNode node) {
         var sym = _stack.FindVar(node.Token.Value);
         if (sym == null)
             throw BuildException<IdentifierNotDefinedException>(node.Token);
+        
         node.Symbol = sym;
         node.Type = sym.Type;
+        node.IsLvalue = true;
+        
         return true;
     }
 
@@ -66,9 +82,11 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AssignNode node) {
-        // todo replace with cheker + lval
-        if (!ReferenceEquals(node.Left.Type, node.Right.Type))
-            throw Incompatible(node.Left.Type, node.Right.Type, node.Right);
+        // todo: assign can also be +=, -= etc... 
+        EnsureTypesMatch(ref node.Left, ref node.Right);
+
+        if (!node.Left.IsLvalue)
+            throw BuildException<NotLvalueException>(GetClosestToken(node.Left));
         
         return true;
     }
@@ -98,7 +116,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(CharNode node) {
-        throw new System.NotImplementedException();
+        node.Type = _stack.SymChar;
+        return true;
     }
     
     private static T BuildException<T>(Token token) where T : ParserException {
@@ -110,21 +129,46 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         }
     }
 
+    private void EnsureTypesMatch(ref ExprNode left, ref ExprNode right) {
+        if (!MatchTypes(ref left, ref right))        
+            throw Incompatible(left.Type, right.Type, right);
+    }
+
+    private bool MatchTypes(ref ExprNode left, ref ExprNode right) {
+        switch (left.Type) {
+            // scalars
+            // float
+            case SymFloat leftFloat:
+                switch (right.Type) {
+                    case SymInt _:
+                        right = new CastNode(new IdentifierToken(_stack.SymFloat.Name,0, 0), right);
+                        return true;
+                    
+                    case SymFloat _:
+                        return true;
+                }
+                break;
+            // end float
+            // int
+            case SymInt leftInt:
+                switch (right.Type) {
+                    case SymInt _:
+                        return true;
+                }
+            break;
+            // end int
+        }
+
+        return false;
+    }
+
     private static IncompatibleTypesException Incompatible(SymType left, SymType right, ExprNode node) {
-        var token = GetLeftmostToken(node);
+        var token = GetClosestToken(node);
         return new IncompatibleTypesException(left, right, token.Lexeme, token.Line, token.Column);
     }
-    
-//    private static T BuildException<T>(Token leftToken, Token rightToken) where T : ParserException {
-//        try {
-//            return (T)Activator.CreateInstance(typeof(T),leftToken, rightToken.Lexeme, rightToken.Line, rightToken.Column);
-//        }
-//        catch (TargetInvocationException e) {
-//            throw e.InnerException;
-//        }
-//    }
 
-    private static Token GetLeftmostToken(ExprNode node) {
+    // extract some token from exprnode 
+    private static Token GetClosestToken(ExprNode node) {
         var type = node.GetType();
         var pi = type.GetProperty("Token");
         
