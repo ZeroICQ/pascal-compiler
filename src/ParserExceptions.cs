@@ -43,8 +43,8 @@ public class IdentifierNotDefinedException : ParserException {
 }
 
 public class IncompatibleTypesException : ParserException {
-    private SymType _leftType;
-    private SymType _rightType;
+    private readonly SymType _leftType;
+    private readonly SymType _rightType;
     public override string Message => $"Types \"{_leftType.Name}\" and \"{_rightType.Name}\" are incompatible at {Line},{Column}.";
 
     public IncompatibleTypesException(SymType leftType, SymType rightType, string lexeme, int line, int column)
@@ -54,13 +54,24 @@ public class IncompatibleTypesException : ParserException {
     }
 }
 
+public class OperatorNotOverloaded : ParserException {
+    private readonly SymType _leftType;
+    private readonly SymType _rightType;
+
+    public override string Message => $"Operator is not overloaded \"{_leftType}\" {Lexeme} \"{_rightType}\" at {Line},{Column}.";
+    
+    public OperatorNotOverloaded(SymType leftType, SymType rightType, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _leftType = leftType;
+        _rightType = rightType;
+    }
+}
+
 public class NotLvalueException : ParserException {
-    public override string Message => $"Expression is not lvalue at {Line},{Column}";
+    public override string Message => $"Expression is not lvalue at {Line},{Column}.";
     public NotLvalueException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
 public class ParserPanicException : Exception {
-    public override string Message => "This error must not be thrown under any circumstances";
+    public override string Message => "This error must not be thrown under any circumstances.";
 }
-
 }

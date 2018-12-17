@@ -6,9 +6,11 @@ namespace Compiler {
 // sets Type values, makes implicit typecasts, 
 public class SemanticsVisitor : IAstVisitor<bool> {
     private readonly SymStack _stack;
+    private readonly TypeChecker _typeChecker;
 
     public SemanticsVisitor(SymStack stack) {
         _stack = stack;
+        _typeChecker = new TypeChecker(stack);
     }
     
     public bool Visit(BlockNode node) {
@@ -26,9 +28,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         if (node.Right.Type == null)
             node.Right.Accept(this);
         
-        // todo add switch check for all operation + casts
-        if (!ReferenceEquals(node.Left.Type, node.Right.Type))
-            throw Incompatible(node.Left.Type, node.Right.Type, node.Right);
+         
+        _typeChecker.RequireBinary(ref node.Left, ref node.Right, node.Operation);
         
         // todo rmk to match cast
         node.Type = node.Left.Type;
@@ -82,12 +83,16 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AssignNode node) {
-        // todo: assign can also be +=, -= etc... 
-        EnsureTypesMatch(ref node.Left, ref node.Right);
-
-        if (!node.Left.IsLvalue)
-            throw BuildException<NotLvalueException>(GetClosestToken(node.Left));
+//        if (node.Left.Type == null)
+//            node.Left.Accept(this);
+//        
+//        if (node.Right.Type == null)
+//            node.Right.Accept(this);
         
+        if (!node.Left.IsLvalue)
+            throw BuildException<NotLvalueException>(ExprNode.GetClosestToken(node.Left));
+        
+        _typeChecker.RequireAssignment(ref node.Left, ref node.Right, node.Operation.Value);
         return true;
     }
 
@@ -128,62 +133,6 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             throw e.InnerException;
         }
     }
-
-    private void EnsureTypesMatch(ref ExprNode left, ref ExprNode right) {
-        if (!MatchTypes(ref left, ref right))        
-            throw Incompatible(left.Type, right.Type, right);
-    }
-
-    private bool MatchTypes(ref ExprNode left, ref ExprNode right) {
-        switch (left.Type) {
-            // scalars
-            // float
-            case SymFloat leftFloat:
-                switch (right.Type) {
-                    case SymInt _:
-                        right = new CastNode(new IdentifierToken(_stack.SymFloat.Name,0, 0), right);
-                        return true;
-                    
-                    case SymFloat _:
-                        return true;
-                }
-                break;
-            // end float
-            // int
-            case SymInt leftInt:
-                switch (right.Type) {
-                    case SymInt _:
-                        return true;
-                }
-            break;
-            // end int
-        }
-
-        return false;
-    }
-
-    private static IncompatibleTypesException Incompatible(SymType left, SymType right, ExprNode node) {
-        var token = GetClosestToken(node);
-        return new IncompatibleTypesException(left, right, token.Lexeme, token.Line, token.Column);
-    }
-
-    // extract some token from exprnode 
-    private static Token GetClosestToken(ExprNode node) {
-        var type = node.GetType();
-        var pi = type.GetProperty("Token");
-        
-        if (pi != null)
-            return (Token) pi.GetValue(node);
-        
-        pi = type.GetProperty("Operation");
-        if (pi != null)
-            return (Token) pi.GetValue(node);
-        
-        // no token found
-        
-//        pi = type.GetProperty("Left");
-//        if (pi ! null)
-        throw new ArgumentOutOfRangeException("something really bad happened");
-    }
+    
 }
 }

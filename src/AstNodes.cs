@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -11,6 +12,23 @@ public abstract class AstNode {
 public abstract class ExprNode : AstNode {
     public SymType Type { get; set; }
     public bool IsLvalue { get; set; } = false;
+    
+    public static Token GetClosestToken(ExprNode node) {
+        var type = node.GetType();
+        var pi = type.GetProperty("Token");
+            
+        if (pi != null)
+            return (Token) pi.GetValue(node);
+            
+        pi = type.GetProperty("Operation");
+        if (pi != null)
+            return (Token) pi.GetValue(node);
+            
+        // no token found
+        //        pi = type.GetProperty("Left");
+        //        if (pi ! null)
+        throw new ArgumentOutOfRangeException("Token was not found in GetClosest token method");
+    }
 
 }
 
@@ -99,8 +117,8 @@ public class UnaryOperationNode : ExprNode {
 }
 
 public class BinaryExprNode : ExprNode {
-    public ExprNode Left { get; }
-    public ExprNode Right { get; }
+    public ExprNode Left;
+    public ExprNode Right;
     public Token Operation { get; }
 
     public BinaryExprNode(ExprNode left, ExprNode right, Token operation) {
