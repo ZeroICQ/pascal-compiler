@@ -32,4 +32,24 @@ public class DuplicateIdentifierException : ParserException {
     public DuplicateIdentifierException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
+public class IdentifierNotDefinedException : ParserException {
+    public override string Message => $"Identifier {Lexeme} at {Line},{Column} was not found in this scope.";
+
+    public IdentifierNotDefinedException(string lexeme, int line, int column) : base(lexeme, line, column) {
+        
+    }
+}
+
+public class IncompatibleTypesException : ParserException {
+    private SymType _leftType;
+    private SymType _rightType;
+    public override string Message => $"Types \"{_leftType.Name}\" and \"{_rightType.Name}\" are incompatible at {Line},{Column}";
+
+    public IncompatibleTypesException(SymType leftType, SymType rightType, string lexeme, int line, int column)
+        : base(lexeme, line, column) {
+        _leftType = leftType;
+        _rightType = rightType;
+    }
+}
+
 }

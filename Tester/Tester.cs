@@ -25,6 +25,7 @@ class Tester {
         
         var testLexer = new SwitchArgument('l', "lexer", "Test lexer", false);
         var testParser = new SwitchArgument('p', "parser", "Test parser", false);
+        var testSemantics = new SwitchArgument('s', "semantics", "Test parser with semantics", false);
         var testAll = new SwitchArgument('a', "all", "Launch all tests", false);
         
         commandLineParser.Arguments.Add(compilerPath);
@@ -33,8 +34,9 @@ class Tester {
         commandLineParser.Arguments.Add(testAll);
         commandLineParser.Arguments.Add(testLexer);
         commandLineParser.Arguments.Add(testParser);
+        commandLineParser.Arguments.Add(testSemantics);
 
-        var testGroupCertification = new ArgumentGroupCertification("a,p,l", EArgumentGroupCondition.AtLeastOneUsed);
+        var testGroupCertification = new ArgumentGroupCertification("a,p,l,s", EArgumentGroupCondition.AtLeastOneUsed);
         commandLineParser.Certifications.Add(testGroupCertification);
 
         try {
@@ -47,7 +49,8 @@ class Tester {
 
         if (testAll.Value) {
             TestLexer(compilerPath.Value.FullName, testsDirectory.Value.FullName);
-            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName);
+            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName, "parser");
+            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName, "semantics", true);
             return;
         }
 
@@ -55,7 +58,10 @@ class Tester {
             TestLexer(compilerPath.Value.FullName, testsDirectory.Value.FullName);
 
         if (testParser.Value)
-            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName);
+            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName, "parser");
+        
+        if (testSemantics.Value)
+            TestParser(compilerPath.Value.FullName, testsDirectory.Value.FullName, "semantics", true);
     }
 
     private static Process RunCompiler(string path, string flags) {
@@ -153,10 +159,10 @@ class Tester {
         }
     }
 
-    static void TestParser(string compilerPath, string testDir) {
+    static void TestParser(string compilerPath, string testDir, string path, bool semantics = false) {
         var defaultForegroundColor = Console.ForegroundColor;
         
-        var testFiles = Directory.GetFiles($"{testDir}/parser").Reverse();
+        var testFiles = Directory.GetFiles($"{testDir}/{path}/").Reverse();
 
         foreach (var testFile in testFiles) {
             if (!testFile.EndsWith(".pas"))
@@ -164,7 +170,11 @@ class Tester {
 
             var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
 
-            var pr = RunCompiler(compilerPath, $"-c -s -i  {testFile}");
+            var flags = "-s ";
+            if (!semantics)
+                flags += "-c";
+
+            var pr = RunCompiler(compilerPath, $"{flags} -i {testFile}");
             
             var foundError = false;
             using (var answer = File.OpenText($"{testName}.test")) {

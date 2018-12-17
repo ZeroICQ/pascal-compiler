@@ -40,6 +40,12 @@ public class SymStack {
             return symType;
         return null;
     }
+    // return nullable
+    public SymVar FindVar(string name) {
+        if (Find(name) is SymVar symVar)
+            return symVar;
+        return null;
+    }
 
     public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ExprNode value = null) {
         var type = FindType(typeToken.Value);

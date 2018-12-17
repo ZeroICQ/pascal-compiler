@@ -36,7 +36,13 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     }
 
     public PrinterNode Visit(IdentifierNode node) {
-        return new PrinterNode(node.Token.StringValue);
+        var pNode = new PrinterNode(node.Token.StringValue);
+        if (node.Symbol != null) {
+            var symbolString = $"{node.Symbol.Name}:{node.Symbol.Type.Name}";
+            pNode.AddChild(new PrinterNode(symbolString));
+        }
+
+        return pNode;
     }
 
     public PrinterNode Visit(FunctionCallNode node) {

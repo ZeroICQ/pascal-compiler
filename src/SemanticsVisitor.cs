@@ -1,3 +1,7 @@
+using System;
+using System.Collections;
+using System.Reflection;
+
 namespace Compiler {
 
 // sets Type values, makes implicit typecasts, 
@@ -29,7 +33,12 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IdentifierNode node) {
-        throw new System.NotImplementedException();
+        var sym = _stack.FindVar(node.Token.Value);
+        if (sym == null)
+            throw BuildException<IdentifierNotDefinedException>(node.Token);
+        node.Symbol = sym;
+        node.Type = sym.Type;
+        return true;
     }
 
     public bool Visit(FunctionCallNode node) {
@@ -57,7 +66,11 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AssignNode node) {
-        throw new System.NotImplementedException();
+        // todo replace with cheker + lval
+        if (!ReferenceEquals(node.Left.Type, node.Right.Type))
+            throw Incompatible(node.Left.Type, node.Right.Type, node.Right);
+        
+        return true;
     }
 
     public bool Visit(IfNode node) {
@@ -86,6 +99,47 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
     public bool Visit(CharNode node) {
         throw new System.NotImplementedException();
+    }
+    
+    private static T BuildException<T>(Token token) where T : ParserException {
+        try {
+            return (T)Activator.CreateInstance(typeof(T), token.Lexeme, token.Line, token.Column);
+        }
+        catch (TargetInvocationException e) {
+            throw e.InnerException;
+        }
+    }
+
+    private static IncompatibleTypesException Incompatible(SymType left, SymType right, ExprNode node) {
+        var token = GetLeftmostToken(node);
+        return new IncompatibleTypesException(left, right, token.Lexeme, token.Line, token.Column);
+    }
+    
+//    private static T BuildException<T>(Token leftToken, Token rightToken) where T : ParserException {
+//        try {
+//            return (T)Activator.CreateInstance(typeof(T),leftToken, rightToken.Lexeme, rightToken.Line, rightToken.Column);
+//        }
+//        catch (TargetInvocationException e) {
+//            throw e.InnerException;
+//        }
+//    }
+
+    private static Token GetLeftmostToken(ExprNode node) {
+        var type = node.GetType();
+        var pi = type.GetProperty("Token");
+        
+        if (pi != null)
+            return (Token) pi.GetValue(node);
+        
+        pi = type.GetProperty("Operation");
+        if (pi != null)
+            return (Token) pi.GetValue(node);
+        
+        // no token found
+        
+//        pi = type.GetProperty("Left");
+//        if (pi ! null)
+        throw new ArgumentOutOfRangeException("something really bad happened");
     }
 }
 }
