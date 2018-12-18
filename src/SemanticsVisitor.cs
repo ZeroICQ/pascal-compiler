@@ -22,7 +22,6 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(BinaryExprNode node) {
-        // todo: div, mod
         if (node.Left.Type == null)
             node.Left.Accept(this);
 

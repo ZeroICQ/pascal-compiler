@@ -64,8 +64,8 @@ public class TypeChecker {
 
     // tries to cast target to source's type
     private bool CheckBinary(ref ExprNode source, ref ExprNode target, Token op) {
+        //todo: xor, shl, shr, etc...
         switch (op) {
-            
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
                     
@@ -97,6 +97,12 @@ public class TypeChecker {
                         RequireCast(_stack.SymInt, ref target);
                         RequireCast(_stack.SymInt, ref source);
                         return true;
+                    
+                    case Constants.Words.And:
+                    case Constants.Words.Or:
+                        // only bool and int
+                        return (source.Type is SymBool || source.Type is SymInt) && TryCast(source.Type, ref target);
+                        
                 }
                 break;
         }
