@@ -1,0 +1,7 @@
+Main Block
+     ┴
+  Assign
+┌────┴┐
+b  (float)
+   ┌──┴
+   a

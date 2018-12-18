@@ -39,13 +39,7 @@ public class TypeChecker {
                     case Constants.Operators.Plus:
                     case Constants.Operators.Minus:
                     case Constants.Operators.Multiply:
-                        var leftToRightTry = TryCast(left.Type, ref right);
-                        
-                        if (!leftToRightTry) {
-                            return TryCast(right.Type, ref left);
-                        }
-
-                        return leftToRightTry;
+                        return TryCast(left.Type, ref right) || TryCast(right.Type, ref left);
                     
                     case Constants.Operators.Divide:
                         TryCast(_stack.SymFloat, ref left);

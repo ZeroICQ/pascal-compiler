@@ -15,12 +15,12 @@ public abstract class ExprNode : AstNode {
     
     public static Token GetClosestToken(ExprNode node) {
         var type = node.GetType();
-        var pi = type.GetProperty("Token");
+        var pi = type.GetProperty(nameof(Token));
             
         if (pi != null)
             return (Token) pi.GetValue(node);
             
-        pi = type.GetProperty("Operation");
+        pi = type.GetProperty(nameof(BinaryExprNode.Operation));
         if (pi != null)
             return (Token) pi.GetValue(node);
             

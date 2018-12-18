@@ -45,6 +45,7 @@ internal static class App {
     private static void PerformSyntaxAnalysis(StreamReader streamReader, bool checkSemantics) {
         var compiler = new Compiler(streamReader, checkSemantics);
         compiler.PrintAst();
+        
     }
 
     private static void PerformLexicalAnalysis(StreamReader streamReader) {

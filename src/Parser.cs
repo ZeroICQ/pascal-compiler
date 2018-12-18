@@ -18,13 +18,13 @@ public class Parser {
         _symStack.Push();
     }
 
-    public AstNode Parse() { 
+    public (AstNode, SymStack) Parse() { 
         ParseDeclarations();
         
         var mainBlock = ParseCompoundStatement();
         Require(Constants.Operators.Dot);
         mainBlock.IsMain = true;
-        return mainBlock;
+        return (mainBlock, _symStack);
     }
 
 
@@ -146,7 +146,6 @@ public class Parser {
                                 Require(Constants.Separators.Semicolon);
                                 isFirst = false;
                                 state = ParseVariableDeclarationsStates.Start;
-                                
                                 break;
                             }
                         }
@@ -155,7 +154,7 @@ public class Parser {
                     throw Illegal(t);
             }
         }
-    }
+    } 
 
     private StatementNode ParseStatementWithCheck() {
         var st = ParseStatement();

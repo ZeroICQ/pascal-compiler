@@ -1,8 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Compiler {
 
-public class SymStack {
+public class SymStack : IEnumerable {
     private Stack<SymTable> _stack = new Stack<SymTable>();
     // standard types
     public readonly SymInt SymInt = new SymInt();
@@ -63,6 +64,10 @@ public class SymStack {
     public void AddType(SymType symType) {
         //todo: check?
         _stack.Peek().Add(symType);
+    }
+
+    public IEnumerator GetEnumerator() {
+        return _stack.GetEnumerator();
     }
 }
 
