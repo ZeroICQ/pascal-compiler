@@ -36,10 +36,34 @@ public class Parser {
                 ParseVariableDeclarations();
                 continue;
             }
+
+            if (Check(t, Constants.Words.Const)) {
+               ParseConstDeclarations();
+            }
             break;
         }
 
         _lexer.Retract();
+    }
+    //todo: continue
+    // start after "const"
+    private void ParseConstDeclarations() {
+        var tmpToken = _lexer.GetNextToken();
+        
+        IdentifierToken identifier;
+
+        if (tmpToken is IdentifierToken id) {
+            identifier = id;
+        }
+        else {
+            _lexer.Retract();
+            throw Illegal(tmpToken);
+        }
+        
+        Require(Constants.Operators.Equal);
+        
+        var expr
+
     }
 
     // start after "var"

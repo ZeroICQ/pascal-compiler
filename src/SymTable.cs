@@ -175,6 +175,34 @@ public class SymVar : Symbol {
     }
 }
 
+abstract public class SymConst : Symbol { }
+
+public class SymIntConst : SymConst {
+    public override string Name => "integer const";
+    public int Value { get; }
+
+    public SymIntConst(int value) {
+        Value = value;
+    }
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+public class SymFloatConst : SymConst {
+    public override string Name => "float const";
+    public double Value { get; }
+
+    public SymFloatConst(double value) {
+        Value = value;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+} 
+// todo: char, boolean, string const;
+
 public class SymArray : SymType {
     private readonly long _startIndex;
     private readonly long _endIndex;
