@@ -30,7 +30,22 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         
          
         _typeChecker.RequireBinaryAny(ref node.Left, ref node.Right, node.Operation);
-        
+
+        switch (node.Operation) {
+            case OperatorToken op: 
+                switch (op.Value) {
+                    case Constants.Operators.Less:
+                    case Constants.Operators.LessOrEqual:
+                    case Constants.Operators.More:
+                    case Constants.Operators.MoreOreEqual:
+                    case Constants.Operators.Equal:
+                    case Constants.Operators.NotEqual:
+                        node.Type = _stack.SymBool;
+                        return true;
+                }
+                break;
+        }
+
         node.Type = node.Left.Type;
         return true;
     }
@@ -112,12 +127,13 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         throw new System.NotImplementedException();
     }
 
+    // continue, break, return
     public bool Visit(ControlSequence node) {
-        throw new System.NotImplementedException();
+        return true;
     }
 
     public bool Visit(EmptyStatementNode node) {
-        throw new System.NotImplementedException();
+        return true;
     }
 
     public bool Visit(CharNode node) {

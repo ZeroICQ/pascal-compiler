@@ -28,5 +28,7 @@ Global:
 ──────────────────────
 │Scalar type │float  │
 ──────────────────────
-│Scalar type │string │
+│Scalar type │boolean│
+──────────────────────
+│Type        │string │
 ──────────────────────

@@ -1,18 +1,18 @@
-Main Block
-     ┴
-  Assign
-┌────┴┐
-b  (float)
+  Main Block
+       ┴
+    Assign
+┌──────┴─┐
+b    NotEqual
+      ┌──┴───┐
+   (float)  2.2
    ┌──┴
-   a
+   1
 
 Global:
 ──────────────────────
 │Name        │Type   │
 ══════════════════════
-│a           │integer│
-──────────────────────
-│b           │float  │
+│b           │boolean│
 ──────────────────────
 │Scalar type │integer│
 ──────────────────────

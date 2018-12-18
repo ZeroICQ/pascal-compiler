@@ -15,6 +15,16 @@ public class SymbolPrinterVisitor : ISymVisitor {
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
     public void Visit(Symbol symbol) {
+        const string name = "Type";
+        var type = symbol.Name;
+        
+        UpdateNameColumnLength(name.Length);
+        UpdateTypeColumnLength(type.Length);
+        
+        _entries.Add(new KeyValuePair<string, string>(name, type));
+    }
+
+    public void Visit(SymScalar symbol) {
         const string name = "Scalar type";
         var type = symbol.Name;
         

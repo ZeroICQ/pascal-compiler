@@ -19,10 +19,6 @@ public class TypeChecker {
     private bool CheckAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
         var op = opToken.Value;
         
-//        if (op == Constants.Operators.DivideAssign) {
-//            RequireCast(_stack.SymFloat, ref right);
-//        }
-
         switch (op) {
             case Constants.Operators.PlusAssign:
                 RequireBinary(ref left, ref right,
@@ -76,11 +72,20 @@ public class TypeChecker {
                     case Constants.Operators.Plus:
                     case Constants.Operators.Minus:
                     case Constants.Operators.Multiply:
-                        return source.Type is SymScalar && !(source.Type is SymChar) && TryCast(source.Type, ref target);
+                        return source.Type is SymScalar && !(source.Type is SymChar || source.Type is SymBool)
+                                                        && TryCast(source.Type, ref target);
                     
                     case Constants.Operators.Divide:
-                        return source.Type is SymScalar && !(source.Type is SymChar) && 
+                        return source.Type is SymScalar && !(source.Type is SymChar || source.Type is SymBool) && 
                                TryCast(_stack.SymFloat, ref source, false) && TryCast(_stack.SymFloat, ref target);
+                    
+                    case Constants.Operators.Less:
+                    case Constants.Operators.LessOrEqual:
+                    case Constants.Operators.More:
+                    case Constants.Operators.MoreOreEqual:
+                    case Constants.Operators.Equal:
+                    case Constants.Operators.NotEqual:
+                        return source.Type is SymScalar && !(source.Type is SymChar) && TryCast(source.Type, ref target);
                 }
                 break;
 //            case ReservedToken reservedToken:
@@ -138,6 +143,16 @@ public class TypeChecker {
                 
                 break;
             // end char
+            
+            // bool
+            case SymBool _ :
+                switch (source.Type) {
+                    case SymBool _ :
+                        return true;
+                }
+                
+                break;
+            // end bool
         }
 
         return false;
