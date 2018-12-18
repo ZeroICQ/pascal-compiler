@@ -55,14 +55,16 @@ public class IncompatibleTypesException : ParserException {
 }
 
 public class OperatorNotOverloaded : ParserException {
-    private readonly SymType _leftType;
-    private readonly SymType _rightType;
 
-    public override string Message => $"Operator {Lexeme} is not overloaded for \"{_leftType.Name}\" and \"{_rightType.Name}\" at {Line},{Column}.";
+    public override string Message { get; }
     
     public OperatorNotOverloaded(SymType leftType, SymType rightType, string lexeme, int line, int column) : base(lexeme, line, column) {
-        _leftType = leftType;
-        _rightType = rightType;
+        Message =
+            $"Operator {Lexeme} is not overloaded for \"{leftType.Name}\" and \"{rightType.Name}\" at {Line},{Column}.";
+    }
+    
+    public OperatorNotOverloaded(SymType type, string lexeme, int line, int column) : base(lexeme, line, column) {
+        Message = $"Operator {Lexeme} is not overloaded for \"{type.Name}\" at {Line},{Column}.";
     }
 }
 

@@ -22,6 +22,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(BinaryExprNode node) {
+        // todo: div, mod
         if (node.Left.Type == null)
             node.Left.Accept(this);
 
@@ -94,7 +95,18 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(UnaryOperationNode node) {
-        throw new System.NotImplementedException();
+        //todo: special treat with pointers ^, @
+        
+        if (node.Operand.Type == null)
+            node.Operand.Accept(this);
+
+        // constraints to not
+        if (node.Operation is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Not) {
+            if (!(node.Operand.Type is SymScalar) || node.Operand.Type is SymFloat)
+                throw BuildException<OperatorNotOverloaded>(node.Operand.Type, node.Operation);
+        }
+        node.Type = node.Operand.Type;
+        return true;
     }
 
     public bool Visit(AssignNode node) {
@@ -144,6 +156,15 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     private static T BuildException<T>(Token token) where T : ParserException {
         try {
             return (T)Activator.CreateInstance(typeof(T), token.Lexeme, token.Line, token.Column);
+        }
+        catch (TargetInvocationException e) {
+            throw e.InnerException;
+        }
+    }
+    
+    private static T BuildException<T>(SymType type, Token token) where T : ParserException {
+        try {
+            return (T)Activator.CreateInstance(typeof(T), type, token.Lexeme, token.Line, token.Column);
         }
         catch (TargetInvocationException e) {
             throw e.InnerException;

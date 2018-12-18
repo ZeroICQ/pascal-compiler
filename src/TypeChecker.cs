@@ -94,7 +94,7 @@ public class TypeChecker {
 
         return false;
     }
-
+    
     private void RequireCast(SymType targetType, ref ExprNode source) {
         if (!TryCast(targetType, ref source)) {
             var n = ExprNode.GetClosestToken(source);

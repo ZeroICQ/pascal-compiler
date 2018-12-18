@@ -575,7 +575,7 @@ public class Parser {
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
                     case Constants.Words.Not:
-                        return new UnaryOperationNode(reservedToken, ParseExprWithCheck(isConst));
+                        return new UnaryOperationNode(reservedToken, ParseFactor(isConst));
                 }
                 break;
             

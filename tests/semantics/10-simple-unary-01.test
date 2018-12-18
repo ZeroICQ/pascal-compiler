@@ -1,0 +1,44 @@
+  Main Block
+       ┴
+    Assign
+┌──────┴─┐
+f     Minus
+    ┌────┴─┐
+   1.2  (float)
+          ┌┴
+        Plus
+          ┴
+        Minus
+          ┴
+        Plus
+          ┴
+        Minus
+          ┴
+        Plus
+          ┴
+        Minus
+          ┴
+        Plus
+          ┴
+        Minus
+          ┴
+        Plus
+        ┌─┴
+        2
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│f           │float  │
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────
+│Scalar type │boolean│
+──────────────────────
+│Type        │string │
+──────────────────────
