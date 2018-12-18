@@ -86,10 +86,19 @@ public class TypeChecker {
                     case Constants.Operators.Equal:
                     case Constants.Operators.NotEqual:
                         return source.Type is SymScalar && !(source.Type is SymChar) && TryCast(source.Type, ref target);
+                    
                 }
                 break;
-//            case ReservedToken reservedToken:
-//                break;
+            case ReservedToken reservedToken:
+                switch (reservedToken.Value) {
+                    
+                    case Constants.Words.Div:
+                    case Constants.Words.Mod:
+                        RequireCast(_stack.SymInt, ref target);
+                        RequireCast(_stack.SymInt, ref source);
+                        return true;
+                }
+                break;
         }
 
         return false;

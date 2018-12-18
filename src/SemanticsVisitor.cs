@@ -46,7 +46,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
                 }
                 break;
         }
-
+        // left and right nodes should be same type by this point
         node.Type = node.Left.Type;
         return true;
     }
