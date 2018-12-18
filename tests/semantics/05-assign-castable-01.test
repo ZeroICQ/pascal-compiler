@@ -5,3 +5,18 @@ Main Block
 b  (float)
    ┌──┴
    a
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│a           │integer│
+──────────────────────
+│b           │float  │
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────

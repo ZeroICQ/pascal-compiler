@@ -33,16 +33,24 @@ internal class Compiler {
             var canvas = new List<StringBuilder>();
             visitorTree.Print(canvas);
 
-            foreach (var line in canvas) {
-                Console.WriteLine(line);
+            if (!_checkSemantics) {
+                foreach (var line in canvas) {
+                    Console.WriteLine(line);
+                }
+                return;
+            }
+
+            var symbolPrinter = new SymbolPrinterVisitor();
+            foreach (var table in symStack) {
+                foreach (var symbol in table) {
+                    symbol.Accept(symbolPrinter);                    
+                }
             }
             
-            if (!_checkSemantics)
-                return;
-
-            foreach (var table in symStack) {
-                
-            }
+            symbolPrinter.Print(canvas);
+            foreach (var line in canvas) {
+                Console.WriteLine(line);
+            } 
         }
         catch (ParsingException e) {
             Console.WriteLine(e.Message);

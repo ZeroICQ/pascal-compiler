@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Linq;
+    
 namespace Compiler {
 
-public class SymStack : IEnumerable {
+public class SymStack : IEnumerable<SymTable> {
     private Stack<SymTable> _stack = new Stack<SymTable>();
     // standard types
     public readonly SymInt SymInt = new SymInt();
@@ -66,12 +67,16 @@ public class SymStack : IEnumerable {
         _stack.Peek().Add(symType);
     }
 
-    public IEnumerator GetEnumerator() {
+    public IEnumerator<SymTable> GetEnumerator() {
         return _stack.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
     }
 }
 
-internal class SymTable {
+public class SymTable : IEnumerable<Symbol> {
     private Dictionary<string, Symbol> _sym_map = new Dictionary<string, Symbol>();
     private List<Symbol> _sym_list = new List<Symbol>();
     
@@ -84,10 +89,20 @@ internal class SymTable {
         _sym_map.TryGetValue(name, out var symbol);
         return symbol;
     }
+
+    public IEnumerator<Symbol> GetEnumerator() {
+        return _sym_list.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
+    }
 }
 
 public abstract class Symbol {
     public abstract string Name { get; }
+    public abstract void Accept(ISymVisitor visitor);
+
 }
 
 
@@ -100,14 +115,26 @@ public abstract class SymScalar : SymType {
 
 public class SymInt : SymScalar {
     public override string Name => "integer";
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
 }
 
 public class SymFloat : SymScalar {
     public override string Name => "float";
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
 }
 
 public class SymChar : SymScalar {
     public override string Name => "char";
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
 }
 
 // variables
@@ -122,6 +149,10 @@ public class SymVar : Symbol {
         Type = type;
         InitialValue = initialValue;
     }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
 }
 
 public class SymArray : SymType {
@@ -135,6 +166,10 @@ public class SymArray : SymType {
         _startIndex = startIndex;
         _endIndex = endIndex;
         _type = type;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
     }
 }
 
