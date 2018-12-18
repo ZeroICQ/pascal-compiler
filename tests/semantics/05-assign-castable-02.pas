@@ -15,12 +15,6 @@ begin
     c *= d;
     c /= d;
     
-    e := f;
-    e += f;
-    e -= f;
-    e *= f;
-    //e /= f;
-    
     //float-integer
     c := a;
     c += a;

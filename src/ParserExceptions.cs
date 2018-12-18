@@ -58,7 +58,7 @@ public class OperatorNotOverloaded : ParserException {
     private readonly SymType _leftType;
     private readonly SymType _rightType;
 
-    public override string Message => $"Operator is not overloaded \"{_leftType}\" {Lexeme} \"{_rightType}\" at {Line},{Column}.";
+    public override string Message => $"Operator {Lexeme} is not overloaded for \"{_leftType.Name}\" and \"{_rightType.Name}\" at {Line},{Column}.";
     
     public OperatorNotOverloaded(SymType leftType, SymType rightType, string lexeme, int line, int column) : base(lexeme, line, column) {
         _leftType = leftType;

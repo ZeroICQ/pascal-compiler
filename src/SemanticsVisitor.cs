@@ -29,7 +29,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             node.Right.Accept(this);
         
          
-        _typeChecker.RequireBinary(ref node.Left, ref node.Right, node.Operation);
+        _typeChecker.RequireBinaryAny(ref node.Left, ref node.Right, node.Operation);
         
         node.Type = node.Left.Type;
         return true;

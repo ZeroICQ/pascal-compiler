@@ -19,28 +19,28 @@ public class TypeChecker {
     private bool CheckAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
         var op = opToken.Value;
         
-        if (op == Constants.Operators.DivideAssign) {
-            RequireCast(_stack.SymFloat, ref right);
-        }
+//        if (op == Constants.Operators.DivideAssign) {
+//            RequireCast(_stack.SymFloat, ref right);
+//        }
 
         switch (op) {
             case Constants.Operators.PlusAssign:
-                CheckBinary(ref left, ref right,
+                RequireBinary(ref left, ref right,
                     new OperatorToken("+", Constants.Operators.Plus, opToken.Line, opToken.Column));
                 break;
             
             case Constants.Operators.MinusAssign:
-                CheckBinary(ref left, ref right,
+                RequireBinary(ref left, ref right,
                     new OperatorToken("-", Constants.Operators.Minus, opToken.Line, opToken.Column));
                 break;
             
             case Constants.Operators.MultiplyAssign:
-                CheckBinary(ref left, ref right,
+                RequireBinary(ref left, ref right,
                     new OperatorToken("*", Constants.Operators.Multiply, opToken.Line, opToken.Column));
                 break;
             
             case Constants.Operators.DivideAssign:
-                CheckBinary(ref left, ref right,
+                RequireBinary(ref left, ref right,
                     new OperatorToken("/", Constants.Operators.Divide, opToken.Line, opToken.Column));
                 break;
             
@@ -48,33 +48,39 @@ public class TypeChecker {
                 break;
             
             default:
-                
-                throw new ArgumentOutOfRangeException($"Unknown {opToken.Lexeme} operator in CheckAssingment");
+                throw new ArgumentOutOfRangeException($"Unknown {opToken.Lexeme} operator in CheckAssignment");
         }
         return TryCast(left.Type, ref right);
     }
     
     // binary operations 
-    public void RequireBinary(ref ExprNode left, ref ExprNode right, Token op) {
+    public void RequireBinaryAny(ref ExprNode left, ref ExprNode right, Token op) {
         if (!(CheckBinary(ref left, ref right, op) || CheckBinary(ref right, ref left, op))) {
-            throw new OperatorNotOverloaded(left.Type, right.Type, op.StringValue, op.Line, op.Column);
+            throw new OperatorNotOverloaded(left.Type, right.Type, op.Lexeme, op.Line, op.Column);
+        }
+    }
+    
+    public void RequireBinary(ref ExprNode left, ref ExprNode right, Token op) {
+        if (!CheckBinary(ref left, ref right, op)) {
+            throw new OperatorNotOverloaded(left.Type, right.Type, op.Lexeme, op.Line, op.Column);
         }
     }
 
-    // tries to cast source to target's type
+    // tries to cast target to source's type
     private bool CheckBinary(ref ExprNode source, ref ExprNode target, Token op) {
         switch (op) {
+            
             case OperatorToken operatorToken:
-                
-                switch (operatorToken.Value) { 
+                switch (operatorToken.Value) {
+                    
                     case Constants.Operators.Plus:
                     case Constants.Operators.Minus:
                     case Constants.Operators.Multiply:
-                        return TryCast(source.Type, ref target);
+                        return source.Type is SymScalar && !(source.Type is SymChar) && TryCast(source.Type, ref target);
                     
                     case Constants.Operators.Divide:
-                        TryCast(_stack.SymFloat, ref target);
-                        return true;
+                        return source.Type is SymScalar && !(source.Type is SymChar) && 
+                               TryCast(_stack.SymFloat, ref source, false) && TryCast(_stack.SymFloat, ref target);
                 }
                 break;
 //            case ReservedToken reservedToken:
@@ -92,7 +98,7 @@ public class TypeChecker {
     }
 
     // try cast target to source
-    private bool TryCast(SymType targetType, ref ExprNode source) {
+    private bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
         switch (targetType) {
             // scalars
             // float
@@ -100,6 +106,9 @@ public class TypeChecker {
                 switch (source.Type) {
                     case SymInt _:
                         var t = ExprNode.GetClosestToken(source);
+                        if (!canModify) 
+                            return true;
+                        
                         source = new CastNode(new IdentifierToken(_stack.SymFloat.Name, t.Line, t.Column), source);
                         source.Type = _stack.SymFloat;
                         return true;
