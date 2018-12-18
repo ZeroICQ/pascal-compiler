@@ -10,12 +10,14 @@ public class SymStack : IEnumerable<SymTable> {
     public readonly SymInt SymInt = new SymInt();
     public readonly SymChar SymChar = new SymChar();
     public readonly SymFloat SymFloat = new SymFloat();
+    public readonly SymString SymString = new SymString();
 
     public SymStack() {
         _stack.Push(new SymTable());
         AddType(SymInt);        
         AddType(SymChar);        
         AddType(SymFloat);        
+        AddType(SymString);        
     }
 
     public void Push() {
@@ -131,6 +133,14 @@ public class SymFloat : SymScalar {
 
 public class SymChar : SymScalar {
     public override string Name => "char";
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+public class SymString : SymType {
+    public override string Name => "string";
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);

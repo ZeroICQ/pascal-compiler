@@ -74,7 +74,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(StringNode node) {
-        throw new System.NotImplementedException();
+        node.Type = _stack.SymString;
+        return true;
     }
 
     public bool Visit(UnaryOperationNode node) {
@@ -82,11 +83,11 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AssignNode node) {
-//        if (node.Left.Type == null)
-//            node.Left.Accept(this);
-//        
-//        if (node.Right.Type == null)
-//            node.Right.Accept(this);
+        if (node.Left.Type == null)
+            node.Left.Accept(this);
+        
+        if (node.Right.Type == null)
+            node.Right.Accept(this);
         
         if (!node.Left.IsLvalue)
             throw BuildException<NotLvalueException>(ExprNode.GetClosestToken(node.Left));

@@ -14,7 +14,7 @@ public class SymbolPrinterVisitor : ISymVisitor {
 
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
-    public void Visit(SymScalar symbol) {
+    public void Visit(Symbol symbol) {
         const string name = "Scalar type";
         var type = symbol.Name;
         
@@ -39,7 +39,7 @@ public class SymbolPrinterVisitor : ISymVisitor {
         _entries.Add(new KeyValuePair<string, string>(name, type));
     }
 
-    public void Print(List<StringBuilder> canvas, string namespaceName = "Global" ) {
+    public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {
         // head
         canvas.Add(new StringBuilder(""));
         canvas.Add(new StringBuilder($"{namespaceName}:"));
