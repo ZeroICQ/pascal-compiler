@@ -1,0 +1,30 @@
+                                                                                                     Main Block
+   ┌─────────┬───────────┬──────────────┬───────────┬─────────┬───────────┬──────────────┬──────────────┬─┴────────┬─────────┬───────────┬──────────────┬─────────────┬───────────┬───────────┬──────────────┐
+Assign  PlusAssign  MinusAssign  MultiplyAssign  Assign  PlusAssign  MinusAssign  MultiplyAssign  DivideAssign  Assign  PlusAssign  MinusAssign  MultiplyAssign    Assign    PlusAssign  MinusAssign  MultiplyAssign
+┌──┴    ┌──┬─┴      ┌──┬─┴       ┌──┬───┴        ┌──┴    ┌──┬─┴      ┌──┬─┴       ┌──┬───┴        ┌──┬──┴       ┌──┴    ┌──┬─┴      ┌──┬─┴       ┌──┬───┴        ┌────┴┐     ┌────┴┐     ┌────┴┐      ┌─────┬┴
+a  b    a  b        a  b         a  b            c  d    c  d        c  d         c  d            c  d          e  f    e  f        e  f         e  f            c  (float)  c  (float)  c  (float)   c  (float)
+                                                                                                                                                                    ┌──┴        ┌──┴        ┌──┴         ┌──┴
+                                                                                                                                                                    a           a           a            a
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│a           │integer│
+──────────────────────
+│b           │integer│
+──────────────────────
+│c           │float  │
+──────────────────────
+│d           │float  │
+──────────────────────
+│e           │char   │
+──────────────────────
+│f           │char   │
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────

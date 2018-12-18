@@ -91,7 +91,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         if (!node.Left.IsLvalue)
             throw BuildException<NotLvalueException>(ExprNode.GetClosestToken(node.Left));
         
-        _typeChecker.RequireAssignment(ref node.Left, ref node.Right, node.Operation.Value);
+        _typeChecker.RequireAssignment(ref node.Left, ref node.Right, node.Operation);
         return true;
     }
 

@@ -15,7 +15,7 @@ public abstract class ExprNode : AstNode {
     
     public static Token GetClosestToken(ExprNode node) {
         var type = node.GetType();
-        var pi = type.GetProperty(nameof(Token));
+        var pi = type.GetProperty(nameof(IdentifierNode.Token));
             
         if (pi != null)
             return (Token) pi.GetValue(node);
