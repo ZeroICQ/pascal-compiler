@@ -6,13 +6,15 @@ public class Parser {
     private ulong _cyclesCounter = 0;
     private SymStack _symStack;
     private bool _checkSemantics;
+    private TypeChecker _typeChecker;
     private SemanticsVisitor _semanticsVisitor;
 
     public Parser(LexemesAutomata lexer, bool checkSemantics) {
         _lexer = lexer;
         _symStack = new SymStack();
         _checkSemantics = checkSemantics;
-        _semanticsVisitor = new SemanticsVisitor(_symStack);
+        _typeChecker = new TypeChecker(_symStack);
+        _semanticsVisitor = new SemanticsVisitor(_symStack, _typeChecker);
         
         // Global namespace
         _symStack.Push();
@@ -120,14 +122,30 @@ public class Parser {
                 //after "var <identifier> :"->[...]
                 case ParseVariableDeclarationsStates.SingleVariable:
                     if (t is IdentifierToken typeToken) {
-                        ExprNode initialExpr = null;
-                        
-                        if (Check(_lexer.GetNextToken(), Constants.Operators.Equal))
-                            initialExpr = ParseExprWithCheck(true);                            
+                        SymConst initialValue = null;
+
+                        if (Check(_lexer.GetNextToken(), Constants.Operators.Equal)) {
+                            var initialExpr = ParseExprWithCheck(true);
+
+                            var type = _symStack.FindType(typeToken.Value);
+
+                            if (type == null) {
+                                throw new IdentifierNotDefinedException(typeToken.Lexeme, typeToken.Line,
+                                    typeToken.Column);
+                            }
+                            
+                            var initValEvalVisitor = new EvalConstExprVisitor(_symStack);
+                            initialValue = initialExpr.Accept(initValEvalVisitor);
+
+                            if (!_typeChecker.TryCast(type, ref initialExpr)) {
+                                var tmp = ExprNode.GetClosestToken(initialExpr);
+                                throw new IncompatibleTypesException(type, initialValue.Type, tmp.Lexeme, tmp.Line, tmp.Column);
+                            }
+                        }
                         else
                             _lexer.Retract();    
                         
-                        _symStack.AddVariable(identifiers[0], typeToken, initialExpr);
+                        _symStack.AddVariable(identifiers[0], typeToken, initialValue);
                         Require(Constants.Separators.Semicolon);
                         isFirst = false;
                         state = ParseVariableDeclarationsStates.Start;
@@ -202,7 +220,7 @@ public class Parser {
         if (startIndexIntConst == null) {
             var t = ExprNode.GetClosestToken(startIndexExpr);
             throw new IncompatibleTypesException(_symStack.SymInt, startIndexConst.Type,
-                startIndexConst.ConstValue, t.Line, t.Column);
+                startIndexConst.InitialStringValue, t.Line, t.Column);
         }
 
         Require(Constants.Operators.Dot);
@@ -216,7 +234,7 @@ public class Parser {
         if (endIndexIntConst == null) {
             var t = ExprNode.GetClosestToken(endIndexExpr);
             throw new IncompatibleTypesException(_symStack.SymInt, endIndexExpr.Type,
-                endIndexConst.ConstValue, t.Line, t.Column);
+                endIndexConst.InitialStringValue, t.Line, t.Column);
         }
                         
         Require(Constants.Operators.CloseBracket);

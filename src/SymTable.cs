@@ -53,7 +53,7 @@ public class SymStack : IEnumerable<SymTable> {
         return null;
     }
 
-    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, ExprNode value = null) {
+    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymConst value = null) {
         var type = FindType(typeToken.Value);
         
         if (type == null)
@@ -61,8 +61,9 @@ public class SymStack : IEnumerable<SymTable> {
         
         if (FindVarOrConst(variableToken.Value) != null)
             throw new DuplicateIdentifierException(variableToken.Lexeme, variableToken.Line, variableToken.Line);
-        var symVar = new SymVar(variableToken.Value, type, value);
         
+        //type check for initial value must be performed earlier. i.e. in parser.       
+        var symVar = new SymVar(variableToken.Value, type, value);
         _stack.Peek().Add(symVar);
     }
 
@@ -177,8 +178,8 @@ public abstract class SymVarOrConst : Symbol {
     public override string Name { get; }
     public SymType Type { get; }
     public bool IsConst { get; }
-    // not null only at constants. is used to print symtable.
-    public string ConstValue { get; protected set; } = null;
+    // not null only at constants and initialized variables. is used to print symtable.
+    public string InitialStringValue { get; protected set; }
 
     protected SymVarOrConst(string name, SymType type, bool isConst) {
         Name = name;
@@ -194,10 +195,11 @@ public abstract class SymVarOrConst : Symbol {
 // variables
 public class SymVar : SymVarOrConst {
     // nullable
-    public ExprNode InitialValue { get; }
-    
-    public SymVar(string name, SymType type, ExprNode initialValue) : base(name, type, false) {
+    public SymConst InitialValue { get; }
+
+    public SymVar(string name, SymType type, SymConst initialValue) : base(name, type, false) {
         InitialValue = initialValue;
+        InitialStringValue = initialValue?.InitialStringValue;
     }
 }
 // constants
@@ -213,7 +215,7 @@ public class SymIntConst : SymConst {
 
     public SymIntConst(string name, SymType type, long value) : base(name, type) {
         Value = value;
-        ConstValue = value.ToString();
+        InitialStringValue = value.ToString();
     }
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -225,7 +227,7 @@ public class SymFloatConst : SymConst {
 
     public SymFloatConst(string name, SymType type, double value) : base(name, type) {
         Value = value;
-        ConstValue = value.ToString();
+        InitialStringValue = value.ToString();
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -239,7 +241,7 @@ public class SymCharConst : SymConst {
     
     public SymCharConst(string name, SymType type, char value) : base(name, type) {
         Value = value;
-        ConstValue = value.ToString();
+        InitialStringValue = value.ToString();
     }
 
     public override void Accept(ISymVisitor visitor) {
@@ -252,7 +254,7 @@ public class SymBoolConst : SymConst {
 
     public SymBoolConst(string name, SymType type, bool value) : base(name, type) {
         Value = value;
-        ConstValue = value.ToString();
+        InitialStringValue = value.ToString();
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -265,7 +267,7 @@ public class SymStringConst : SymConst {
 
     public SymStringConst(string name, SymType type, string value) : base(name, type) {
         Value = value;
-        ConstValue = value;
+        InitialStringValue = value;
     }
     
     public override void Accept(ISymVisitor visitor) {

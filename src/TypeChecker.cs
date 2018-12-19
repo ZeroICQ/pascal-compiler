@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 
 namespace Compiler {
 public class TypeChecker {
@@ -130,7 +129,7 @@ public class TypeChecker {
     }
 
     // try cast target to source
-    private bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
+    public bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
         //todo: make unalias function
         switch (targetType) {
             // scalars

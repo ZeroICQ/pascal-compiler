@@ -8,9 +8,9 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     private readonly SymStack _stack;
     private readonly TypeChecker _typeChecker;
 
-    public SemanticsVisitor(SymStack stack) {
+    public SemanticsVisitor(SymStack stack, TypeChecker typeChecker) {
         _stack = stack;
-        _typeChecker = new TypeChecker(stack);
+        _typeChecker = typeChecker;
     }
     
     public bool Visit(BlockNode node) {

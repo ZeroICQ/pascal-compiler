@@ -19,7 +19,10 @@ public class SymbolPrinterVisitor : ISymVisitor {
         var type = symbol.Type.Name;
 
         if (symbol.IsConst) {
-            type = $"const {type} = {symbol.ConstValue}";
+            type = $"const {type} = {symbol.InitialStringValue}";
+        }
+        else if (symbol.InitialStringValue != null) {
+            type = $"{type} = {symbol.InitialStringValue}";
         }
         
         
