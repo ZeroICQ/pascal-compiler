@@ -11,5 +11,6 @@ var
    
 begin
     f := 2 / 2;
+    f := iconst_1 + fconst_2; 
 end.
 

@@ -1,12 +1,12 @@
-    Main Block
-         ┴
-      Assign
-┌────────┴─┐
-f       Divide
-      ┌────┴───┐
-   (float)  (float)
-   ┌──┴     ┌──┴
-   2        2
+                Main Block
+         ┌───────────┴─────────┐
+      Assign                Assign
+┌────────┴─┐         ┌─────────┴─┐
+f       Divide       f         Plus
+      ┌────┴───┐            ┌────┴────┐
+   (float)  (float)     (float)   fconst_2
+   ┌──┴     ┌──┴            ┴
+   2        2           iconst_1
 
 Global:
 ─────────────────────────────────
