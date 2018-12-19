@@ -117,7 +117,7 @@ public class Parser {
                         throw Illegal(t);
                     }
                     break;
-                //after "var identifier :"->[...]
+                //after "var <identifier> :"->[...]
                 case ParseVariableDeclarationsStates.SingleVariable:
                     if (t is IdentifierToken typeToken) {
                         ExprNode initialExpr = null;
@@ -133,34 +133,15 @@ public class Parser {
                         state = ParseVariableDeclarationsStates.Start;
                         break;
                     }
-                    else if (t is ReservedToken reservedToken) {
-                        // todo: refactor
-                        Require(Constants.Words.Array);
-                        Require(Constants.Operators.OpenBracket);
-
-                        long startIndex;
-                        if (_lexer.GetNextToken() is IntegerToken integerStart) {
-                            startIndex = integerStart.Value;
-                        }
-                        else {
-                            _lexer.Retract();
-                            throw Illegal(t);
-                        }
+                    else if (t is ReservedToken) {
+                        _lexer.Retract();
+                        var arrayType = ParseArrayTypeDeclaration();
+                        Require(Constants.Separators.Semicolon);
+                        _symStack.AddArray(identifiers[0], arrayType);
                         
-                        Require(Constants.Operators.Dot);
-                        Require(Constants.Operators.Dot);
-
-                        long endIndex;
-                        if (_lexer.GetNextToken() is IntegerToken integerEnd) {
-                            endIndex = integerEnd.Value;
-                        }
-                        else {
-                            _lexer.Retract();
-                            throw Illegal(t);
-                        }
-                        
-                        Require(Constants.Operators.CloseBracket);
-                        Require(Constants.Words.Of);
+                        isFirst = false;
+                        state = ParseVariableDeclarationsStates.Start;
+                        break;
                     }
                     
                     _lexer.Retract();
@@ -178,11 +159,25 @@ public class Parser {
                         if (Check(nextToken, Constants.Separators.Colon)) {
                             // parse typeToken
                             var typeT = _lexer.GetNextToken();
+                            
                             if (typeT is IdentifierToken tpToken) {
                                 foreach (var id in identifiers) {
                                     _symStack.AddVariable(id, tpToken);
                                 }
                                 Require(Constants.Separators.Semicolon);
+                                isFirst = false;
+                                state = ParseVariableDeclarationsStates.Start;
+                                break;
+                            }
+                            else if (typeT is ReservedToken) {
+                                _lexer.Retract();
+                                var arrayType = ParseArrayTypeDeclaration();
+                                Require(Constants.Separators.Semicolon);
+                                
+                                foreach (var id in identifiers) {
+                                    _symStack.AddArray(id, arrayType);
+                                }
+                                
                                 isFirst = false;
                                 state = ParseVariableDeclarationsStates.Start;
                                 break;
@@ -193,7 +188,57 @@ public class Parser {
                     throw Illegal(t);
             }
         }
-    } 
+    }
+
+    private SymArray ParseArrayTypeDeclaration() {
+        Require(Constants.Words.Array);
+        Require(Constants.Operators.OpenBracket);
+
+        var startIndexExpr = ParseExprWithCheck(true);
+        var startIndexEvalVisitor = new EvalConstExprVisitor(_symStack);
+        var startIndexConst = startIndexExpr.Accept(startIndexEvalVisitor);
+        var startIndexIntConst = startIndexConst as SymIntConst;
+
+        if (startIndexIntConst == null) {
+            var t = ExprNode.GetClosestToken(startIndexExpr);
+            throw new IncompatibleTypesException(_symStack.SymInt, startIndexConst.Type,
+                startIndexConst.ConstValue, t.Line, t.Column);
+        }
+
+        Require(Constants.Operators.Dot);
+        Require(Constants.Operators.Dot);
+
+        var endIndexExpr = ParseExprWithCheck(true);
+        var endIndexEvalVisitor = new EvalConstExprVisitor(_symStack);
+        var endIndexConst = endIndexExpr.Accept(endIndexEvalVisitor);
+        var endIndexIntConst = endIndexConst as SymIntConst;
+        
+        if (endIndexIntConst == null) {
+            var t = ExprNode.GetClosestToken(endIndexExpr);
+            throw new IncompatibleTypesException(_symStack.SymInt, endIndexExpr.Type,
+                endIndexConst.ConstValue, t.Line, t.Column);
+        }
+                        
+        Require(Constants.Operators.CloseBracket);
+        Require(Constants.Words.Of);
+
+        if (endIndexIntConst.Value < startIndexIntConst.Value) {
+            var t = ExprNode.GetClosestToken(endIndexExpr);
+            throw new UpperRangBoundLessThanLowerException(t.Lexeme, t.Line, t.Column);
+        }
+        
+        // array
+        if (!(_lexer.GetNextToken() is IdentifierToken idToken)) {
+            _lexer.Retract();
+            return new SymArray(startIndexIntConst, endIndexIntConst, ParseArrayTypeDeclaration());
+        }
+
+        // else - type         
+        var type = _symStack.FindType(idToken.Value);
+        if (type == null)
+            throw new IdentifierNotDefinedException(idToken.Lexeme, idToken.Line, idToken.Column);
+        return new SymArray(startIndexIntConst, endIndexIntConst, type);
+    }
 
     private StatementNode ParseStatementWithCheck() {
         var st = ParseStatement();

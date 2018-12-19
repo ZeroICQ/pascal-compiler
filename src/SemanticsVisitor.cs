@@ -96,15 +96,15 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     public bool Visit(UnaryOperationNode node) {
         //todo: special treat with pointers ^, @
         
-        if (node.Operand.Type == null)
-            node.Operand.Accept(this);
+        if (node.Expr.Type == null)
+            node.Expr.Accept(this);
 
         // constraints to not
         if (node.Operation is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Not) {
-            if (!(node.Operand.Type is SymScalar) || node.Operand.Type is SymFloat)
-                throw BuildException<OperatorNotOverloaded>(node.Operand.Type, node.Operation);
+            if (!(node.Expr.Type is SymScalar) || node.Expr.Type is SymFloat)
+                throw BuildException<OperatorNotOverloaded>(node.Expr.Type, node.Operation);
         }
-        node.Type = node.Operand.Type;
+        node.Type = node.Expr.Type;
         return true;
     }
 

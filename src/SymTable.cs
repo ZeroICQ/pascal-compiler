@@ -59,10 +59,17 @@ public class SymStack : IEnumerable<SymTable> {
         if (type == null)
             throw new TypeNotFoundException(typeToken.Lexeme, typeToken.Line, typeToken.Column);
         
-        if (_stack.Peek().Find(variableToken.Value) != null)
+        if (FindVarOrConst(variableToken.Value) != null)
             throw new DuplicateIdentifierException(variableToken.Lexeme, variableToken.Line, variableToken.Line);
         var symVar = new SymVar(variableToken.Value, type, value);
         
+        _stack.Peek().Add(symVar);
+    }
+
+    public void AddArray(IdentifierToken identifierToken, SymArray arrayType) {
+        if (FindVarOrConst(identifierToken.Value) != null) 
+            throw new DuplicateIdentifierException(identifierToken.Lexeme, identifierToken.Line, identifierToken.Line);
+        var symVar = new SymVar(identifierToken.Value, arrayType, null);
         _stack.Peek().Add(symVar);
     }
 
@@ -267,16 +274,16 @@ public class SymStringConst : SymConst {
 }
 
 public class SymArray : SymType {
-    private readonly long _startIndex;
-    private readonly long _endIndex;
-    private readonly SymType _type;
-    
-    public override string Name => $"array of {_type.Name}";
+    public SymIntConst StartIndex { get; }
+    public SymIntConst EndIndex { get; }
+    public SymType Type { get; }
 
-    public SymArray(long startIndex, long endIndex, SymType type) {
-        _startIndex = startIndex;
-        _endIndex = endIndex;
-        _type = type;
+    public override string Name => $"array[{StartIndex.Value}..{EndIndex.Value}] of {Type.Name}";
+
+    public SymArray(SymIntConst startIndex, SymIntConst endIndex, SymType type) {
+        StartIndex = startIndex;
+        EndIndex = endIndex;
+        Type = type;
     }
     
     public override void Accept(ISymVisitor visitor) {

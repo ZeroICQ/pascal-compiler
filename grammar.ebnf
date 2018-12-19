@@ -12,11 +12,15 @@
 
             <variable declaration> ::= <multiple variables> | <single variable>
                 
-                <multiple variables> ::= <identifier> {"," <identifier>} ":" <type>
+                <multiple variables> ::= <identifier> {"," <identifier>} ":" (<type> | <array type>)
                 
-                <single variable> ::= <identifier> ":" <type> {"=" <const expression>}
+                <single variable> ::= <identifier> ":" (<type> {"=" <const expression>} | <array type>)
 
-                <type> ::= <identifier>
+                <type> ::= <identifier> | <array type>
+                
+                <array type> := "Array" "[" <int const expr> ".." <int const expr> "]" "Of" (<type> | <array type> )
+                
+                    <int const expr> := <const simple expression>
                 
     <compound statement> ::= "begin" <statement> {; <statement>} [ ";" ] "end"
                  

@@ -108,11 +108,11 @@ public class CharNode : ConstantNode {
 
 public class UnaryOperationNode : ExprNode {
     public Token Operation { get; }
-    public ExprNode Operand { get; }
+    public ExprNode Expr { get; }
 
-    public UnaryOperationNode(Token operation, ExprNode operand) {
+    public UnaryOperationNode(Token operation, ExprNode expr) {
         Operation = operation;
-        Operand = operand;
+        Expr = expr;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {

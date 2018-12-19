@@ -49,11 +49,6 @@ public class SymbolPrinterVisitor : ISymVisitor {
         _entries.Add(new KeyValuePair<string, string>(name, type));
     }
 
-    public void Visit(SymArray symbol) {
-        // todo: implement
-        throw new NotImplementedException();
-    }
-
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {
         // head
         canvas.Add(new StringBuilder(""));

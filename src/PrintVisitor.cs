@@ -70,7 +70,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
 
     public PrinterNode Visit(UnaryOperationNode node) {
         var pNode = new PrinterNode(node.Operation.StringValue);
-        pNode.AddChild(node.Operand.Accept(this));
+        pNode.AddChild(node.Expr.Accept(this));
         return pNode;
     }
     

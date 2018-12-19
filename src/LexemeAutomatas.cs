@@ -246,6 +246,11 @@ public static class DecimalNumberAutomata {
                 case States.BeforeDot:
                     switch (symbol) {
                         case '.':
+                            // sample case array of[1..2] should be <int>..<int>. not <float>.<int>
+                            if (input.Peek() == '.') {
+                                input.Retract();
+                                return TokenFactory.Build<IntegerToken>(input);
+                            }
                             currState = States.AfterDot;
                             break;
                         case 'e':

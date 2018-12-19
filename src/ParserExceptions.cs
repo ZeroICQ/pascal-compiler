@@ -74,11 +74,17 @@ public class NotLvalueException : ParserException {
 }
 
 public class ConstExpressionParsingException : ParserException {
-    public override string Message => $"Could not evaluate const expression for {Lexeme} at {Line},{Column}";
+    public override string Message => $"Could not evaluate const expression for {Lexeme} at {Line},{Column}.";
     public ConstExpressionParsingException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
+public class UpperRangBoundLessThanLowerException : ParserException {
+    public override string Message => $"Upper bound of range is less than lower bound at {Line},{Column}.";
+    public UpperRangBoundLessThanLowerException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
 public class ParserPanicException : Exception {
     public override string Message => "This error must not be thrown under any circumstances.";
 }
+
 }

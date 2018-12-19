@@ -1,11 +1,15 @@
 namespace Compiler {
 public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     private IdentifierToken _idToken;
-    private string Name => _idToken.Value;
+    private string Name => _idToken?.Value;
     private SymStack _symStack;
     
     public EvalConstExprVisitor(IdentifierToken idToken, SymStack stack) {
         _idToken = idToken;
+        _symStack = stack;
+    }
+
+    public EvalConstExprVisitor(SymStack stack) {
         _symStack = stack;
     }
     public SymConst Visit(BlockNode node) {
@@ -39,13 +43,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat, (double) leftInt.Value / rightInt.Value);
+                        return new SymFloatConst(Name, _symStack.SymFloat, (double) leftInt.Value / rightInt.Value);
                 }
                 break;
             case SymFloatConst leftFloat:
                 switch (right) {
                     case SymFloatConst rightFloat:
-                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value / rightFloat.Value);
+                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value / rightFloat.Value);
                 }
                 break;
         }
@@ -58,13 +62,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(_idToken.Value, _symStack.SymInt, leftInt.Value * rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value * rightInt.Value);
                 }
                 break;
             case SymFloatConst leftFloat:
                 switch (right) {
                     case SymFloatConst rightFloat:
-                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value * rightFloat.Value);
+                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value * rightFloat.Value);
                 }
                 break;
         }
@@ -77,13 +81,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(_idToken.Value, _symStack.SymInt, leftInt.Value + rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value + rightInt.Value);
                 }
                 break;
             case SymFloatConst leftFloat:
                 switch (right) {
                     case SymFloatConst rightFloat:
-                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value + rightFloat.Value);
+                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value + rightFloat.Value);
                 }
                 break;
         }
@@ -96,13 +100,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(_idToken.Value, _symStack.SymInt, leftInt.Value - rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value - rightInt.Value);
                 }
                 break;
             case SymFloatConst leftFloat:
                 switch (right) {
                     case SymFloatConst rightFloat:
-                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value - rightFloat.Value);
+                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value - rightFloat.Value);
                 }
                 break;
         }
@@ -156,7 +160,28 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     }
 
     public SymConst Visit(UnaryOperationNode node) {
-        throw new System.NotImplementedException();
+        // todo: maybe implement other unary operations
+        var exprConst = node.Expr.Accept(this);
+        switch (node.Operation) {
+            
+            case OperatorToken operatorToken:
+                
+                switch (operatorToken.Value) {
+                    
+                    case Constants.Operators.Minus:
+                        
+                        switch (exprConst) {
+                            
+                            case SymIntConst intConst:
+                                return new SymIntConst(intConst.Name, intConst.Type, -intConst.Value);
+                            case SymFloatConst floatConst:
+                                return new SymFloatConst(floatConst.Name, floatConst.Type, -floatConst.Value);
+                        }
+                        break;
+                }
+                break;
+        }
+        throw EvalException();
     }
 
     public SymConst Visit(AssignNode node) {
