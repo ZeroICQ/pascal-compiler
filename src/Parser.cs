@@ -554,10 +554,22 @@ public class Parser {
                     Require(Constants.Operators.CloseBracket);
                     state = ParseVarRefStates.Start;
                     break;
-                
+
                 case ParseVarRefStates.AfterParenthesis:
                     _lexer.Retract();
                     var paramList = ParseParamList();
+                    
+                    // need to distinguish function call and cast:
+                    if (varRef is IdentifierNode idNode) {
+                        var type = _symStack.FindType(idNode.Token.Value);
+                        if (type != null && paramList.Count == 1) {
+                            varRef = new CastNode(type, paramList[0]);
+                            
+                            state = ParseVarRefStates.Start;
+                            break;
+                        }
+                    }
+
                     varRef = new FunctionCallNode(varRef, paramList);
                     state = ParseVarRefStates.Start;
                     break;

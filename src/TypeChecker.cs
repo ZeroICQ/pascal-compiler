@@ -125,7 +125,7 @@ public class TypeChecker {
         }
     }
 
-    public bool CanCast(SymType targetType, ref ExprNode source) {
+    public bool CanCast(SymType targetType, ExprNode source) {
         return TryCast(targetType, ref source, false);
     }
 

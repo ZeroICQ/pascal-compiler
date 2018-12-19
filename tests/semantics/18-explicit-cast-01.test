@@ -1,0 +1,28 @@
+Main Block
+     ┴
+  Assign
+┌────┴┐
+b  (float)
+      ┴
+   (float)
+   ┌──┴
+   b
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│a           │integer│
+──────────────────────
+│b           │float  │
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────
+│Scalar type │boolean│
+──────────────────────
+│Type        │string │
+──────────────────────
