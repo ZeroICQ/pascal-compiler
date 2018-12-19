@@ -61,13 +61,13 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IdentifierNode node) {
-        var sym = _stack.FindVar(node.Token.Value);
+        var sym = _stack.FindVarOrConst(node.Token.Value);
         if (sym == null)
             throw BuildException<IdentifierNotDefinedException>(node.Token);
         
         node.Symbol = sym;
         node.Type = sym.Type;
-        node.IsLvalue = true;
+        node.IsLvalue = !sym.IsConst;
         
         return true;
     }

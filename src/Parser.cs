@@ -45,25 +45,40 @@ public class Parser {
 
         _lexer.Retract();
     }
-    //todo: continue
+    
     // start after "const"
+//    private enum ParseConstDeclarationStates {Start,}
     private void ParseConstDeclarations() {
-        var tmpToken = _lexer.GetNextToken();
-        
-        IdentifierToken identifier;
+        var isFirst = true;
 
-        if (tmpToken is IdentifierToken id) {
-            identifier = id;
-        }
-        else {
-            _lexer.Retract();
-            throw Illegal(tmpToken);
-        }
-        
-        Require(Constants.Operators.Equal);
-        
-        var expr
+        while (true) {
+            var tmpToken = _lexer.GetNextToken();
+            IdentifierToken identifier;
+            
+            if (tmpToken is IdentifierToken id) {
+                identifier = id;
+            }
+            else if (isFirst){
+                _lexer.Retract();
+                throw Illegal(tmpToken);
+            }
+            else {
+                _lexer.Retract();
+                return;
+            }
 
+            if (isFirst)
+                isFirst = false;
+
+            Require(Constants.Operators.Equal);
+            var initialExpr = ParseExprWithCheck(true);
+            Require(Constants.Separators.Semicolon);
+            
+            var evalVisitor = new EvalConstExprVisitor(identifier, _symStack);
+            var symConst = initialExpr.Accept(evalVisitor);
+            
+            _symStack.AddConst(identifier, symConst);
+        }
     }
 
     // start after "var"
@@ -118,6 +133,7 @@ public class Parser {
                         break;
                     }
                     else if (t is ReservedToken reservedToken) {
+                        // todo: refactor
                         Require(Constants.Words.Array);
                         Require(Constants.Operators.OpenBracket);
 
@@ -143,9 +159,7 @@ public class Parser {
                         }
                         
                         Require(Constants.Operators.CloseBracket);
-                        
                         Require(Constants.Words.Of);
-                        
                     }
                     
                     _lexer.Retract();

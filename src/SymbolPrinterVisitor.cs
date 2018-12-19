@@ -14,6 +14,21 @@ public class SymbolPrinterVisitor : ISymVisitor {
 
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
+    public void Visit(SymVarOrConst symbol) {
+        var name = symbol.Name;
+        var type = symbol.Type.Name;
+
+        if (symbol.IsConst) {
+            type = $"const {type} = {symbol.ConstValue}";
+        }
+        
+        
+        UpdateNameColumnLength(name.Length);
+        UpdateTypeColumnLength(type.Length);
+        
+        _entries.Add(new KeyValuePair<string, string>(name, type));
+    }
+
     public void Visit(Symbol symbol) {
         const string name = "Type";
         var type = symbol.Name;
@@ -37,16 +52,6 @@ public class SymbolPrinterVisitor : ISymVisitor {
     public void Visit(SymArray symbol) {
         // todo: implement
         throw new NotImplementedException();
-    }
-
-    public void Visit(SymVar symVar) {
-        var name = symVar.Name;
-        var type = symVar.Type.Name;
-        
-        UpdateNameColumnLength(name.Length);
-        UpdateTypeColumnLength(type.Length);
-        
-        _entries.Add(new KeyValuePair<string, string>(name, type));
     }
 
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {

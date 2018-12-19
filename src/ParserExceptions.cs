@@ -73,6 +73,11 @@ public class NotLvalueException : ParserException {
     public NotLvalueException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
+public class ConstExpressionParsingException : ParserException {
+    public override string Message => $"Could not evaluate const expression for {Lexeme} at {Line},{Column}";
+    public ConstExpressionParsingException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
 public class ParserPanicException : Exception {
     public override string Message => "This error must not be thrown under any circumstances.";
 }

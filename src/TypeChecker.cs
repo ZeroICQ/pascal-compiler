@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 
 namespace Compiler {
 public class TypeChecker {
@@ -89,6 +88,7 @@ public class TypeChecker {
                     
                 }
                 break;
+            
             case ReservedToken reservedToken:
                 switch (reservedToken.Value) {
                     
@@ -106,7 +106,6 @@ public class TypeChecker {
                 }
                 break;
         }
-
         return false;
     }
     

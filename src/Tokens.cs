@@ -87,15 +87,15 @@ public class IntegerToken : NumberToken {
 public class FloatToken : NumberToken {
     public override TokenType Type => TokenType.Real;
     public override string Lexeme { get; }
-    public override string StringValue => _value.ToString(CultureInfo.InvariantCulture);
-    
-    private readonly double _value;
+    public override string StringValue => Value.ToString(CultureInfo.InvariantCulture);
+
+    public double Value { get; }
     static readonly NumberFormatInfo NumberFormat = new NumberFormatInfo {NumberDecimalSeparator = "."};
 
     public FloatToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         try {
-            _value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
+            Value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);
         }
         catch (OverflowException) {
             throw new RealLiteralOverflowException(lexeme, Line, Column);

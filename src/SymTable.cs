@@ -47,9 +47,9 @@ public class SymStack : IEnumerable<SymTable> {
         return null;
     }
     // return nullable
-    public SymVar FindVar(string name) {
-        if (Find(name) is SymVar symVar)
-            return symVar;
+    public SymVarOrConst FindVarOrConst(string name) {
+        if (Find(name) is SymVarOrConst symbol)
+            return symbol;
         return null;
     }
 
@@ -64,6 +64,14 @@ public class SymStack : IEnumerable<SymTable> {
         var symVar = new SymVar(variableToken.Value, type, value);
         
         _stack.Peek().Add(symVar);
+    }
+
+    public void AddConst(IdentifierToken constToken, SymConst symConst) {
+        if (_stack.Peek().Find(constToken.Value) != null)
+            throw new DuplicateIdentifierException(constToken.Value, constToken.Line, constToken.Line);
+        
+        
+        _stack.Peek().Add(symConst);
     }
 
     public void AddType(SymType symType) {
@@ -114,6 +122,7 @@ public abstract class Symbol {
 public abstract class SymType : Symbol {
 }
 
+// scalars
 public abstract class SymScalar : SymType {
 }
 
@@ -157,37 +166,47 @@ public class SymBool : SymScalar {
     }
 }
 
-// variables
-public class SymVar : Symbol {
+public abstract class SymVarOrConst : Symbol {
     public override string Name { get; }
-    public SymType Type;
-    // nullable
-    public ExprNode InitialValue { get; }
-    
-    public SymVar(string name, SymType type, ExprNode initialValue) {
+    public SymType Type { get; }
+    public bool IsConst { get; }
+    // not null only at constants. is used to print symtable.
+    public string ConstValue { get; protected set; } = null;
+
+    protected SymVarOrConst(string name, SymType type, bool isConst) {
         Name = name;
         Type = type;
-        InitialValue = initialValue;
+        IsConst = isConst;
     }
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
 }
-// constants
-public abstract class SymConst : Symbol {
-    public override string Name { get; }
 
-    protected SymConst(string name) {
-        Name = name;
+// variables
+public class SymVar : SymVarOrConst {
+    // nullable
+    public ExprNode InitialValue { get; }
+    
+    public SymVar(string name, SymType type, ExprNode initialValue) : base(name, type, false) {
+        InitialValue = initialValue;
     }
+}
+// constants
+public abstract class SymConst : SymVarOrConst {
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+    protected SymConst(string name, SymType type) : base(name, type, true) {}
 }
 
 public class SymIntConst : SymConst {
-    public int Value { get; }
+    public long Value { get; }
 
-    public SymIntConst(string name, int value) : base(name) {
+    public SymIntConst(string name, SymType type, long value) : base(name, type) {
         Value = value;
+        ConstValue = value.ToString();
     }
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -197,8 +216,9 @@ public class SymIntConst : SymConst {
 public class SymFloatConst : SymConst {
     public double Value { get; }
 
-    public SymFloatConst(string name, double value) : base(name) {
+    public SymFloatConst(string name, SymType type, double value) : base(name, type) {
         Value = value;
+        ConstValue = value.ToString();
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -210,8 +230,9 @@ public class SymCharConst : SymConst {
     // or string?
     public char Value { get; }
     
-    public SymCharConst(string name, char value) : base(name) {
+    public SymCharConst(string name, SymType type, char value) : base(name, type) {
         Value = value;
+        ConstValue = value.ToString();
     }
 
     public override void Accept(ISymVisitor visitor) {
@@ -222,8 +243,9 @@ public class SymCharConst : SymConst {
 public class SymBoolConst : SymConst {
     public bool Value { get; }
 
-    public SymBoolConst(string name, bool value) : base(name) {
+    public SymBoolConst(string name, SymType type, bool value) : base(name, type) {
         Value = value;
+        ConstValue = value.ToString();
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -234,8 +256,9 @@ public class SymBoolConst : SymConst {
 public class SymStringConst : SymConst {
     public string Value { get; }
 
-    public SymStringConst(string name, string value) : base(name) {
+    public SymStringConst(string name, SymType type, string value) : base(name, type) {
         Value = value;
+        ConstValue = value;
     }
     
     public override void Accept(ISymVisitor visitor) {
