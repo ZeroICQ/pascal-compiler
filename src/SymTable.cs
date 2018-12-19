@@ -289,6 +289,7 @@ public class SymArray : SymType {
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
+    
 }
 
 }  

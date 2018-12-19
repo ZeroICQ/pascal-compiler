@@ -8,7 +8,7 @@ public class TypeChecker {
     public TypeChecker(SymStack stack) {
         _stack = stack;
     }
-    // assignment
+    
     public void RequireAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
         if (!CheckAssignment(ref left, ref right, opToken)) {
             var token = ExprNode.GetClosestToken(right);
@@ -127,6 +127,7 @@ public class TypeChecker {
 
     // try cast target to source
     private bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
+        //todo: make unalias function
         switch (targetType) {
             // scalars
             // float
@@ -177,10 +178,53 @@ public class TypeChecker {
                 
                 break;
             // end bool
+            case SymArray target:
+                switch (source.Type) {
+                    case SymArray sourceType:
+                        return IsTypesEqual(target, sourceType); 
+                }
+                break;
         }
 
         return false;
     }
 
+    private bool IsTypesEqual(SymType target, SymType source) {
+        var lhs = target;
+        var rhs = source;
+
+        while (true) {
+            switch (lhs) {
+                case SymArray lArr:
+
+                    switch (rhs) {
+                        case SymArray rArr:
+                            
+                            if (lArr.Type is SymScalar && rArr.Type is SymScalar) {
+                                return lArr.StartIndex.Value == rArr.StartIndex.Value &&
+                                       lArr.EndIndex.Value   == rArr.EndIndex.Value &&
+                                       lArr.Type.GetType()   == rArr.Type.GetType();
+                            }
+
+                            lhs = lArr.Type;
+                            rhs = rArr.Type;
+                            
+                        break;
+                    }
+                    
+                    break;
+                
+                case SymScalar lScalar:
+                    switch (rhs) {
+                        case SymScalar rScalar:
+                            return lScalar.GetType() == rScalar.GetType();
+                    }
+                    break;
+            }
+            
+        }
+        
+        
+    }
 }
 }
