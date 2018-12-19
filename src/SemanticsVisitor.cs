@@ -73,10 +73,31 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(FunctionCallNode node) {
-        throw new System.NotImplementedException();
+        foreach (var arg in node.Args) {
+            arg.Accept(this);
+        }
+        
+        switch (node.Name) {
+            
+            case IdentifierNode idNode:
+
+                if (node.Args.Count == 1 &&_stack.FindType(idNode.Token.Value) is SymType type) {
+                    var castingExpr = node.Args[0];
+                    
+                    if (!_typeChecker.CanCast(type, ref castingExpr)) {
+                        throw new IncompatibleTypesException(type, castingExpr.Type, idNode.Token.Lexeme,
+                            idNode.Token.Line, idNode.Token.Column);
+                    }
+                }
+                
+                break;
+        }
+
+        return true;
     }
 
     public bool Visit(CastNode node) {
+        // is never created in parser because is is impossible to distinguish from func/proc 
         throw new System.NotImplementedException();
     }
 

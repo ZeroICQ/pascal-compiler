@@ -125,6 +125,10 @@ public class TypeChecker {
         }
     }
 
+    public bool CanCast(SymType targetType, ref ExprNode source) {
+        return TryCast(targetType, ref source, false);
+    }
+
     // try cast target to source
     private bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
         //todo: make unalias function
