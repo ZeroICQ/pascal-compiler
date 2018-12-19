@@ -174,14 +174,19 @@ public class SymVar : Symbol {
         visitor.Visit(this);
     }
 }
+// constants
+public abstract class SymConst : Symbol {
+    public override string Name { get; }
 
-abstract public class SymConst : Symbol { }
+    protected SymConst(string name) {
+        Name = name;
+    }
+}
 
 public class SymIntConst : SymConst {
-    public override string Name => "integer const";
     public int Value { get; }
 
-    public SymIntConst(int value) {
+    public SymIntConst(string name, int value) : base(name) {
         Value = value;
     }
     public override void Accept(ISymVisitor visitor) {
@@ -190,18 +195,53 @@ public class SymIntConst : SymConst {
 }
 
 public class SymFloatConst : SymConst {
-    public override string Name => "float const";
     public double Value { get; }
 
-    public SymFloatConst(double value) {
+    public SymFloatConst(string name, double value) : base(name) {
         Value = value;
     }
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
-} 
-// todo: char, boolean, string const;
+}
+
+public class SymCharConst : SymConst {
+    // or string?
+    public char Value { get; }
+    
+    public SymCharConst(string name, char value) : base(name) {
+        Value = value;
+    }
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+public class SymBoolConst : SymConst {
+    public bool Value { get; }
+
+    public SymBoolConst(string name, bool value) : base(name) {
+        Value = value;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+public class SymStringConst : SymConst {
+    public string Value { get; }
+
+    public SymStringConst(string name, string value) : base(name) {
+        Value = value;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
 
 public class SymArray : SymType {
     private readonly long _startIndex;
