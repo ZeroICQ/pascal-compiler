@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 
 namespace Compiler {
 public class TypeChecker {
@@ -50,10 +51,18 @@ public class TypeChecker {
     
     // binary operations 
     public void RequireBinaryAny(ref ExprNode left, ref ExprNode right, Token op) {
+        // division special case int / int;
+        if (op is OperatorToken opToken && opToken.Value == Constants.Operators.Divide) {
+            if (!(CheckBinary(ref left, ref right, op) && CheckBinary(ref right, ref left, op))) {
+                throw new OperatorNotOverloaded(left.Type, right.Type, op.Lexeme, op.Line, op.Column);
+            }
+        }
+        
         if (!(CheckBinary(ref left, ref right, op) || CheckBinary(ref right, ref left, op))) {
             throw new OperatorNotOverloaded(left.Type, right.Type, op.Lexeme, op.Line, op.Column);
         }
     }
+   
     
     public void RequireBinary(ref ExprNode left, ref ExprNode right, Token op) {
         if (!CheckBinary(ref left, ref right, op)) {
@@ -128,7 +137,8 @@ public class TypeChecker {
                         if (!canModify) 
                             return true;
                         
-                        source = new CastNode(new IdentifierToken(_stack.SymFloat.Name, t.Line, t.Column), source);
+                        source = new CastNode(_stack.SymFloat, source);
+//                        source = new CastNode(new IdentifierToken(_stack.SymFloat.Name, t.Line, t.Column), source);
                         source.Type = _stack.SymFloat;
                         return true;
 

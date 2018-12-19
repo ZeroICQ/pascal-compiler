@@ -2,7 +2,11 @@
 
 <main block> ::= {<declaration part>} <compound statement> "."
 
-    <declaration part> ::= <variable declaration part> ";"
+    <declaration part> ::= {<variable declaration part> | <constant declaration part>}
+    
+        <constant declaration part> ::= "const"  <constant declaration> {<constant declaration>}
+    
+            <constant declaration> ::= <identifier> "=" <const expression> ";"
 
         <variable declaration part> ::= "var" <variable declaration> ";" {variable declaration ";"}
 

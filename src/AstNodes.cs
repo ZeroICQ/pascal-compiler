@@ -23,6 +23,10 @@ public abstract class ExprNode : AstNode {
         pi = type.GetProperty(nameof(BinaryExprNode.Operation));
         if (pi != null)
             return (Token) pi.GetValue(node);
+        
+        pi = type.GetProperty(nameof(CastNode.Expr));
+        if (pi != null)
+            return GetClosestToken((ExprNode) pi.GetValue(node));
             
         // no token found
         //        pi = type.GetProperty("Left");
@@ -146,8 +150,13 @@ public class FunctionCallNode : ExprNode {
     }
 }
 
-public class CastNode : UnaryOperationNode {
-    public CastNode(IdentifierToken name, ExprNode operand) : base(name, operand) {}
+public class CastNode : ExprNode {
+    public ExprNode Expr { get; }
+
+    public CastNode(SymType type, ExprNode expr) {
+        Type = type;
+        Expr = expr;
+    }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);

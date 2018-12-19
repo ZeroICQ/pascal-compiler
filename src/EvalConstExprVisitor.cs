@@ -21,6 +21,50 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                 switch (op.Value) {
                     case Constants.Operators.Plus:
                         return EvalPlus(left, right);
+                    case Constants.Operators.Minus:
+                        return EvalMinus(left, right);
+                    case Constants.Operators.Multiply:
+                        return EvalMultiply(left, right);
+                    case Constants.Operators.Divide:
+                        return EvalDivide(left, right); 
+                }
+                break;
+        }
+
+        throw EvalException();
+    }
+    
+    private SymConst EvalDivide(SymConst left, SymConst right) {
+        switch (left) {
+            case SymIntConst leftInt:
+                switch (right) {
+                    case SymIntConst rightInt:
+                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat, (double) leftInt.Value / rightInt.Value);
+                }
+                break;
+            case SymFloatConst leftFloat:
+                switch (right) {
+                    case SymFloatConst rightFloat:
+                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value / rightFloat.Value);
+                }
+                break;
+        }
+
+        throw EvalException();
+    }
+
+    private SymConst EvalMultiply(SymConst left, SymConst right) {
+        switch (left) {
+            case SymIntConst leftInt:
+                switch (right) {
+                    case SymIntConst rightInt:
+                        return new SymIntConst(_idToken.Value, _symStack.SymInt, leftInt.Value * rightInt.Value);
+                }
+                break;
+            case SymFloatConst leftFloat:
+                switch (right) {
+                    case SymFloatConst rightFloat:
+                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value * rightFloat.Value);
                 }
                 break;
         }
@@ -46,6 +90,25 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
 
         throw EvalException();
     }
+    
+    private SymConst EvalMinus(SymConst left, SymConst right) {
+        switch (left) {
+            case SymIntConst leftInt:
+                switch (right) {
+                    case SymIntConst rightInt:
+                        return new SymIntConst(_idToken.Value, _symStack.SymInt, leftInt.Value - rightInt.Value);
+                }
+                break;
+            case SymFloatConst leftFloat:
+                switch (right) {
+                    case SymFloatConst rightFloat:
+                        return new SymFloatConst(_idToken.Value, _symStack.SymFloat,leftFloat.Value - rightFloat.Value);
+                }
+                break;
+        }
+
+        throw EvalException();
+    }
 
     public SymConst Visit(IntegerNode node) {
         return new SymIntConst(Name, _symStack.SymInt, node.Token.Value);
@@ -65,7 +128,19 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     }
 
     public SymConst Visit(CastNode node) {
-        throw new System.NotImplementedException();
+        var castingConst = node.Expr.Accept(this);
+        // Explicit casts are currently not allowed in const expr. The only available implicit cast is int -> float.
+        switch (node.Type) {
+            case SymFloat s:
+                switch (castingConst) {
+                    case SymIntConst intConst:
+                        return new SymFloatConst(intConst.Name, _symStack.SymFloat, intConst.Value);
+                    case SymFloatConst floatConst:
+                        return castingConst;
+                }
+                break;
+        }
+        throw EvalException();
     }
 
     public SymConst Visit(AccessNode node) {

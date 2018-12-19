@@ -39,6 +39,7 @@ public class Parser {
 
             if (Check(t, Constants.Words.Const)) {
                ParseConstDeclarations();
+               continue;
             }
             break;
         }
