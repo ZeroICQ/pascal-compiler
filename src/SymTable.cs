@@ -294,4 +294,20 @@ public class SymArray : SymType {
     
 }
 
+public class SymAlias : SymType {
+    public override string Name { get; }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+public class SymTypeAlias : SymType {
+    public override string Name { get; }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
 }  
