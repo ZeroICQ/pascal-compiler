@@ -108,9 +108,9 @@ public class StringToken : ConstantToken {
         
     public override TokenType Type => TokenType.String;
     public override string Lexeme { get; }
-    public override string StringValue => _value;
+    public string Value { get; private set; }
+    public override string StringValue => Value;
 
-    private string _value;
     
     public StringToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
@@ -252,7 +252,7 @@ public class StringToken : ConstantToken {
             }
         }
         
-        _value = value.ToString();
+        Value = value.ToString();
     }
 }
 

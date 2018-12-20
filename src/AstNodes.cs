@@ -96,7 +96,7 @@ public class StringNode : ConstantNode {
 
 public class CharNode : ConstantNode {
     public StringToken Token { get; }
-
+    public char Value => Token.Value[0];
     public CharNode(StringToken token) : base(token) {
         Token = token;
     }
