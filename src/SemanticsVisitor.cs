@@ -117,6 +117,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             throw new ArrayExpectedException(node.Operand.Type, token.Lexeme, token.Line, token.Column);
 
         node.Type = arrayType.Type;
+        node.IsLvalue = true;
         
         _typeChecker.RequireCast(_stack.SymInt, ref node.IndexExpr);
         
@@ -132,7 +133,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
                     arrayType.MaxIndex.Value, token.Line, token.Column);
 
         }
-        catch (ConstExprEvalException e) {
+        catch (ConstExprEvalException) {
             return true;
         }
 
@@ -173,7 +174,9 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IfNode node) {
-        
+        node.Condition.Accept(this);
+        //todo: check if expression in statement node already have types
+        _typeChecker.RequireCast(_stack.SymBool, ref node.Condition);
         return true;
     }
 

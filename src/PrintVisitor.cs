@@ -84,7 +84,9 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(IfNode node) {
         var pNode = new PrinterNode("If");
         pNode.AddChild(node.Condition.Accept(this));
-        pNode.AddChild(node.TrueBranch.Accept(this));
+        
+        if (node.TrueBranch != null)
+            pNode.AddChild(node.TrueBranch.Accept(this));
         
         if (node.FalseBranch != null)
             pNode.AddChild(node.FalseBranch.Accept(this));

@@ -325,6 +325,8 @@ public class Parser {
 //                throw Illegal(nextToken);
                 
             // statements that starts with reserved words
+            case SeparatorToken separatorToken:
+                break;
             case ReservedToken reserved:
                 switch (reserved.Value) {
                     case Constants.Words.Begin:
@@ -384,12 +386,17 @@ public class Parser {
                         }
                         break;
                 }
-                
-                _lexer.Retract();
-                throw Illegal(nextToken);
+                break;
+                //todo: experiment
+                //return new EmptyStatementNode();
+                //_lexer.Retract();
+                //throw Illegal(nextToken);
         }
 
-        throw Illegal(t);
+        //todo: experiment
+        _lexer.Retract();
+        return new EmptyStatementNode();
+//        throw Illegal(t);
     }
 
     private ForNode ParseForStatement() {
@@ -457,8 +464,17 @@ public class Parser {
         Require(Constants.Words.If);
         var condition = ParseExprWithCheck(false);
         Require(Constants.Words.Then);
+        
+        
         var trueStatement = ParseStatementWithCheck();
-                        
+
+        if (Check(_lexer.GetNextToken(), Constants.Separators.Semicolon)) {
+            _lexer.Retract();
+            return new IfNode(condition, trueStatement);
+        }
+        
+        _lexer.Retract();
+
         if (Check(_lexer.GetNextToken(), Constants.Words.Else)) {
             var falseStatement = ParseStatementWithCheck();
             return new IfNode(condition, trueStatement, falseStatement);

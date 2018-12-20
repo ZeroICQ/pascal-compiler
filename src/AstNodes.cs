@@ -232,12 +232,13 @@ public class AssignNode : StatementNode {
 }
 
 public class IfNode : StatementNode {
-    public ExprNode Condition { get; }
+    public ExprNode Condition;
+    // nullable
     public StatementNode TrueBranch { get; }
     // nullable
     public StatementNode FalseBranch { get; }
 
-    public IfNode(ExprNode condition, StatementNode trueBranch, StatementNode falseBranch = null) {
+    public IfNode(ExprNode condition, StatementNode trueBranch = null, StatementNode falseBranch = null) {
         Condition = condition;
         TrueBranch = trueBranch;
         FalseBranch = falseBranch;
