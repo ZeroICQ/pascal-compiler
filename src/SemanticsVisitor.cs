@@ -181,7 +181,9 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(WhileNode node) {
-        throw new System.NotImplementedException();
+        node.Condition.Accept(this);
+        _typeChecker.RequireCast(_stack.SymBool, ref node.Condition);        
+        return true;
     }
 
     public bool Visit(ProcedureCallNode node) {

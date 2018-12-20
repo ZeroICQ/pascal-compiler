@@ -1,0 +1,26 @@
+                                 Main Block
+           ┌─────────────────────────┬┴─────────────────────────┐
+         While                     While                      While
+     ┌─────┴──────┐            ┌─────┴───────┐          ┌───────┴────┐
+LessOrEqual    Block         Less       PlusAssign  NotEqual  Empty statement
+┌──┬─┴            ┴         ┌──┴────┐   ┌──┬─┴      ┌───┴
+a  2         PlusAssign  1000.21  2300  a  2        a  10
+             ┌──┬─┴
+             a  1
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│a           │integer│
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────
+│Scalar type │boolean│
+──────────────────────
+│Type        │string │
+──────────────────────

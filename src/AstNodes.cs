@@ -250,7 +250,7 @@ public class IfNode : StatementNode {
 }
 
 public class WhileNode : StatementNode {
-    public ExprNode Condition { get; }
+    public ExprNode Condition;
     public StatementNode Block { get; }
 
     public WhileNode(ExprNode condition, StatementNode block) {
