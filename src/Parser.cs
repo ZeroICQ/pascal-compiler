@@ -85,7 +85,6 @@ public class Parser {
     }
 
     // start after "var"
-    // todo: add arrays
     private enum ParseVariableDeclarationsStates {Start, SingleVariable, MultipleVariables} 
     private void ParseVariableDeclarations() {
         var state = ParseVariableDeclarationsStates.Start;
@@ -139,10 +138,6 @@ public class Parser {
                             initialValue = initialExpr.Accept(initValEvalVisitor);
                             //todo : check if works, remove commented
                             _typeChecker.RequireCast(type, ref initialExpr);
-//                            if (!_typeChecker.TryCast(type, ref initialExpr)) {
-//                                var tmp = ExprNode.GetClosestToken(initialExpr);
-//                                throw new IncompatibleTypesException(type, initialValue.Type, tmp.Lexeme, tmp.Line, tmp.Column);
-//                            }
                         }
                         else
                             _lexer.Retract();    
