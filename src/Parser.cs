@@ -133,8 +133,9 @@ public class Parser {
                                 throw new IdentifierNotDefinedException(typeToken.Lexeme, typeToken.Line,
                                     typeToken.Column);
                             }
-                            
-                            var initValEvalVisitor = new EvalConstExprVisitor(_symStack);
+
+                            var initialValueToken = ExprNode.GetClosestToken(initialExpr);
+                            var initValEvalVisitor = new EvalConstExprVisitor(initialValueToken, _symStack);
                             initialValue = initialExpr.Accept(initValEvalVisitor);
                             //todo : check if works, remove commented
                             _typeChecker.RequireCast(type, ref initialExpr);
@@ -214,7 +215,7 @@ public class Parser {
         Require(Constants.Operators.OpenBracket);
 
         var startIndexExpr = ParseExprWithCheck(true);
-        var startIndexEvalVisitor = new EvalConstExprVisitor(_symStack);
+        var startIndexEvalVisitor = new EvalConstExprVisitor(ExprNode.GetClosestToken(startIndexExpr), _symStack);
         var startIndexConst = startIndexExpr.Accept(startIndexEvalVisitor);
         var startIndexIntConst = startIndexConst as SymIntConst;
 
@@ -228,7 +229,7 @@ public class Parser {
         Require(Constants.Operators.Dot);
 
         var endIndexExpr = ParseExprWithCheck(true);
-        var endIndexEvalVisitor = new EvalConstExprVisitor(_symStack);
+        var endIndexEvalVisitor = new EvalConstExprVisitor(ExprNode.GetClosestToken(endIndexExpr), _symStack);
         var endIndexConst = endIndexExpr.Accept(endIndexEvalVisitor);
         var endIndexIntConst = endIndexConst as SymIntConst;
         

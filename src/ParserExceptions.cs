@@ -73,9 +73,18 @@ public class NotLvalueException : ParserException {
     public NotLvalueException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
-public class ConstExpressionParsingException : ParserException {
+public abstract class ConstExprEvalException : ParserException {
+    protected ConstExprEvalException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
+public class NamedConstExprEvalException : ConstExprEvalException {
     public override string Message => $"Could not evaluate const expression for {Lexeme} at {Line},{Column}.";
-    public ConstExpressionParsingException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+    public NamedConstExprEvalException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+}
+
+public class AnonConstExprEvalException : ConstExprEvalException {
+    public override string Message => $"Could not evaluate const expression at {Line},{Column}.";
+    public AnonConstExprEvalException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
 public class UpperRangBoundLessThanLowerException : ParserException {
@@ -88,6 +97,21 @@ public class ArrayExpectedException : ParserException {
     public override string Message => $"Array expected. Got {_type.Name} at {Line}, {Column}.";
     public ArrayExpectedException(SymType type, string lexeme, int line, int column) : base(lexeme, line, column) {
         _type = type;
+    }
+}
+
+public class RangeCheckErrorException : ParserException {
+    private readonly long _gotIndex;
+    private readonly long _minIndex;
+    private readonly long _maxIndex;
+    
+    public override string Message => $"Range check error {_gotIndex} must be between {_minIndex} and {_maxIndex}";
+    
+    public RangeCheckErrorException(long gotIndex, long minIndex, long maxIndex, int line, int column) 
+        : base(gotIndex.ToString(), line, column) {
+        _gotIndex = gotIndex;
+        _minIndex = minIndex;
+        _maxIndex = maxIndex;
     }
 }
 

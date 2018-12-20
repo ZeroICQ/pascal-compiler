@@ -276,15 +276,15 @@ public class SymStringConst : SymConst {
 }
 
 public class SymArray : SymType {
-    public SymIntConst StartIndex { get; }
-    public SymIntConst EndIndex { get; }
+    public SymIntConst MinIndex { get; }
+    public SymIntConst MaxIndex { get; }
     public SymType Type { get; }
 
-    public override string Name => $"array[{StartIndex.Value}..{EndIndex.Value}] of {Type.Name}";
+    public override string Name => $"array[{MinIndex.Value}..{MaxIndex.Value}] of {Type.Name}";
 
-    public SymArray(SymIntConst startIndex, SymIntConst endIndex, SymType type) {
-        StartIndex = startIndex;
-        EndIndex = endIndex;
+    public SymArray(SymIntConst minIndex, SymIntConst maxIndex, SymType type) {
+        MinIndex = minIndex;
+        MaxIndex = maxIndex;
         Type = type;
     }
     

@@ -82,6 +82,11 @@ public class IntegerToken : NumberToken {
             throw new IntegerLiteralOverflowException(Lexeme, Line, Column);
         }
     }
+
+    public IntegerToken(long value, int line, int column) : base(line, column) {
+        Value = value;
+        Lexeme = value.ToString();
+    }
 }
 
 public class FloatToken : NumberToken {

@@ -1,6 +1,7 @@
 namespace Compiler {
 public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     private IdentifierToken _idToken;
+    private Token _token;
     private string Name => _idToken?.Value;
     private SymStack _symStack;
     
@@ -8,10 +9,12 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
         _idToken = idToken;
         _symStack = stack;
     }
-
-    public EvalConstExprVisitor(SymStack stack) {
+    
+    public EvalConstExprVisitor(Token token, SymStack stack) {
+        _token = token;
         _symStack = stack;
     }
+
     public SymConst Visit(BlockNode node) {
         throw EvalException();
     }
@@ -216,8 +219,11 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
         throw EvalException();
     }
 
-    private ConstExpressionParsingException EvalException() {
-        return new ConstExpressionParsingException(_idToken.Lexeme, _idToken.Line, _idToken.Column);
+    private ConstExprEvalException EvalException() {
+        if (_idToken == null) {
+            return new AnonConstExprEvalException(_token.Lexeme, _token.Line, _token.Column);
+        }
+        return new NamedConstExprEvalException(_idToken.Lexeme, _idToken.Line, _idToken.Column);
     }
 }
 }

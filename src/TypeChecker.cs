@@ -205,8 +205,8 @@ public class TypeChecker {
                         case SymArray rArr:
                             
                             if (lArr.Type is SymScalar && rArr.Type is SymScalar) {
-                                return lArr.StartIndex.Value == rArr.StartIndex.Value &&
-                                       lArr.EndIndex.Value   == rArr.EndIndex.Value &&
+                                return lArr.MinIndex.Value == rArr.MinIndex.Value &&
+                                       lArr.MaxIndex.Value   == rArr.MaxIndex.Value &&
                                        lArr.Type.GetType()   == rArr.Type.GetType();
                             }
 
