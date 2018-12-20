@@ -87,6 +87,10 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         throw new System.NotImplementedException();
     }
 
+    public bool Visit(ProcedureCallNode node) {
+        throw new System.NotImplementedException();
+    }
+
     public bool Visit(CastNode node) {
         if (node.Type != null) return true;
         node.Expr.Accept(this);
@@ -186,12 +190,14 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         return true;
     }
 
-    public bool Visit(ProcedureCallNode node) {
-        throw new System.NotImplementedException();
-    }
-
     public bool Visit(ForNode node) {
-        throw new System.NotImplementedException();
+        node.Initial.Accept(this);
+        node.Final.Accept(this);
+        
+        _typeChecker.RequireCast(_stack.SymInt, ref node.Initial.Left);
+        _typeChecker.RequireCast(_stack.SymInt, ref node.Final);
+        
+        return true;
     }
 
     // continue, break, return

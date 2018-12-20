@@ -279,10 +279,10 @@ public class ProcedureCallNode : StatementNode {
 
 public class ForNode : StatementNode {
     public enum DirectionType {To, Downto}
-    
+
     public AssignNode Initial { get; }
     public DirectionType Direction { get; }
-    public ExprNode Final { get; }    
+    public ExprNode Final;
     public StatementNode Body { get; }
 
     public ForNode(AssignNode initial, DirectionType direction, ExprNode final, StatementNode body) {
