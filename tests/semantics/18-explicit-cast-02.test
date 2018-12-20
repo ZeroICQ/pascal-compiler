@@ -1,1 +1,30 @@
-Types "integer" and "float" are incompatible at 5,24.
+ Main Block
+      ┴
+   Assign
+┌─────┴┐
+b   (float)
+       ┴
+   (integer)
+      ┌┴
+   (float)
+   ┌──┴
+   b
+
+Global:
+──────────────────────
+│Name        │Type   │
+══════════════════════
+│a           │integer│
+──────────────────────
+│b           │float  │
+──────────────────────
+│Scalar type │integer│
+──────────────────────
+│Scalar type │char   │
+──────────────────────
+│Scalar type │float  │
+──────────────────────
+│Scalar type │boolean│
+──────────────────────
+│Type        │string │
+──────────────────────

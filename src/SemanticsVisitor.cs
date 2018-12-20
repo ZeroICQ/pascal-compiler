@@ -24,12 +24,11 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(BinaryExprNode node) {
-        if (node.Left.Type == null)
-            node.Left.Accept(this);
-
-        if (node.Right.Type == null)
-            node.Right.Accept(this);
+        if (node.Type != null)
+            return true;
         
+        node.Left.Accept(this);
+        node.Right.Accept(this);
          
         _typeChecker.RequireBinaryAny(ref node.Left, ref node.Right, node.Operation);
 
@@ -53,16 +52,22 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IntegerNode node) {
+        if (node.Type != null) return true;
+        
         node.Type = _stack.SymInt;
         return true;
     }
 
     public bool Visit(FloatNode node) {
+        if (node.Type != null) return true;
+        
         node.Type = _stack.SymFloat;
         return true;
     }
 
     public bool Visit(IdentifierNode node) {
+        if (node.Type != null) return true;
+        
         var sym = _stack.FindVarOrConst(node.Token.Value);
         if (sym == null)
             throw BuildException<IdentifierNotDefinedException>(node.Token);
@@ -83,6 +88,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(CastNode node) {
+        if (node.Type != null) return true;
         node.Expr.Accept(this);
         
         if (!_typeChecker.CanCast(node.Type, node.Expr)) {
@@ -98,9 +104,9 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IndexNode node) {
-        if (node.Operand.Type == null) {
-            node.Operand.Accept(this);
-        }
+        if (node.Type != null) return true;
+        
+        node.Operand.Accept(this);
 
         if (node.IndexExpr.Type == null) {
             node.IndexExpr.Accept(this);
@@ -134,15 +140,17 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(StringNode node) {
+        if (node.Type != null) return true;
+        
         node.Type = _stack.SymString;
         return true;
     }
 
     public bool Visit(UnaryOperationNode node) {
         //todo: special treat with pointers ^, @
+        if (node.Type != null) return true;
         
-        if (node.Expr.Type == null)
-            node.Expr.Accept(this);
+        node.Expr.Accept(this);
 
         // constraints to not
         if (node.Operation is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Not) {
@@ -154,11 +162,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AssignNode node) {
-        if (node.Left.Type == null)
-            node.Left.Accept(this);
-        
-        if (node.Right.Type == null)
-            node.Right.Accept(this);
+        node.Left.Accept(this);
+        node.Right.Accept(this);
         
         if (!node.Left.IsLvalue)
             throw BuildException<NotLvalueException>(ExprNode.GetClosestToken(node.Left));
@@ -168,7 +173,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IfNode node) {
-        throw new System.NotImplementedException();
+        
+        return true;
     }
 
     public bool Visit(WhileNode node) {
@@ -193,6 +199,8 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(CharNode node) {
+        if (node.Type != null) return true;
+
         node.Type = _stack.SymChar;
         return true;
     }
