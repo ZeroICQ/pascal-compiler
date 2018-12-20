@@ -64,7 +64,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(IndexNode node) {
         var pNode = new PrinterNode("Index");
         pNode.AddChild(node.Operand.Accept(this));
-        pNode.AddChild(node.Index.Accept(this));
+        pNode.AddChild(node.IndexExpr.Accept(this));
         return pNode;
     }
 

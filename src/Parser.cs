@@ -136,11 +136,12 @@ public class Parser {
                             
                             var initValEvalVisitor = new EvalConstExprVisitor(_symStack);
                             initialValue = initialExpr.Accept(initValEvalVisitor);
-
-                            if (!_typeChecker.TryCast(type, ref initialExpr)) {
-                                var tmp = ExprNode.GetClosestToken(initialExpr);
-                                throw new IncompatibleTypesException(type, initialValue.Type, tmp.Lexeme, tmp.Line, tmp.Column);
-                            }
+                            //todo : check if works, remove commented
+                            _typeChecker.RequireCast(type, ref initialExpr);
+//                            if (!_typeChecker.TryCast(type, ref initialExpr)) {
+//                                var tmp = ExprNode.GetClosestToken(initialExpr);
+//                                throw new IncompatibleTypesException(type, initialValue.Type, tmp.Lexeme, tmp.Line, tmp.Column);
+//                            }
                         }
                         else
                             _lexer.Retract();    

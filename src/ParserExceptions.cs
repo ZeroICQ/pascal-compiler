@@ -83,8 +83,18 @@ public class UpperRangBoundLessThanLowerException : ParserException {
     public UpperRangBoundLessThanLowerException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
+public class ArrayExpectedException : ParserException {
+    private readonly SymType _type;
+    public override string Message => $"Array expected. Got {_type.Name} at {Line}, {Column}.";
+    public ArrayExpectedException(SymType type, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _type = type;
+    }
+}
+
 public class ParserPanicException : Exception {
+
     public override string Message => "This error must not be thrown under any circumstances.";
 }
+
 
 }

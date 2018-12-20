@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Reflection;
 
 namespace Compiler {
@@ -96,7 +97,34 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(IndexNode node) {
-        throw new System.NotImplementedException();
+        if (node.Operand.Type == null) {
+            node.Operand.Accept(this);
+        }
+
+        if (node.IndexExpr.Type == null) {
+            node.IndexExpr.Accept(this);
+        }
+        
+        if (!(node.Operand.Type is SymArray)) {
+            var t = ExprNode.GetClosestToken(node.Operand);
+            throw new ArrayExpectedException(node.Operand.Type, t.Lexeme, t.Line, t.Column);
+        }
+        
+        _typeChecker.RequireCast(_stack.SymInt, ref node.IndexExpr);
+        //try to compute index value
+        cdsadamk
+        var indexEvalVisitor = new EvalConstExprVisitor(_stack);
+
+        try {
+            var indexConst = node.IndexExpr.Accept(indexEvalVisitor);
+            
+        }
+        catch (ConstExpressionParsingException e) {
+            Console.WriteLine(e);
+            throw;
+        }
+
+        return true;
     }
 
     public bool Visit(StringNode node) {

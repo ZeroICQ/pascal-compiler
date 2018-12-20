@@ -117,11 +117,12 @@ public class TypeChecker {
         return false;
     }
     
-    private void RequireCast(SymType targetType, ref ExprNode source) {
-        if (!TryCast(targetType, ref source)) {
-            var n = ExprNode.GetClosestToken(source);
-            throw new IncompatibleTypesException(targetType, source.Type, n.Lexeme, n.Line, n.Column);
-        }
+    public void RequireCast(SymType targetType, ref ExprNode source) {
+        if (TryCast(targetType, ref source)) 
+            return;
+        
+        var token = ExprNode.GetClosestToken(source);
+        throw new IncompatibleTypesException(targetType, source.Type, token.Lexeme, token.Line, token.Column);
     }
 
     public bool CanCast(SymType targetType, ExprNode source) {

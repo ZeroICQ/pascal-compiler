@@ -181,11 +181,11 @@ public class AccessNode : ExprNode {
 // a[3]
 public class IndexNode : ExprNode {
     public ExprNode Operand { get; }
-    public ExprNode Index { get; }
+    public ExprNode IndexExpr;
 
-    public IndexNode(ExprNode operand, ExprNode index) {
+    public IndexNode(ExprNode operand, ExprNode indexExpr) {
         Operand = operand;
-        Index = index;
+        IndexExpr = indexExpr;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
