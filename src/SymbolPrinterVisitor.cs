@@ -11,6 +11,8 @@ public class SymbolPrinterVisitor : ISymVisitor {
 
     private const char _lineSeparator = '─';
     private const char _columnSeparator = '│';
+    
+    private List<KeyValuePair<string, SymTable>> _nestedSymTable = new List<KeyValuePair<string, SymTable>>();
 
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
@@ -72,17 +74,35 @@ public class SymbolPrinterVisitor : ISymVisitor {
         _entries.Add(new KeyValuePair<string, string>(name, type));
     }
 
+    public void Visit(SymRecord symbol) {
+        _nestedSymTable.Add(new KeyValuePair<string, SymTable>($"Record \"{symbol.Name}\"", symbol.Fields));
+    }
+
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {
         // head
         canvas.Add(new StringBuilder(""));
         canvas.Add(new StringBuilder($"{namespaceName}:"));
+        UpdateNameColumnLength("Name".Length);
+        UpdateTypeColumnLength("Type".Length);
         PrintHorizontalLine(canvas, _lineSeparator);
         InsertLine("Name", "Type", canvas);
+        
         PrintHorizontalLine(canvas, '═');
         
         foreach (var entry in _entries) {
             InsertLine(entry.Key, entry.Value, canvas);
             PrintHorizontalLine(canvas, _lineSeparator);
+        }
+
+        foreach (var pair in _nestedSymTable) {
+            var symbolPrinter = new SymbolPrinterVisitor();
+            
+            foreach (var symbol in pair.Value) {
+                symbol.Accept(symbolPrinter);
+            }
+             
+            symbolPrinter.Print(canvas, pair.Key);
+            
         }
     }
 

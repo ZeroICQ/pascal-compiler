@@ -190,7 +190,10 @@ public class TypeChecker {
                         return IsTypesEqual(target, sourceType); 
                 }
                 break;
+            default:
+                return IsTypesEqual(realSourceType, realTargetType);
         }
+        
         return false;
     }
 
@@ -225,11 +228,17 @@ public class TypeChecker {
                             return lScalar.GetType() == rScalar.GetType();
                     }
                     break;
+                
+                case SymRecord lRecord:
+                    switch (rhs) {
+                        case SymRecord rRecord:
+                            return lRecord.Name == rRecord.Name;
+                    }
+                    break;
+                default:
+                    return false;
             }
-            
         }
-        
-        
     }
 }
 }

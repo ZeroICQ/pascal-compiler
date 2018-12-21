@@ -1,0 +1,48 @@
+          Main Block
+       ┌───────┴───────┐
+    Assign          Assign
+   ┌───┴───┐       ┌───┴───┐
+pointa  pointb  pointa  pointa
+
+Global:
+──────────────────────
+│Name    │Type       │
+══════════════════════
+│pointa  │point      │
+──────────────────────
+│pointb  │point      │
+──────────────────────
+│pos     │position   │
+──────────────────────
+│integer │Scalar type│
+──────────────────────
+│char    │Scalar type│
+──────────────────────
+│float   │Scalar type│
+──────────────────────
+│boolean │Scalar type│
+──────────────────────
+│string  │Type       │
+──────────────────────
+
+Record "point":
+───────────────
+│Name │Type   │
+═══════════════
+│x    │integer│
+───────────────
+│y    │integer│
+───────────────
+│z    │integer│
+───────────────
+
+Record "position":
+───────────────
+│Name │Type   │
+═══════════════
+│x    │integer│
+───────────────
+│y    │integer│
+───────────────
+│z    │integer│
+───────────────

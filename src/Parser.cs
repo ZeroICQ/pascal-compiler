@@ -61,31 +61,34 @@ public class Parser {
         while (true) {
             var next = _lexer.GetNextToken();
 
-            if (next is IdentifierToken aliasToken) {
+            if (next is IdentifierToken nameToken) {
                 Require(Constants.Operators.Equal);
 
                 next = _lexer.GetNextToken();
 
                 if (next is IdentifierToken typeToken) {
                     Require(Constants.Separators.Semicolon);
-                    _symStack.AddAlias(aliasToken, typeToken);
+                    _symStack.AddAlias(nameToken, typeToken);
                 }
                 else if (Check(next, Constants.Words.Type)) {
                     next = _lexer.GetNextToken();
 
                     if (next is IdentifierToken aliasTypeToken) {
                         Require(Constants.Separators.Semicolon);
-                        _symStack.AddAliasType(aliasToken, aliasTypeToken);
+                        _symStack.AddAliasType(nameToken, aliasTypeToken);
                     }
                     else {
                         _lexer.Retract();
-                        _symStack.AddAliasType(aliasToken, ParseArrayTypeDeclaration());
+                        _symStack.AddAliasType(nameToken, ParseArrayTypeDeclaration());
                         Require(Constants.Separators.Semicolon);
                     }
                 }
+                else if (Check(next, Constants.Words.Record)) {
+                    _symStack.AddType(ParseRecord(nameToken.Value));
+                }
                 else {
                     _lexer.Retract();
-                    _symStack.AddAlias(aliasToken, ParseArrayTypeDeclaration());
+                    _symStack.AddAlias(nameToken, ParseArrayTypeDeclaration());
                     Require(Constants.Separators.Semicolon);
                 }
 
@@ -102,6 +105,17 @@ public class Parser {
             if (isFirst)
                 isFirst = false;
         }
+    }
+
+    // starts after type <recrdr name> = record ->[...]
+    private SymRecord ParseRecord(string name) {
+        _symStack.Push();
+        ParseVariableDeclarations();
+        var fields = _symStack.Pop();
+        Require(Constants.Words.End);
+        Require(Constants.Separators.Semicolon);
+        
+        return new SymRecord(name, fields);
     }
     
     // start after "const"
@@ -160,7 +174,6 @@ public class Parser {
                             throw Illegal(t);
                         return;
                     }
-                        
 
                     var next = _lexer.GetNextToken();
                     if (Check(next, Constants.Separators.Comma))

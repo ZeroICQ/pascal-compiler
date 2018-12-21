@@ -1,0 +1,35 @@
+  Main Block
+       ┴
+Empty statement
+
+Global:
+──────────────────────
+│Name    │Type       │
+══════════════════════
+│mypoint │point      │
+──────────────────────
+│integer │Scalar type│
+──────────────────────
+│char    │Scalar type│
+──────────────────────
+│float   │Scalar type│
+──────────────────────
+│boolean │Scalar type│
+──────────────────────
+│string  │Type       │
+──────────────────────
+
+Record "point":
+───────────────
+│Name │Type   │
+═══════════════
+│x    │float  │
+───────────────
+│y    │float  │
+───────────────
+│z    │float  │
+───────────────
+│s    │char   │
+───────────────
+│meh  │integer│
+───────────────

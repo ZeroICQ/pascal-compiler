@@ -26,8 +26,8 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Push(new SymTable());
     }
 
-    public void Pop() {
-        _stack.Pop();
+    public SymTable Pop() {
+        return _stack.Pop();
     }
     
     // return nullable
@@ -59,7 +59,7 @@ public class SymStack : IEnumerable<SymTable> {
             return symbol;
         return null;
     }
-
+    //todo: major problem with same type and variable
     public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymConst value = null) {
         var type = FindType(typeToken.Value);
         
@@ -185,7 +185,6 @@ public class SymTable : IEnumerable<Symbol> {
 public abstract class Symbol {
     public abstract string Name { get; }
     public abstract void Accept(ISymVisitor visitor);
-
 }
 
 
@@ -357,6 +356,20 @@ public class SymArray : SymType {
     
 }
 
+public class SymRecord : SymType {
+    public override string Name { get; }
+    public SymTable Fields { get; }
+
+    public SymRecord(string name, SymTable fields) {
+        Name = name;
+        Fields = fields;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+} 
+    
 public class SymAlias : SymType {
     public override string Name { get; }
     public SymType Type { get; }
