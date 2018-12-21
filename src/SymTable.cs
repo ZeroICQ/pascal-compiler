@@ -372,7 +372,17 @@ public class SymRecord : SymType {
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
-} 
+}
+
+public class SymFunction : SymType {
+    public override string Name { get; }
+    
+//    public SymFunc 
+    
+    public override void Accept(ISymVisitor visitor) {
+        throw new System.NotImplementedException();
+    }
+}
     
 public class SymAlias : SymType {
     public override string Name { get; }
