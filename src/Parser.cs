@@ -38,6 +38,11 @@ public class Parser {
                 ParseVariableDeclarations();
                 continue;
             }
+            
+            if (Check(t, Constants.Words.Type)) {
+                ParseTypeDeclarations();
+                continue;
+            }
 
             if (Check(t, Constants.Words.Const)) {
                ParseConstDeclarations();
@@ -48,9 +53,44 @@ public class Parser {
 
         _lexer.Retract();
     }
+
+    // starts after "type"
+    private void ParseTypeDeclarations() {
+        var isFirst = true;
+
+        while (true) {
+            var next = _lexer.GetNextToken();
+
+            if (next is IdentifierToken aliasToken) {
+                Require(Constants.Operators.Equal);
+
+                next = _lexer.GetNextToken();
+
+                if (next is IdentifierToken typeToken) {
+                    Require(Constants.Separators.Semicolon);
+                    _symStack.AddAlias(aliasToken, typeToken);
+                }
+                else {
+                    _lexer.Retract();
+                    throw Illegal(next);
+                }
+
+            } 
+            else if (isFirst) {
+                _lexer.Retract();
+                throw Illegal(next);
+            }
+            else {
+                _lexer.Retract();
+                return;
+            }
+
+            if (isFirst)
+                isFirst = false;
+        }
+    }
     
     // start after "const"
-//    private enum ParseConstDeclarationStates {Start,}
     private void ParseConstDeclarations() {
         var isFirst = true;
 

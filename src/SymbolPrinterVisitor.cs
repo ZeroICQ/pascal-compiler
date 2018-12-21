@@ -33,8 +33,8 @@ public class SymbolPrinterVisitor : ISymVisitor {
     }
 
     public void Visit(Symbol symbol) {
-        const string name = "Type";
-        var type = symbol.Name;
+        var name  = symbol.Name;
+        const string type = "Type";
         
         UpdateNameColumnLength(name.Length);
         UpdateTypeColumnLength(type.Length);
@@ -43,8 +43,18 @@ public class SymbolPrinterVisitor : ISymVisitor {
     }
 
     public void Visit(SymScalar symbol) {
-        const string name = "Scalar type";
-        var type = symbol.Name;
+        var name = symbol.Name;
+        const string type = "Scalar type";;
+        
+        UpdateNameColumnLength(name.Length);
+        UpdateTypeColumnLength(type.Length);
+        
+        _entries.Add(new KeyValuePair<string, string>(name, type));
+    }
+
+    public void Visit(SymAlias symbol) {
+        var name = symbol.Name;
+        var type = $"alias to {symbol.Type.Name}";
         
         UpdateNameColumnLength(name.Length);
         UpdateTypeColumnLength(type.Length);

@@ -31,7 +31,7 @@ public class SymStack : IEnumerable<SymTable> {
     }
     
     // return nullable
-    public Symbol Find(string name) {
+    private Symbol Find(string name) {
         foreach (var table in _stack) {
             var symbol = table.Find(name);
             if (symbol != null)
@@ -42,9 +42,16 @@ public class SymStack : IEnumerable<SymTable> {
     }
     // return nullable
     public SymType FindType(string name) {
-        if (Find(name) is SymType symType)
-            return symType;
-        return null;
+        var symbol = Find(name);
+
+        switch (symbol) {
+            case SymAlias alias:
+                return alias.Type;
+            case SymType symType:
+                return symType;
+            default:
+                return null;
+        }
     }
     // return nullable
     public SymVarOrConst FindVarOrConst(string name) {
@@ -85,6 +92,18 @@ public class SymStack : IEnumerable<SymTable> {
     public void AddType(SymType symType) {
         //todo: check?
         _stack.Peek().Add(symType);
+    }
+
+    public void AddAlias(IdentifierToken aliasToken, IdentifierToken typeToken) {
+        
+        if (FindType(aliasToken.Value) != null)
+            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+            
+        var type = FindType(typeToken.Value);
+        if (type == null)
+            throw new TypeNotFoundException(typeToken.Lexeme, typeToken.Line, typeToken.Column);
+        
+        _stack.Peek().Add(new SymAlias(aliasToken.Value, type));
     }
 
     public IEnumerator<SymTable> GetEnumerator() {
@@ -296,6 +315,12 @@ public class SymArray : SymType {
 
 public class SymAlias : SymType {
     public override string Name { get; }
+    public SymType Type { get; }
+
+    public SymAlias(string name, SymType type) {
+        Name = name;
+        Type = type;
+    }
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
