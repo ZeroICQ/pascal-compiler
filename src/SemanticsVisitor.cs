@@ -95,11 +95,12 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         if (node.Type != null) return true;
         node.Expr.Accept(this);
         
-        if (!_typeChecker.CanCast(node.Type, node.Expr)) {
+        if (!_typeChecker.CanCast(node.CastTo, node.Expr)) {
             var t = ExprNode.GetClosestToken(node.Expr);
-            throw new IncompatibleTypesException(node.Type, node.Expr.Type, t.Lexeme, t.Line, t.Column);
+            throw new IncompatibleTypesException(node.CastTo, node.Expr.Type, t.Lexeme, t.Line, t.Column);
         }
 
+        node.Type = node.CastTo;
         return true;
     }
 

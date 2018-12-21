@@ -4,5 +4,6 @@ public interface ISymVisitor {
     void Visit(Symbol symbol);
     void Visit(SymScalar symbol);
     void Visit(SymAlias symbol);
+    void Visit(SymTypeAlias symbol);
 }
 }

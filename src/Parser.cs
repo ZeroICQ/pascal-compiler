@@ -70,9 +70,23 @@ public class Parser {
                     Require(Constants.Separators.Semicolon);
                     _symStack.AddAlias(aliasToken, typeToken);
                 }
+                else if (Check(next, Constants.Words.Type)) {
+                    next = _lexer.GetNextToken();
+
+                    if (next is IdentifierToken aliasTypeToken) {
+                        Require(Constants.Separators.Semicolon);
+                        _symStack.AddAliasType(aliasToken, aliasTypeToken);
+                    }
+                    else {
+                        _lexer.Retract();
+                        _symStack.AddAliasType(aliasToken, ParseArrayTypeDeclaration());
+                        Require(Constants.Separators.Semicolon);
+                    }
+                }
                 else {
                     _lexer.Retract();
-                    throw Illegal(next);
+                    _symStack.AddAlias(aliasToken, ParseArrayTypeDeclaration());
+                    Require(Constants.Separators.Semicolon);
                 }
 
             } 
@@ -426,11 +440,10 @@ public class Parser {
                         }
                         break;
                 }
-                break;
-                //todo: experiment
+//                break;
                 //return new EmptyStatementNode();
-                //_lexer.Retract();
-                //throw Illegal(nextToken);
+                _lexer.Retract();
+                throw Illegal(nextToken);
         }
 
         //todo: experiment

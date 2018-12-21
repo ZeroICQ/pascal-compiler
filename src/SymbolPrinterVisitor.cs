@@ -62,6 +62,16 @@ public class SymbolPrinterVisitor : ISymVisitor {
         _entries.Add(new KeyValuePair<string, string>(name, type));
     }
 
+    public void Visit(SymTypeAlias symbol) {
+        var name = symbol.Name;
+        var type = $"type alias to {symbol.Type.Name}";
+        
+        UpdateNameColumnLength(name.Length);
+        UpdateTypeColumnLength(type.Length);
+        
+        _entries.Add(new KeyValuePair<string, string>(name, type));
+    }
+
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {
         // head
         canvas.Add(new StringBuilder(""));

@@ -72,6 +72,9 @@ public class TypeChecker {
     // tries to cast target to source's type
     private bool CheckBinary(ref ExprNode source, ref ExprNode target, Token op) {
         //todo: xor, shl, shr, etc...
+        var realSourceType = source.Type is SymTypeAlias sourceTypeAlias ? sourceTypeAlias.Type : source.Type;
+//        var realTargetType = target.Type is SymTypeAlias targetTypeAlias ? targetTypeAlias.Type : target.Type;
+        
         switch (op) {
             case OperatorToken operatorToken:
                 switch (operatorToken.Value) {
@@ -79,11 +82,11 @@ public class TypeChecker {
                     case Constants.Operators.Plus:
                     case Constants.Operators.Minus:
                     case Constants.Operators.Multiply:
-                        return source.Type is SymScalar && !(source.Type is SymChar || source.Type is SymBool)
-                                                        && TryCast(source.Type, ref target);
+                        return realSourceType is SymScalar && !(realSourceType is SymChar || realSourceType is SymBool)
+                                                        && TryCast(realSourceType, ref target);
                     
                     case Constants.Operators.Divide:
-                        return source.Type is SymScalar && !(source.Type is SymChar || source.Type is SymBool) && 
+                        return realSourceType is SymScalar && !(realSourceType is SymChar || realSourceType is SymBool) && 
                                TryCast(_stack.SymFloat, ref source, false) && TryCast(_stack.SymFloat, ref target);
                     
                     case Constants.Operators.Less:
@@ -92,7 +95,7 @@ public class TypeChecker {
                     case Constants.Operators.MoreOreEqual:
                     case Constants.Operators.Equal:
                     case Constants.Operators.NotEqual:
-                        return source.Type is SymScalar && !(source.Type is SymChar) && TryCast(source.Type, ref target);
+                        return realSourceType is SymScalar && !(realSourceType is SymChar) && TryCast(realSourceType, ref target);
                     
                 }
                 break;
@@ -109,7 +112,7 @@ public class TypeChecker {
                     case Constants.Words.And:
                     case Constants.Words.Or:
                         // only bool and int
-                        return (source.Type is SymBool || source.Type is SymInt) && TryCast(source.Type, ref target);
+                        return (realSourceType is SymBool || realSourceType is SymInt) && TryCast(realSourceType, ref target);
                         
                 }
                 break;
@@ -131,19 +134,20 @@ public class TypeChecker {
 
     // try cast target to source
     public bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
-        //todo: make unalias function
-        switch (targetType) {
+        var realSourceType = source.Type is SymTypeAlias sourceTypeAlias ? sourceTypeAlias.Type : source.Type;
+        var realTargetType = targetType is SymTypeAlias targetTypeAlias ? targetTypeAlias.Type : targetType;
+        
+        switch (realTargetType) {
             // scalars
             // float
             case SymFloat _:
-                switch (source.Type) {
+                switch (realSourceType) {
                     case SymInt _:
                         var t = ExprNode.GetClosestToken(source);
                         if (!canModify) 
                             return true;
                         
                         source = new CastNode(_stack.SymFloat, source);
-//                        source = new CastNode(new IdentifierToken(_stack.SymFloat.Name, t.Line, t.Column), source);
                         source.Type = _stack.SymFloat;
                         return true;
 
@@ -155,7 +159,7 @@ public class TypeChecker {
             // end float
             // int
             case SymInt _:
-                switch (source.Type) {
+                switch (realSourceType) {
                     case SymInt _:
                         return true;
                 }
@@ -163,19 +167,17 @@ public class TypeChecker {
                 break;
             // end int
             // char
-            
             case SymChar _ :
-                switch (source.Type) {
+                switch (realSourceType) {
                     case SymChar _:
                         return true;
                 }
                 
                 break;
             // end char
-            
             // bool
             case SymBool _ :
-                switch (source.Type) {
+                switch (realSourceType) {
                     case SymBool _ :
                         return true;
                 }
@@ -183,13 +185,12 @@ public class TypeChecker {
                 break;
             // end bool
             case SymArray target:
-                switch (source.Type) {
+                switch (realSourceType) {
                     case SymArray sourceType:
                         return IsTypesEqual(target, sourceType); 
                 }
                 break;
         }
-
         return false;
     }
 

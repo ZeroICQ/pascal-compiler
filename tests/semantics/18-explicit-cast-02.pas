@@ -2,5 +2,5 @@ var
     a : integer;
     b : float; 
 begin
-    b := integer(float(b));
+    b := integer(integer(a));
 end.     

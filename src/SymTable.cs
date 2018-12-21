@@ -95,7 +95,6 @@ public class SymStack : IEnumerable<SymTable> {
     }
 
     public void AddAlias(IdentifierToken aliasToken, IdentifierToken typeToken) {
-        
         if (FindType(aliasToken.Value) != null)
             throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
             
@@ -104,6 +103,51 @@ public class SymStack : IEnumerable<SymTable> {
             throw new TypeNotFoundException(typeToken.Lexeme, typeToken.Line, typeToken.Column);
         
         _stack.Peek().Add(new SymAlias(aliasToken.Value, type));
+    }
+
+    public void AddAlias(IdentifierToken aliasToken, SymType type) {
+        if (FindType(aliasToken.Value) != null)
+            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+            
+        _stack.Peek().Add(new SymAlias(aliasToken.Value, type));
+    }
+    
+    public void AddAliasType(IdentifierToken aliasToken, IdentifierToken aliasTypeToken) {
+        if (FindType(aliasToken.Value) != null)
+            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+            
+        var type = FindType(aliasTypeToken.Value);
+        if (type == null)
+            throw new TypeNotFoundException(aliasTypeToken.Lexeme, aliasTypeToken.Line, aliasTypeToken.Column);
+        
+        // compute underlying type before adding
+        var realType = type;
+        while (realType is SymTypeAlias typeAlias) {
+            if (typeAlias.Type is SymArray arr) {
+                realType = arr;
+                break;
+            }
+            realType = FindType(typeAlias.Type.Name);
+        }
+        
+        _stack.Peek().Add(new SymTypeAlias(aliasToken.Value, realType));
+    }
+    
+    public void AddAliasType(IdentifierToken aliasToken, SymType aliasType) {
+        if (FindType(aliasToken.Value) != null)
+            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+            
+        // compute underlying type before adding
+        var realType = aliasType;
+        while (realType is SymTypeAlias typeAlias) {
+            if (typeAlias.Type is SymArray arr) {
+                realType = arr;
+                break;
+            }
+            realType = FindType(typeAlias.Type.Name);
+        }
+        
+        _stack.Peek().Add(new SymTypeAlias(aliasToken.Value, realType));
     }
 
     public IEnumerator<SymTable> GetEnumerator() {
@@ -329,6 +373,12 @@ public class SymAlias : SymType {
 
 public class SymTypeAlias : SymType {
     public override string Name { get; }
+    public SymType Type { get; }
+
+    public SymTypeAlias(string name, SymType type) {
+        Name = name;
+        Type = type;
+    }
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);

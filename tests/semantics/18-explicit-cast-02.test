@@ -5,10 +5,10 @@
 b   (float)
        ┴
    (integer)
-      ┌┴
-   (float)
-   ┌──┴
-   b
+       ┴
+   (integer)
+   ┌───┴
+   a
 
 Global:
 ──────────────────────

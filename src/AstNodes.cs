@@ -158,9 +158,10 @@ public class FunctionCallNode : ExprNode {
 
 public class CastNode : ExprNode {
     public ExprNode Expr { get; }
+    public SymType CastTo { get; }
 
     public CastNode(SymType type, ExprNode expr) {
-        Type = type;
+        CastTo = type;
         Expr = expr;
     }
     
