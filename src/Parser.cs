@@ -84,7 +84,7 @@ public class Parser {
                     }
                 }
                 else if (Check(next, Constants.Words.Record)) {
-                    _symStack.AddType(ParseRecord(nameToken.Value));
+                    _symStack.AddType(ParseRecord(nameToken.Value), nameToken);
                 }
                 else {
                     _lexer.Retract();
@@ -110,6 +110,14 @@ public class Parser {
     // starts after type <recrdr name> = record ->[...]
     private SymRecord ParseRecord(string name) {
         _symStack.Push();
+        
+        //empty
+        if (Check(_lexer.GetNextToken(), Constants.Words.End)) {
+            Require(Constants.Separators.Semicolon);
+            return new SymRecord(name, _symStack.Pop());
+        }
+        _lexer.Retract();
+            
         ParseVariableDeclarations();
         var fields = _symStack.Pop();
         Require(Constants.Words.End);

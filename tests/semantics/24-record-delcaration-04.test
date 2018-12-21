@@ -1,0 +1,27 @@
+  Main Block
+       ┴
+Empty statement
+
+Global:
+──────────────────────
+│Name    │Type       │
+══════════════════════
+│integer │Scalar type│
+──────────────────────
+│char    │Scalar type│
+──────────────────────
+│float   │Scalar type│
+──────────────────────
+│boolean │Scalar type│
+──────────────────────
+│string  │Type       │
+──────────────────────
+
+Record "sample":
+────────────────────
+│Name  │Type       │
+════════════════════
+│float │integer = 3│
+────────────────────
+│char  │integer    │
+────────────────────

@@ -29,6 +29,11 @@ public class SymStack : IEnumerable<SymTable> {
     public SymTable Pop() {
         return _stack.Pop();
     }
+
+    private void RequireSymbolRewritable(IdentifierToken identifierToken) {
+        if (FindInCurrentScope(identifierToken.Value) != null) 
+            throw new DuplicateIdentifierException(identifierToken.Lexeme, identifierToken.Line, identifierToken.Line);
+    }
     
     // return nullable
     private Symbol Find(string name) {
@@ -40,6 +45,11 @@ public class SymStack : IEnumerable<SymTable> {
 
         return null;
     }
+
+    private Symbol FindInCurrentScope(string name) {
+        return _stack.Peek().Find(name);
+    }
+    
     // return nullable
     public SymType FindType(string name) {
         var symbol = Find(name);
@@ -65,38 +75,36 @@ public class SymStack : IEnumerable<SymTable> {
         
         if (type == null)
             throw new TypeNotFoundException(typeToken.Lexeme, typeToken.Line, typeToken.Column);
-        
-        if (FindVarOrConst(variableToken.Value) != null)
-            throw new DuplicateIdentifierException(variableToken.Lexeme, variableToken.Line, variableToken.Line);
-        
+
+        RequireSymbolRewritable(variableToken);
         //type check for initial value must be performed earlier. i.e. in parser.       
         var symVar = new SymVar(variableToken.Value, type, value);
         _stack.Peek().Add(symVar);
     }
 
     public void AddArray(IdentifierToken identifierToken, SymArray arrayType) {
-        if (FindVarOrConst(identifierToken.Value) != null) 
-            throw new DuplicateIdentifierException(identifierToken.Lexeme, identifierToken.Line, identifierToken.Line);
+        RequireSymbolRewritable(identifierToken);
         var symVar = new SymVar(identifierToken.Value, arrayType, null);
         _stack.Peek().Add(symVar);
     }
 
     public void AddConst(IdentifierToken constToken, SymConst symConst) {
-        if (_stack.Peek().Find(constToken.Value) != null)
-            throw new DuplicateIdentifierException(constToken.Value, constToken.Line, constToken.Line);
-        
-        
+        RequireSymbolRewritable(constToken);
         _stack.Peek().Add(symConst);
     }
 
-    public void AddType(SymType symType) {
+    private void AddType(SymType symType) {
         //todo: check?
         _stack.Peek().Add(symType);
     }
-
+    
+    public void AddType(SymType symType, Token token) {
+        //todo: check?
+        _stack.Peek().Add(symType);
+    }
+    
     public void AddAlias(IdentifierToken aliasToken, IdentifierToken typeToken) {
-        if (FindType(aliasToken.Value) != null)
-            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+        RequireSymbolRewritable(aliasToken);
             
         var type = FindType(typeToken.Value);
         if (type == null)
@@ -106,15 +114,12 @@ public class SymStack : IEnumerable<SymTable> {
     }
 
     public void AddAlias(IdentifierToken aliasToken, SymType type) {
-        if (FindType(aliasToken.Value) != null)
-            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
-            
+        RequireSymbolRewritable(aliasToken);
         _stack.Peek().Add(new SymAlias(aliasToken.Value, type));
     }
     
     public void AddAliasType(IdentifierToken aliasToken, IdentifierToken aliasTypeToken) {
-        if (FindType(aliasToken.Value) != null)
-            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+        RequireSymbolRewritable(aliasToken);
             
         var type = FindType(aliasTypeToken.Value);
         if (type == null)
@@ -134,8 +139,7 @@ public class SymStack : IEnumerable<SymTable> {
     }
     
     public void AddAliasType(IdentifierToken aliasToken, SymType aliasType) {
-        if (FindType(aliasToken.Value) != null)
-            throw new DuplicateIdentifierException(aliasToken.Lexeme, aliasToken.Line, aliasToken.Column);
+        RequireSymbolRewritable(aliasToken);
             
         // compute underlying type before adding
         var realType = aliasType;

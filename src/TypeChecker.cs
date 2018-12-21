@@ -217,7 +217,7 @@ public class TypeChecker {
                             lhs = lArr.Type;
                             rhs = rArr.Type;
                             
-                        break;
+                        continue;
                     }
                     
                     break;
@@ -238,6 +238,8 @@ public class TypeChecker {
                 default:
                     return false;
             }
+
+            return false;
         }
     }
 }
