@@ -2,7 +2,11 @@
 
 <main block> ::= {<declaration part>} <compound statement> "."
 
-    <declaration part> ::= {<variable declaration part> | <constant declaration part>}
+    <declaration part> ::= {<variable declaration part> | <constant declaration part> | <type declaration part>}
+    
+        <type declaration part> := "type" <type declaration> {<type declaration>}
+        
+            <type declaration> := <identifier> "=" ["Type"] (<array type> | <identifier>) ";"  
     
         <constant declaration part> ::= "const"  <constant declaration> {<constant declaration>}
     
