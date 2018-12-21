@@ -10,19 +10,19 @@ b       And        i1   And
 
 Global:
 ──────────────────────
-│Name        │Type   │
+│Name    │Type       │
 ══════════════════════
-│b           │boolean│
+│b       │boolean    │
 ──────────────────────
-│i1          │integer│
+│i1      │integer    │
 ──────────────────────
-│Scalar type │integer│
+│integer │Scalar type│
 ──────────────────────
-│Scalar type │char   │
+│char    │Scalar type│
 ──────────────────────
-│Scalar type │float  │
+│float   │Scalar type│
 ──────────────────────
-│Scalar type │boolean│
+│boolean │Scalar type│
 ──────────────────────
-│Type        │string │
+│string  │Type       │
 ──────────────────────

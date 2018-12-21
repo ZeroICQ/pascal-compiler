@@ -6,21 +6,21 @@ a  b
 
 Global:
 ──────────────────────
-│Name        │Type   │
+│Name    │Type       │
 ══════════════════════
-│a           │integer│
+│a       │integer    │
 ──────────────────────
-│b           │integer│
+│b       │integer    │
 ──────────────────────
-│c           │char   │
+│c       │char       │
 ──────────────────────
-│Scalar type │integer│
+│integer │Scalar type│
 ──────────────────────
-│Scalar type │char   │
+│char    │Scalar type│
 ──────────────────────
-│Scalar type │float  │
+│float   │Scalar type│
 ──────────────────────
-│Scalar type │boolean│
+│boolean │Scalar type│
 ──────────────────────
-│Type        │string │
+│string  │Type       │
 ──────────────────────

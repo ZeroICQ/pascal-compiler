@@ -8,21 +8,21 @@ i1   Div    i1   Div   i1   Div   i1   Div
 
 Global:
 ──────────────────────
-│Name        │Type   │
+│Name    │Type       │
 ══════════════════════
-│i1          │integer│
+│i1      │integer    │
 ──────────────────────
-│i2          │integer│
+│i2      │integer    │
 ──────────────────────
-│i3          │integer│
+│i3      │integer    │
 ──────────────────────
-│Scalar type │integer│
+│integer │Scalar type│
 ──────────────────────
-│Scalar type │char   │
+│char    │Scalar type│
 ──────────────────────
-│Scalar type │float  │
+│float   │Scalar type│
 ──────────────────────
-│Scalar type │boolean│
+│boolean │Scalar type│
 ──────────────────────
-│Type        │string │
+│string  │Type       │
 ──────────────────────

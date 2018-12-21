@@ -10,17 +10,17 @@ b    NotEqual
 
 Global:
 ──────────────────────
-│Name        │Type   │
+│Name    │Type       │
 ══════════════════════
-│b           │boolean│
+│b       │boolean    │
 ──────────────────────
-│Scalar type │integer│
+│integer │Scalar type│
 ──────────────────────
-│Scalar type │char   │
+│char    │Scalar type│
 ──────────────────────
-│Scalar type │float  │
+│float   │Scalar type│
 ──────────────────────
-│Scalar type │boolean│
+│boolean │Scalar type│
 ──────────────────────
-│Type        │string │
+│string  │Type       │
 ──────────────────────

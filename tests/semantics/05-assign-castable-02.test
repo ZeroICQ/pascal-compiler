@@ -8,27 +8,27 @@ a  b    a  b        a  b         a  b            c  d    c  d        c  d       
 
 Global:
 ──────────────────────
-│Name        │Type   │
+│Name    │Type       │
 ══════════════════════
-│a           │integer│
+│a       │integer    │
 ──────────────────────
-│b           │integer│
+│b       │integer    │
 ──────────────────────
-│c           │float  │
+│c       │float      │
 ──────────────────────
-│d           │float  │
+│d       │float      │
 ──────────────────────
-│e           │char   │
+│e       │char       │
 ──────────────────────
-│f           │char   │
+│f       │char       │
 ──────────────────────
-│Scalar type │integer│
+│integer │Scalar type│
 ──────────────────────
-│Scalar type │char   │
+│char    │Scalar type│
 ──────────────────────
-│Scalar type │float  │
+│float   │Scalar type│
 ──────────────────────
-│Scalar type │boolean│
+│boolean │Scalar type│
 ──────────────────────
-│Type        │string │
+│string  │Type       │
 ──────────────────────
