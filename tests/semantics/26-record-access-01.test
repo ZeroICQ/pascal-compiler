@@ -1,0 +1,39 @@
+                                       Main Block
+           ┌──────────────────────┬─────────┴────────────┬─────────────────────┐
+        Assign                 Assign                 Assign                Assign
+        ┌──┴────────┐           ┌─┴─────────┐  ┌─────────┴┐          ┌─────────┴┐
+     Access        102       Access        10  f       Access        a       Access
+    ┌───┴─────┐             ┌───┴─────┐               ┌───┴─────┐           ┌───┴─────┐
+greenmile  length       greenmile  rating         greenmile  rating     greenmile  length
+
+Global:
+────────────────────────
+│Name      │Type       │
+════════════════════════
+│a         │integer    │
+────────────────────────
+│f         │float      │
+────────────────────────
+│c         │char       │
+────────────────────────
+│greenmile │film       │
+────────────────────────
+│integer   │Scalar type│
+────────────────────────
+│char      │Scalar type│
+────────────────────────
+│float     │Scalar type│
+────────────────────────
+│boolean   │Scalar type│
+────────────────────────
+│string    │Type       │
+────────────────────────
+
+Record "film":
+─────────────────
+│Name   │Type   │
+═════════════════
+│length │integer│
+─────────────────
+│rating │float  │
+─────────────────

@@ -8,11 +8,31 @@ public class TypeChecker {
         _stack = stack;
     }
     
-    public void RequireAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
-        if (!CheckAssignment(ref left, ref right, opToken)) {
-            var token = ExprNode.GetClosestToken(right);
-            throw new IncompatibleTypesException(left.Type, right.Type, token.Lexeme, token.Line, token.Column);
+    public SymType RequireAccess(ExprNode recRef, IdentifierToken fieldName) {
+        var exprToken = ExprNode.GetClosestToken(recRef);
+        // aliases
+        var realType = recRef.Type;
+
+        if (realType is SymTypeAlias symTypeAlias)
+            realType = symTypeAlias.Type;
+        
+        if (!(realType is SymRecord record)) {
+            throw new RecordExpectedException(realType, exprToken.Lexeme, exprToken.Line, exprToken.Column);
         }
+
+        var fieldSymbol = record.Fields.Find(fieldName.Value);
+        
+        if (fieldSymbol == null || !(fieldSymbol is SymVar symVar))
+            throw new MemberNotFoundException(record, fieldName, fieldName.Lexeme, fieldName.Line, fieldName.Column);
+        
+        return symVar.Type;
+    }
+    
+    public void RequireAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
+        if (CheckAssignment(ref left, ref right, opToken)) 
+            return;
+        var token = ExprNode.GetClosestToken(right);
+        throw new IncompatibleTypesException(left.Type, right.Type, token.Lexeme, token.Line, token.Column);
     }
 
     private bool CheckAssignment(ref ExprNode left, ref ExprNode right, OperatorToken opToken) {
@@ -207,11 +227,13 @@ public class TypeChecker {
 
                     switch (rhs) {
                         case SymArray rArr:
+                            if (lArr.MinIndex.Value != rArr.MinIndex.Value ||
+                                lArr.MaxIndex.Value != rArr.MaxIndex.Value) {
+                                return false;
+                            }
                             
                             if (lArr.Type is SymScalar && rArr.Type is SymScalar) {
-                                return lArr.MinIndex.Value == rArr.MinIndex.Value &&
-                                       lArr.MaxIndex.Value   == rArr.MaxIndex.Value &&
-                                       lArr.Type.GetType()   == rArr.Type.GetType();
+                                return lArr.Type.GetType()   == rArr.Type.GetType();
                             }
 
                             lhs = lArr.Type;

@@ -1,0 +1,1 @@
+Types "array[1..100] of integer" and "array[2..101] of integer" are incompatible at 5,9.

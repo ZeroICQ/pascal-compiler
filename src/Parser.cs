@@ -314,7 +314,7 @@ public class Parser {
 
         if (endIndexIntConst.Value < startIndexIntConst.Value) {
             var t = ExprNode.GetClosestToken(endIndexExpr);
-            throw new UpperRangBoundLessThanLowerException(t.Lexeme, t.Line, t.Column);
+            throw new UpperRangeBoundLessThanLowerException(t.Lexeme, t.Line, t.Column);
         }
         
         // array
@@ -338,12 +338,17 @@ public class Parser {
     }
     
     // retracts
-    private BlockNode ParseCompoundStatement() {
+    private BlockNode ParseCompoundStatement(bool ignoreEmptyBlocks=true) {
         var compoundStatement = new BlockNode();
         
         Require(Constants.Words.Begin);
+        var nextStmnt = ParseStatementWithCheck();
         
-        compoundStatement.AddStatement(ParseStatementWithCheck());
+        if (!(ignoreEmptyBlocks && nextStmnt is EmptyStatementNode)) {
+            compoundStatement.AddStatement(nextStmnt);
+        }
+        
+//        compoundStatement.AddStatement(ParseStatementWithCheck());
         while (true) {
             var hasSemicolon = Check(_lexer.GetNextToken(), Constants.Separators.Semicolon);
             
@@ -357,7 +362,11 @@ public class Parser {
                 return compoundStatement;
             
             _lexer.Retract();
-            compoundStatement.AddStatement(ParseStatementWithCheck());
+            nextStmnt = ParseStatementWithCheck();
+        
+            if (!(ignoreEmptyBlocks && nextStmnt is EmptyStatementNode)) {
+                compoundStatement.AddStatement(nextStmnt);
+            }
         }
     }
 

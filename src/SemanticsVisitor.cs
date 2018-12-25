@@ -105,17 +105,20 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(AccessNode node) {
-        throw new System.NotImplementedException();
+        if (node.Type != null) return true;
+        node.Name.Accept(this);
+        node.Type  = _typeChecker.RequireAccess(node.Name, node.Field);
+        node.IsLvalue = true;
+        
+        return true;
     }
 
     public bool Visit(IndexNode node) {
         if (node.Type != null) return true;
         
         node.Operand.Accept(this);
+        node.IndexExpr.Accept(this);
 
-        if (node.IndexExpr.Type == null) {
-            node.IndexExpr.Accept(this);
-        }
         
         var token = ExprNode.GetClosestToken(node.Operand);
         if (!(node.Operand.Type is SymArray arrayType))

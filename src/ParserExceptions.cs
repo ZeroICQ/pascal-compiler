@@ -42,6 +42,20 @@ public class IdentifierNotDefinedException : ParserException {
     }
 }
 
+public class MemberNotFoundException : ParserException {
+    private readonly SymRecord _record;
+    private readonly IdentifierToken _field;
+
+    public override string Message =>
+        $"Record type \"{_record.Name}\" doesn't have member \"{_field.Value}\" at {Line},{Column}.";
+    public MemberNotFoundException(SymRecord record, IdentifierToken field, string lexeme, int line, int column) 
+        : base(lexeme, line, column) 
+    {
+        _record = record;
+        _field = field;
+    }
+}
+
 public class IncompatibleTypesException : ParserException {
     private readonly SymType _leftType;
     private readonly SymType _rightType;
@@ -55,7 +69,6 @@ public class IncompatibleTypesException : ParserException {
 }
 
 public class OperatorNotOverloaded : ParserException {
-
     public override string Message { get; }
     
     public OperatorNotOverloaded(SymType leftType, SymType rightType, string lexeme, int line, int column) : base(lexeme, line, column) {
@@ -87,9 +100,9 @@ public class AnonConstExprEvalException : ConstExprEvalException {
     public AnonConstExprEvalException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
-public class UpperRangBoundLessThanLowerException : ParserException {
+public class UpperRangeBoundLessThanLowerException : ParserException {
     public override string Message => $"Upper bound of range is less than lower bound at {Line},{Column}.";
-    public UpperRangBoundLessThanLowerException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+    public UpperRangeBoundLessThanLowerException(string lexeme, int line, int column) : base(lexeme, line, column) { }
 }
 
 public class ArrayExpectedException : ParserException {
@@ -97,6 +110,15 @@ public class ArrayExpectedException : ParserException {
     public override string Message => $"Array expected. Got {_type.Name} at {Line}, {Column}.";
     public ArrayExpectedException(SymType type, string lexeme, int line, int column) : base(lexeme, line, column) {
         _type = type;
+    }
+}
+
+public class RecordExpectedException : ParserException {
+    private SymType _gotType;
+    public override string Message => $"Record expected. Got {_gotType.Name} at {Line}, {Column}.";
+
+    public RecordExpectedException(SymType gotType, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _gotType = gotType;
     }
 }
 

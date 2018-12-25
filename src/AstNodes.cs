@@ -32,6 +32,10 @@ public abstract class ExprNode : AstNode {
         pi = type.GetProperty(nameof(IndexNode.Operand));
         if (pi != null)
             return GetClosestToken((ExprNode) pi.GetValue(node));
+        
+        pi = type.GetProperty(nameof(AccessNode.Name));
+        if (pi != null)
+            return GetClosestToken((ExprNode) pi.GetValue(node));
             
         // no token found
         //        pi = type.GetProperty("Left");
