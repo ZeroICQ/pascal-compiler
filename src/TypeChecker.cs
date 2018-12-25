@@ -236,7 +236,7 @@ public class TypeChecker {
                     }
                     break;
                 default:
-                    return false;
+                    return lhs.GetType() == rhs.GetType();
             }
 
             return false;

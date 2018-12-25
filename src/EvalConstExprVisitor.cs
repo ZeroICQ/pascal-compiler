@@ -130,7 +130,7 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     }
 
     public SymConst Visit(IdentifierNode node) {
-        // can allow constants
+        //todo: allow constants
         throw EvalException();
     }
 
