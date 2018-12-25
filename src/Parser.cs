@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Compiler {
 public class Parser {
@@ -48,10 +49,157 @@ public class Parser {
                ParseConstDeclarations();
                continue;
             }
+
+            if (Check(t, Constants.Words.Procedure)) {
+                ParseFunctionDeclaration(true);
+                continue;
+            }
+            
+            if (Check(t, Constants.Words.Function)) {
+                ParseFunctionDeclaration(false);
+                continue;
+            }
+            
             break;
         }
 
         _lexer.Retract();
+    }
+    
+    private void ParseFunctionDeclaration(bool isProcedure) {
+        _symStack.Push();
+        
+        var t = _lexer.GetNextToken();
+        if (!(t is IdentifierToken identifierToken)) {
+            _lexer.Retract();
+            throw Illegal(t);
+        }
+        
+        var paramList = ParseParamList();
+        IdentifierToken returnTypeToken = null;
+        
+        //parse return type
+        if (!isProcedure) {
+            Require(Constants.Separators.Colon);
+            t = _lexer.GetNextToken();
+            if (t is IdentifierToken returnIdentifier) {
+                returnTypeToken = returnIdentifier;
+            }
+            else {
+                throw Illegal(t);
+            }
+        }
+        
+        Require(Constants.Separators.Semicolon);
+        t = _lexer.GetNextToken();
+        //local variables
+        if (t is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Var) {
+            //todo: make parameters not globals
+            ParseVariableDeclarations(SymVar.VarTypeEnum.Local);
+        }
+        else {
+            _lexer.Retract();
+        }
+
+        var body = ParseStatementWithCheck();
+        Require(Constants.Separators.Semicolon);
+        
+        var localVars = _symStack.Pop();
+        _symStack.AddFunction(identifierToken, paramList, localVars, body, returnTypeToken);
+    }
+
+    private List<SymVar> ParseParamList() {
+        Require(Constants.Operators.OpenParenthesis);
+        var paramList = new List<SymVar>();
+        
+        while (true) {
+            var t = _lexer.GetNextToken();
+            
+            //determine type var/const/out/<no modificator>
+            var paramModifier = SymVar.VarTypeEnum.Parameter;
+            switch (t) {
+                case ReservedToken reservedToken:
+                    switch (reservedToken.Value) {
+                        case Constants.Words.Var:
+                            paramModifier = SymVar.VarTypeEnum.VarParameter;
+                            break;
+                        
+                        case Constants.Words.Const:
+                            paramModifier = SymVar.VarTypeEnum.ConstParameter;
+                            break;
+                        case Constants.Words.Out:
+                            paramModifier = SymVar.VarTypeEnum.OutParameter;
+                            break;
+                        
+                    }
+                    break;
+                default:
+                    _lexer.Retract();
+                    break;
+            }
+
+            //parse parameter names. single or separated with comma
+            var identifiersTokens = new List<IdentifierToken>();
+            
+            while (true) {
+                t = _lexer.GetNextToken();
+                
+                if (!(t is IdentifierToken paramIdentifierToken))
+                    throw Illegal(t);
+
+                identifiersTokens.Add(paramIdentifierToken);
+                
+                t = _lexer.GetNextToken();
+                if (t is SeparatorToken sep && sep.Value == Constants.Separators.Comma) 
+                    continue;
+                
+                _lexer.Retract();
+                break;
+            }
+            Require(Constants.Separators.Colon);            
+            //parse parameter(s) type
+            t = _lexer.GetNextToken();
+            SymType paramType = null;
+            
+            switch (t) {
+                case ReservedToken reservedToken:
+                    switch (reservedToken.Value) {
+                        case Constants.Words.Array:
+                            if (_lexer.GetNextToken() is ReservedToken res && res.Value == Constants.Words.Of) {
+                                Require(Constants.Words.Const);
+                                paramType = ArrayOfConst.Instance;
+                            }
+                            else {
+                                //some other array
+                                _lexer.Retract();
+                                paramType = ParseArrayTypeDeclaration(true);
+                            }
+                            break;
+                    }
+                    break;
+                
+                case IdentifierToken identifierToken:
+                    paramType = _symStack.FindType(identifierToken.Value);
+                    if (paramType == null)
+                        throw new TypeNotFoundException(identifierToken.Lexeme, identifierToken.Line, identifierToken.Column);
+                    break;
+            }
+            
+            //todo: default values
+            foreach (var idToken in identifiersTokens) {
+                paramList.Add(_symStack.AddVariable(idToken, paramType, paramModifier));
+            }
+
+            t = _lexer.GetNextToken();
+            if (t is SeparatorToken sp && sp.Value == Constants.Separators.Semicolon)
+                    continue;
+
+            if (t is OperatorToken op && op.Value == Constants.Operators.CloseParenthesis)
+                return paramList;
+            
+            _lexer.Retract();
+            throw Illegal(t);
+        }
     }
 
     // starts after "type"
@@ -162,12 +310,12 @@ public class Parser {
 
     // start after "var"
     private enum ParseVariableDeclarationsStates {Start, SingleVariable, MultipleVariables} 
-    private void ParseVariableDeclarations() {
+    private void ParseVariableDeclarations(SymVar.VarTypeEnum varType = SymVar.VarTypeEnum.Global) {
         var state = ParseVariableDeclarationsStates.Start;
         
         var identifiers = new List<IdentifierToken>();
 
-        bool isFirst = true;
+        var isFirst = true;
         while (true) {
             var t = _lexer.GetNextToken();
             switch (state) {
@@ -211,13 +359,12 @@ public class Parser {
                             var initialValueToken = ExprNode.GetClosestToken(initialExpr);
                             var initValEvalVisitor = new EvalConstExprVisitor(initialValueToken, _symStack);
                             initialValue = initialExpr.Accept(initValEvalVisitor);
-                            //todo : check if works, remove commented
                             _typeChecker.RequireCast(type, ref initialExpr);
                         }
                         else
                             _lexer.Retract();    
                         
-                        _symStack.AddVariable(identifiers[0], typeToken, initialValue);
+                        _symStack.AddVariable(identifiers[0], typeToken, varType, initialValue);
                         Require(Constants.Separators.Semicolon);
                         isFirst = false;
                         state = ParseVariableDeclarationsStates.Start;
@@ -227,7 +374,7 @@ public class Parser {
                         _lexer.Retract();
                         var arrayType = ParseArrayTypeDeclaration();
                         Require(Constants.Separators.Semicolon);
-                        _symStack.AddArray(identifiers[0], arrayType);
+                        _symStack.AddArray(identifiers[0], arrayType, varType);
                         
                         isFirst = false;
                         state = ParseVariableDeclarationsStates.Start;
@@ -252,7 +399,7 @@ public class Parser {
                             
                             if (typeT is IdentifierToken tpToken) {
                                 foreach (var id in identifiers) {
-                                    _symStack.AddVariable(id, tpToken);
+                                    _symStack.AddVariable(id, tpToken, varType);
                                 }
                                 Require(Constants.Separators.Semicolon);
                                 isFirst = false;
@@ -265,7 +412,7 @@ public class Parser {
                                 Require(Constants.Separators.Semicolon);
                                 
                                 foreach (var id in identifiers) {
-                                    _symStack.AddArray(id, arrayType);
+                                    _symStack.AddArray(id, arrayType, varType);
                                 }
                                 
                                 isFirst = false;
@@ -280,8 +427,10 @@ public class Parser {
         }
     }
 
-    private SymArray ParseArrayTypeDeclaration() {
-        Require(Constants.Words.Array);
+    private SymArray ParseArrayTypeDeclaration(bool skipArrayWord = false) {
+        if (!skipArrayWord) {
+            Require(Constants.Words.Array);
+        }
         Require(Constants.Operators.OpenBracket);
 
         var startIndexExpr = ParseExprWithCheck(true);
@@ -465,7 +614,7 @@ public class Parser {
                             
                             case Constants.Operators.OpenParenthesis:
                                 //procedure call
-                                var paramList = ParseParamList();
+                                var paramList = ParseArgumentList();
                                 return new ProcedureCallNode(left, paramList);
                         }
                         break;
@@ -566,34 +715,34 @@ public class Parser {
         return new IfNode(condition, trueStatement);
     }
     
-    private enum ParseParamListStates {Start, AfterFirst}
+    private enum ParseArgListStates {Start, AfterFirst}
     // parse (expr {, expr})
     // starts after (->[..]
-    private List<ExprNode> ParseParamList() {
-        var parameters = new List<ExprNode>();
+    private List<ExprNode> ParseArgumentList() {
+        var args = new List<ExprNode>();
 
-        var state = ParseParamListStates.Start;
+        var state = ParseArgListStates.Start;
 
         while (true) {
             var t = _lexer.GetNextToken();
             
             switch (state) {
-                case ParseParamListStates.Start:
+                case ParseArgListStates.Start:
                     if (Check(t, Constants.Operators.CloseParenthesis))
-                        return parameters;
+                        return args;
                     _lexer.Retract();
                     
-                    state = ParseParamListStates.AfterFirst;
-                    parameters.Add(ParseExprWithCheck(false));
+                    state = ParseArgListStates.AfterFirst;
+                    args.Add(ParseExprWithCheck(false));
                     break;
                 
-                case ParseParamListStates.AfterFirst:
+                case ParseArgListStates.AfterFirst:
                     if (Check(t, Constants.Operators.CloseParenthesis))
-                        return parameters;
+                        return args;
                     _lexer.Retract();
                     
                     Require(Constants.Separators.Comma);
-                    parameters.Add(ParseExprWithCheck(false));
+                    args.Add(ParseExprWithCheck(false));
                     break;
             }
             
@@ -671,7 +820,7 @@ public class Parser {
 
                 case ParseVarRefStates.AfterParenthesis:
                     _lexer.Retract();
-                    var paramList = ParseParamList();
+                    var paramList = ParseArgumentList();
                     
                     // need to distinguish function call and cast:
                     if (varRef is IdentifierNode idNode) {

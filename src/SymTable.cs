@@ -69,8 +69,21 @@ public class SymStack : IEnumerable<SymTable> {
             return symbol;
         return null;
     }
-    //todo: major problem with same type and variable
-    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymConst value = null) {
+
+    public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, IdentifierToken returnTypeToken) {
+        //todo: add checks!!!
+        SymType returnType = null;
+        if (returnTypeToken != null) {
+            returnType = FindType(returnTypeToken.Value);
+            if (returnType == null)
+                throw new TypeNotFoundException(returnTypeToken.Lexeme, returnTypeToken.Line, returnTypeToken.Column);
+        }
+        _stack.Peek().Add(new SymFunc(nameToken.Value, paramList, localVars, body, returnType));
+    }
+    
+    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymVar.VarTypeEnum varType, 
+        SymConst value = null) 
+    {
         var type = FindType(typeToken.Value);
         
         if (type == null)
@@ -78,13 +91,23 @@ public class SymStack : IEnumerable<SymTable> {
 
         RequireSymbolRewritable(variableToken);
         //type check for initial value must be performed earlier. i.e. in parser.       
-        var symVar = new SymVar(variableToken.Value, type, value);
+        var symVar = new SymVar(variableToken.Value, type, value, varType);
         _stack.Peek().Add(symVar);
     }
+    
+    public SymVar AddVariable(IdentifierToken variableToken, SymType type, SymVar.VarTypeEnum varMod, SymConst value = null) 
+    {
+        
+        RequireSymbolRewritable(variableToken);
+        //type check for initial value must be performed earlier. i.e. in parser.       
+        var symVar = new SymVar(variableToken.Value, type, value, varMod);
+        _stack.Peek().Add(symVar);
+        return symVar;
+    }
 
-    public void AddArray(IdentifierToken identifierToken, SymArray arrayType) {
+    public void AddArray(IdentifierToken identifierToken, SymArray arrayType, SymVar.VarTypeEnum varType) {
         RequireSymbolRewritable(identifierToken);
-        var symVar = new SymVar(identifierToken.Value, arrayType, null);
+        var symVar = new SymVar(identifierToken.Value, arrayType, null, varType);
         _stack.Peek().Add(symVar);
     }
 
@@ -196,6 +219,20 @@ public abstract class Symbol {
 public abstract class SymType : Symbol {
 }
 
+// should be only used for parameters
+public class ArrayOfConst : SymType {
+    public override string Name => "Array of const";
+    
+    private ArrayOfConst() {}
+    private static ArrayOfConst _instance;
+    
+    public static ArrayOfConst Instance => _instance ?? (_instance = new ArrayOfConst());
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
 // scalars
 public abstract class SymScalar : SymType {
 }
@@ -260,11 +297,15 @@ public abstract class SymVarOrConst : Symbol {
 
 // variables
 public class SymVar : SymVarOrConst {
+    public enum VarTypeEnum {Global, Local, Parameter, VarParameter, ConstParameter, OutParameter}
     // nullable
     public SymConst InitialValue { get; }
-
-    public SymVar(string name, SymType type, SymConst initialValue) : base(name, type, false) {
+    public VarTypeEnum VarType { get; }
+    public SymVar(string name, SymType type, SymConst initialValue, VarTypeEnum varType)
+        : base(name, type, false) 
+    {
         InitialValue = initialValue;
+        VarType = varType;
         InitialStringValue = initialValue?.InitialStringValue;
     }
 }
@@ -374,13 +415,26 @@ public class SymRecord : SymType {
     }
 }
 
-public class SymFunction : SymType {
+public class SymFunc : SymType {
     public override string Name { get; }
     
-//    public SymFunc 
+    public List<SymVar> Parameters { get; }
+    public SymTable LocalVariables { get; }
+    // if null -> procedure
+    public SymType ReturnType { get; }
+    public StatementNode Body { get; }
     
+    public SymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType) {
+        Name = name;
+        Parameters = parameters;
+        LocalVariables = localVariables;
+        Body = body;
+        ReturnType = returnType;
+    }
+
+
     public override void Accept(ISymVisitor visitor) {
-        throw new System.NotImplementedException();
+        visitor.Visit(this);
     }
 }
     

@@ -78,6 +78,41 @@ public class SymbolPrinterVisitor : ISymVisitor {
         _nestedSymTable.Add(new KeyValuePair<string, SymTable>($"Record \"{symbol.Name}\"", symbol.Fields));
     }
 
+    public void Visit(SymFunc symbol) {
+        var name = symbol.Name;
+        var returnType = symbol.ReturnType == null ? "void" : symbol.ReturnType.Name;
+
+        var paramsList = new StringBuilder();
+        var isFirst = true;
+        foreach (var p in symbol.Parameters) {
+            if (!isFirst)
+                paramsList.Append(", ");
+            else
+                isFirst = false;
+
+            switch (p.VarType) {
+                case SymVar.VarTypeEnum.OutParameter:
+                    paramsList.Append("out ");
+                    break;
+                case SymVar.VarTypeEnum.Parameter:
+                    paramsList.Append("var ");
+                    break;
+                
+                case SymVar.VarTypeEnum.ConstParameter:
+                    paramsList.Append("const ");
+                    break;
+            }
+            paramsList.Append($"{p.Name}:{p.Type.Name}");
+        }
+            
+        var type = $"function({paramsList}): {returnType}";
+        
+        UpdateNameColumnLength(name.Length);
+        UpdateTypeColumnLength(type.Length);
+        
+        _entries.Add(new KeyValuePair<string, string>(name, type));
+    }
+
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {
         // head
         canvas.Add(new StringBuilder(""));
