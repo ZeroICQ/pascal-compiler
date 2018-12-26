@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using CommandLineParser.Arguments;
 using CommandLineParser.Exceptions;
 using CommandLineParser.Validation;
@@ -8,6 +9,7 @@ namespace Compiler {
 
 internal static class App {
     public static int  Main(string[] args) {
+        Console.OutputEncoding = Encoding.UTF8;
         var commandLineParser = new CommandLineParser.CommandLineParser();
         
         var sourcePath = new FileArgument('i', "input", "Source file path") { Optional = false };

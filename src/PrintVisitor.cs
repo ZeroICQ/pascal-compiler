@@ -176,8 +176,6 @@ public class PrinterNode {
     }
 
     private void PrintEdge(in List<StringBuilder> canvas, int depth, int start, int end, bool isLeftEdge, bool isRightEdge) {
-        Console.OutputEncoding = Encoding.UTF8;
-        
         if (canvas.Count - 1 < depth) {
             canvas.Add(new StringBuilder());
         }
