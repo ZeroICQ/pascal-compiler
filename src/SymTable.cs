@@ -73,6 +73,7 @@ public class SymStack : IEnumerable<SymTable> {
     public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, IdentifierToken returnTypeToken) {
         //todo: add checks!!!
         SymType returnType = null;
+        RequireSymbolRewritable(nameToken);
         if (returnTypeToken != null) {
             returnType = FindType(returnTypeToken.Value);
             if (returnType == null)

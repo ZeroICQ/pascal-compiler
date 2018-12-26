@@ -129,10 +129,23 @@ public class Parser {
                             break;
                         case Constants.Words.Out:
                             paramModifier = SymVar.VarTypeEnum.OutParameter;
+                            break;                    
+                    default:
+                        _lexer.Retract();
+                        break;
+                    }                   
+                    break;
+                
+                case OperatorToken opToken:
+                    switch (opToken.Value) {
+                        case Constants.Operators.CloseParenthesis:
+                            return paramList;
+                        default:
+                            _lexer.Retract();
                             break;
-                        
                     }
                     break;
+
                 default:
                     _lexer.Retract();
                     break;

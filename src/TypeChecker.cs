@@ -133,7 +133,6 @@ public class TypeChecker {
                     case Constants.Words.Or:
                         // only bool and int
                         return (realSourceType is SymBool || realSourceType is SymInt) && TryCast(realSourceType, ref target);
-                        
                 }
                 break;
         }

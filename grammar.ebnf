@@ -2,8 +2,12 @@
 
 <main block> ::= {<declaration part>} <compound statement> "."
 
-    <declaration part> ::= {<variable declaration part> | <constant declaration part> | <type declaration part>}
-    
+    <declaration part> ::= {<variable declaration part> | <constant declaration part> | <type declaration part>} | <function declaration part> | <procedure declaration part>
+        
+        <function declaration part> ::= "function" <identifier> "(" <parameters list> ")" ":" <type> ";" <variable declaration part> <compound statement> ";"
+        
+        <procedure declaration part> ::= "procedure" <identifier> "(" <parameters list> ")" ";" <variable declaration part> <compound statement> ";"
+            
         <type declaration part> := "type" <type declaration> {<type declaration>}
         
             <type declaration> := <identifier> "=" ["Type"] (<array type> | <identifier>) ";"  
