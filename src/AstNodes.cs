@@ -48,7 +48,7 @@ public abstract class ExprNode : AstNode {
 //--- Expressions ---
 public class IdentifierNode : ExprNode {
     public IdentifierToken Token { get; }
-    public SymVarOrConst Symbol { get; set; } = null;
+    public SymVarOrConst Symbol { get; set; }
         
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
@@ -145,10 +145,10 @@ public class BinaryExprNode : ExprNode {
     }
 }
 
-
 public class FunctionCallNode : ExprNode {
     public ExprNode Name { get; }
     public List<ExprNode> Args { get; } 
+    public SymFunc Symbol { get; set; }
     
     public FunctionCallNode(ExprNode name, List<ExprNode> args) {
         Name = name;
@@ -269,12 +269,10 @@ public class WhileNode : StatementNode {
 }
 
 public class ProcedureCallNode : StatementNode {
-    public ExprNode Name { get; }
-    public List<ExprNode> Args { get; } 
+    public FunctionCallNode Function;
     
-    public ProcedureCallNode(ExprNode name, List<ExprNode> args) {
-        Name = name;
-        Args = args;
+    public ProcedureCallNode(FunctionCallNode function) {
+        Function = function;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {

@@ -104,8 +104,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(ProcedureCallNode node) {
         var pNode = new PrinterNode("Procedure");
         
-        pNode.AddChild(node.Name.Accept(this));
-        foreach (var arg in node.Args) {
+        pNode.AddChild(node.Function.Name.Accept(this));
+        foreach (var arg in node.Function.Args) {
             pNode.AddChild(arg.Accept(this));
         }
         return pNode;

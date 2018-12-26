@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Compiler {
 public class TypeChecker {
@@ -6,6 +7,16 @@ public class TypeChecker {
 
     public TypeChecker(SymStack stack) {
         _stack = stack;
+    }
+
+    public SymType RequireFunction(ExprNode Name, List<ExprNode> Args) {
+        var realType = Name.Type;
+
+        if (realType is SymTypeAlias symTypeAlias)
+            realType = symTypeAlias.Type;
+        
+        if (!(realType is IdentifierNode))
+            throw Exception
     }
     
     public SymType RequireAccess(ExprNode recRef, IdentifierToken fieldName) {

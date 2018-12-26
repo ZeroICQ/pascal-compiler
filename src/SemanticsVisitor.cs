@@ -80,15 +80,20 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     }
 
     public bool Visit(FunctionCallNode node) {
-//        foreach (var arg in node.Args) {
-//            arg.Accept(this);
-//        }
-
-        throw new System.NotImplementedException();
+        if (node.Type != null) return true;
+        
+        node.Name.Accept(this);
+        foreach (var arg in node.Args) {
+            arg.Accept(this);
+        }
+        
+        node.Type = _typeChecker.RequireFunction(node.Name, node.Args);
+        return true;
     }
 
     public bool Visit(ProcedureCallNode node) {
-        throw new System.NotImplementedException();
+        node.Function.Accept(this);
+        return true;
     }
 
     public bool Visit(CastNode node) {

@@ -500,7 +500,7 @@ public class Parser {
     }
     
     // retracts
-    private BlockNode ParseCompoundStatement(bool ignoreEmptyBlocks=true) {
+    private BlockNode ParseCompoundStatement(bool ignoreEmptyBlocks = true) {
         var compoundStatement = new BlockNode();
         
         Require(Constants.Words.Begin);
@@ -609,7 +609,7 @@ public class Parser {
 
                 // todo: remove crunch?
                 if (left is FunctionCallNode f) {
-                    return new ProcedureCallNode(f.Name, f.Args);
+                    return new ProcedureCallNode(f);
                 }
                 
                 // now it can be either procedure statement or assign
@@ -628,7 +628,7 @@ public class Parser {
                             case Constants.Operators.OpenParenthesis:
                                 //procedure call
                                 var paramList = ParseArgumentList();
-                                return new ProcedureCallNode(left, paramList);
+                                return new ProcedureCallNode(new FunctionCallNode(left, paramList));
                         }
                         break;
                 }
@@ -838,7 +838,7 @@ public class Parser {
                     // need to distinguish function call and cast:
                     if (varRef is IdentifierNode idNode) {
                         var type = _symStack.FindType(idNode.Token.Value);
-                        if (type != null && paramList.Count == 1) {
+                        if (type != null && !(type is SymFunc) && paramList.Count == 1) {
                             varRef = new CastNode(type, paramList[0]);
                             
                             state = ParseVarRefStates.Start;

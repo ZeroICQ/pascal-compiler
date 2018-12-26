@@ -129,14 +129,14 @@ public class SymbolPrinterVisitor : ISymVisitor {
             PrintHorizontalLine(canvas, _lineSeparator);
         }
 
-        foreach (var pair in _nestedSymTable) {
+        foreach (var (key, value) in _nestedSymTable) {
             var symbolPrinter = new SymbolPrinterVisitor();
             
-            foreach (var symbol in pair.Value) {
+            foreach (var symbol in value) {
                 symbol.Accept(symbolPrinter);
             }
              
-            symbolPrinter.Print(canvas, pair.Key);
+            symbolPrinter.Print(canvas, key);
             
         }
     }
