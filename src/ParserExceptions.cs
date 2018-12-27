@@ -127,7 +127,21 @@ public class RecordExpectedException : ParserException {
     }
 }
 
-public class ArgumentCountMissmatch()
+public class WrongArgumentsNumberException : ParserException {
+    public override string Message => $"Wrong number of arguments for \"{Lexeme}\". Expected {_expected}, but got {_got} at {Line},{Column}.";
+    
+    private readonly long _expected;
+    private readonly long _got;
+    
+    public WrongArgumentsNumberException(long expected, long got, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _expected = expected;
+        _got = got;
+    }
+}
+
+public class WrongParameterTypeException : Exception {
+    public override string Message => "Wrong argument vartype.";
+}
 
 public class RangeCheckErrorException : ParserException {
     private readonly long _gotIndex;

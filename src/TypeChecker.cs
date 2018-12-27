@@ -11,21 +11,47 @@ public class TypeChecker {
 
     public SymFunc RequireFunction(ExprNode Name, List<ExprNode> Args) {
         var realType = Name.Type;
-
+        
         if (realType is SymTypeAlias symTypeAlias)
             realType = symTypeAlias.Type;
+        
+        var nameToken = ExprNode.GetClosestToken(Name);
 
         if (!(realType is SymFunc funcType)) {
-            var t = ExprNode.GetClosestToken(Name);
-            throw new NotAFunctionException(t.Lexeme, t.Line, t.Column);
+            throw new NotAFunctionException(nameToken.Lexeme, nameToken.Line, nameToken.Column);
         }
         
-        //todo: continue with param check
         var argc = Args.Count;
         var parc = funcType.Parameters.Count;
         
         if (argc != parc)
-            throw new Exception();
+            throw new WrongArgumentsNumberException(parc, argc, nameToken.Lexeme, nameToken.Line, nameToken.Column);
+        
+        //todo: continue with param check
+
+        for (var i = 0; i < argc; i++) {
+            var currParameter = funcType.Parameters[i];
+            var curArgument = Args[i];
+            
+            switch (funcType.Parameters[i].VarType) {
+                case SymVar.VarTypeEnum.Global:
+                case SymVar.VarTypeEnum.Local:
+                    throw new WrongParameterTypeException();
+                
+                case SymVar.VarTypeEnum.Parameter:
+                    RequireCast(currParameter.Type, ref curArgument);
+                    break;
+                case SymVar.VarTypeEnum.VarParameter:
+                case SymVar.VarTypeEnum.ConstParameter:
+                case SymVar.VarTypeEnum.OutParameter:
+                    throw new NotImplementedException();
+//                default:
+//                    throw new ArgumentOutOfRangeException();
+            }
+            
+        }
+
+        return funcType;
     }
     
     public SymType RequireAccess(ExprNode recRef, IdentifierToken fieldName) {
