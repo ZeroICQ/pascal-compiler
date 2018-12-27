@@ -87,7 +87,9 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             arg.Accept(this);
         }
         
-        node.Type = _typeChecker.RequireFunction(node.Name, node.Args);
+        var symbol =_typeChecker.RequireFunction(node.Name, node.Args);
+        node.Type = symbol.ReturnType;
+        node.Symbol = symbol;
         return true;
     }
 

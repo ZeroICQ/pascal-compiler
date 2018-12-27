@@ -9,14 +9,23 @@ public class TypeChecker {
         _stack = stack;
     }
 
-    public SymType RequireFunction(ExprNode Name, List<ExprNode> Args) {
+    public SymFunc RequireFunction(ExprNode Name, List<ExprNode> Args) {
         var realType = Name.Type;
 
         if (realType is SymTypeAlias symTypeAlias)
             realType = symTypeAlias.Type;
+
+        if (!(realType is SymFunc funcType)) {
+            var t = ExprNode.GetClosestToken(Name);
+            throw new NotAFunctionException(t.Lexeme, t.Line, t.Column);
+        }
         
-        if (!(realType is IdentifierNode))
-            throw Exception
+        //todo: continue with param check
+        var argc = Args.Count;
+        var parc = funcType.Parameters.Count;
+        
+        if (argc != parc)
+            throw new Exception();
     }
     
     public SymType RequireAccess(ExprNode recRef, IdentifierToken fieldName) {

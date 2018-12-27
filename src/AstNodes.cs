@@ -10,7 +10,7 @@ public abstract class AstNode {
 }
 
 public abstract class ExprNode : AstNode {
-    public SymType Type { get; set; }
+    public virtual SymType Type { get; set; }
     public bool IsLvalue { get; set; } = false;
     
     public static Token GetClosestToken(ExprNode node) {

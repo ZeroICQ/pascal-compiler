@@ -113,6 +113,11 @@ public class ArrayExpectedException : ParserException {
     }
 }
 
+public class NotAFunctionException : ParserException {
+    public override string Message => $"{Lexeme} is not a function at {Line}, {Column}.";
+    public NotAFunctionException(string lexeme, int line, int column) : base(lexeme, line, column) { }
+} 
+
 public class RecordExpectedException : ParserException {
     private SymType _gotType;
     public override string Message => $"Record expected. Got {_gotType.Name} at {Line}, {Column}.";
@@ -121,6 +126,8 @@ public class RecordExpectedException : ParserException {
         _gotType = gotType;
     }
 }
+
+public class ArgumentCountMissmatch()
 
 public class RangeCheckErrorException : ParserException {
     private readonly long _gotIndex;
@@ -136,6 +143,7 @@ public class RangeCheckErrorException : ParserException {
         _maxIndex = maxIndex;
     }
 }
+
 
 public class ParserPanicException : Exception {
 
