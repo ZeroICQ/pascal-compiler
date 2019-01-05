@@ -70,6 +70,13 @@ public class SymStack : IEnumerable<SymTable> {
         return null;
     }
 
+    public SymFunc FindFunction(string name) {
+        if (Find(name) is SymFunc symFunc)
+            return symFunc;
+        
+        return null;
+    }
+
     public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, IdentifierToken returnTypeToken) {
         //todo: add checks!!!
         SymType returnType = null;
@@ -262,6 +269,13 @@ public class SymChar : SymScalar {
     }
 }
 
+public class SymVoid : SymType {
+    public override string Name => "void";
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
 public class SymString : SymType {
     public override string Name => "string";
     
@@ -430,7 +444,13 @@ public class SymFunc : SymType {
         Parameters = parameters;
         LocalVariables = localVariables;
         Body = body;
-        ReturnType = returnType;
+        
+        if (returnType == null) {
+            ReturnType = new SymVoid();
+        }
+        else {
+            ReturnType = returnType;
+        }
     }
 
 

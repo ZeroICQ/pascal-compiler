@@ -80,7 +80,7 @@ public class SymbolPrinterVisitor : ISymVisitor {
 
     public void Visit(SymFunc symbol) {
         var name = symbol.Name;
-        var returnType = symbol.ReturnType == null ? "void" : symbol.ReturnType.Name;
+        var returnType = symbol.ReturnType.Name;
 
         var paramsList = new StringBuilder();
         var isFirst = true;
@@ -94,7 +94,7 @@ public class SymbolPrinterVisitor : ISymVisitor {
                 case SymVar.VarTypeEnum.OutParameter:
                     paramsList.Append("out ");
                     break;
-                case SymVar.VarTypeEnum.Parameter:
+                case SymVar.VarTypeEnum.VarParameter:
                     paramsList.Append("var ");
                     break;
                 

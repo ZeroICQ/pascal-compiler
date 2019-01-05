@@ -9,50 +9,39 @@ public class TypeChecker {
         _stack = stack;
     }
 
-    public SymFunc RequireFunction(ExprNode Name, List<ExprNode> Args) {
-        var realType = Name.Type;
-        
-        if (realType is SymTypeAlias symTypeAlias)
-            realType = symTypeAlias.Type;
-        
-        var nameToken = ExprNode.GetClosestToken(Name);
-
-        if (!(realType is SymFunc funcType)) {
-            throw new NotAFunctionException(nameToken.Lexeme, nameToken.Line, nameToken.Column);
-        }
-        
-        var argc = Args.Count;
-        var parc = funcType.Parameters.Count;
+    public SymFunc RequireFunction(Token token, SymFunc funcSym, List<ExprNode> args) {
+        var argc = args.Count;
+        var parc = funcSym.Parameters.Count;
         
         if (argc != parc)
-            throw new WrongArgumentsNumberException(parc, argc, nameToken.Lexeme, nameToken.Line, nameToken.Column);
+            throw new WrongArgumentsNumberException(parc, argc, token.Lexeme, token.Line, token.Column);
         
-        //todo: continue with param check
-
         for (var i = 0; i < argc; i++) {
-            var currParameter = funcType.Parameters[i];
-            var curArgument = Args[i];
+            var currParameter = funcSym.Parameters[i];
+            var curArgument  = args[i];
             
-            switch (funcType.Parameters[i].VarType) {
+            switch (funcSym.Parameters[i].VarType) {
                 case SymVar.VarTypeEnum.Global:
                 case SymVar.VarTypeEnum.Local:
                     throw new WrongParameterTypeException();
                 
                 case SymVar.VarTypeEnum.Parameter:
                     RequireCast(currParameter.Type, ref curArgument);
+                    args[i] = curArgument;
                     break;
                 case SymVar.VarTypeEnum.VarParameter:
-                case SymVar.VarTypeEnum.ConstParameter:
                 case SymVar.VarTypeEnum.OutParameter:
+                case SymVar.VarTypeEnum.ConstParameter:
                     throw new NotImplementedException();
-//                default:
-//                    throw new ArgumentOutOfRangeException();
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
             
         }
 
-        return funcType;
+        return funcSym;
     }
+
     
     public SymType RequireAccess(ExprNode recRef, IdentifierToken fieldName) {
         var exprToken = ExprNode.GetClosestToken(recRef);

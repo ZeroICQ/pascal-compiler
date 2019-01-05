@@ -81,15 +81,27 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
     public bool Visit(FunctionCallNode node) {
         if (node.Type != null) return true;
+
+        //todo: rmk when add pointers
+        if (!(node.Name is IdentifierNode funcIdentifier)) {
+            node.Name.Accept(this);
+            var t = ExprNode.GetClosestToken(node);
+            throw new FunctionExpectedException(node.Name.Type, t.Lexeme, t.Line, t.Column);
+        }
+
+        var funcSym = _stack.FindFunction(funcIdentifier.Token.Value);
         
-        node.Name.Accept(this);
+        if (funcSym == null)
+            throw new IdentifierNotDefinedException(funcIdentifier.Token.Lexeme, funcIdentifier.Token.Line, funcIdentifier.Token.Column);
+        
         foreach (var arg in node.Args) {
             arg.Accept(this);
         }
         
-        var symbol =_typeChecker.RequireFunction(node.Name, node.Args);
+        var symbol = _typeChecker.RequireFunction(funcIdentifier.Token, funcSym, node.Args);
         node.Type = symbol.ReturnType;
         node.Symbol = symbol;
+        //todo: function cal return lvalues
         return true;
     }
 
@@ -190,7 +202,6 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
     public bool Visit(IfNode node) {
         node.Condition.Accept(this);
-        //todo: check if expression in statement node already have types
         _typeChecker.RequireCast(_stack.SymBool, ref node.Condition);
         return true;
     }

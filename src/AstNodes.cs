@@ -48,6 +48,7 @@ public abstract class ExprNode : AstNode {
 //--- Expressions ---
 public class IdentifierNode : ExprNode {
     public IdentifierToken Token { get; }
+    //identifier can be variable, const, or function 
     public SymVarOrConst Symbol { get; set; }
         
     public override T Accept<T>(IAstVisitor<T> visitor) {

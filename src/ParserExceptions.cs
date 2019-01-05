@@ -139,6 +139,17 @@ public class WrongArgumentsNumberException : ParserException {
     }
 }
 
+public class FunctionExpectedException : ParserException {
+    public override string Message => $"Function expected at {Line}, {Column}, but got {_gotType.Name}.";
+
+    private SymType _gotType;
+
+    public FunctionExpectedException(SymType got, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _gotType = got;
+    }
+}
+
+
 public class WrongParameterTypeException : Exception {
     public override string Message => "Wrong argument vartype.";
 }

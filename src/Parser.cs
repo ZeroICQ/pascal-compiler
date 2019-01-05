@@ -541,7 +541,6 @@ public class Parser {
 //                _lexer.Retract();
 //                var left = ParseExprWithCheck(false);
 //
-//                // todo: remove crunch?
 //                if (left is FunctionCallNode f) {
 //                    return new ProcedureCallNode(f.Name, f.Args);
 //                }
@@ -607,7 +606,6 @@ public class Parser {
                 _lexer.Retract();
                 var left = ParseExprWithCheck(false);
 
-                // todo: remove crunch?
                 if (left is FunctionCallNode f) {
                     return new ProcedureCallNode(f);
                 }
@@ -835,7 +833,7 @@ public class Parser {
                     _lexer.Retract();
                     var paramList = ParseArgumentList();
                     
-                    // need to distinguish function call and cast:
+                    //todo: need to distinguish function call and cast:
                     if (varRef is IdentifierNode idNode) {
                         var type = _symStack.FindType(idNode.Token.Value);
                         if (type != null && !(type is SymFunc) && paramList.Count == 1) {
