@@ -1,9 +1,22 @@
 bits 64
+default rel
 section .data
 section .text
 global main
 extern printf
 writeln:
+enter 0, 0
+sub rsp, 32
+lea rcx, [rbp + 16]
+call printf
+push byte 65
+lea rcx, [rsp]
+call printf
+add rsp, 8
+add rsp, 32
+leave
+ret
+write:
 enter 0, 0
 sub rsp, 32
 lea rcx, [rbp + 16]

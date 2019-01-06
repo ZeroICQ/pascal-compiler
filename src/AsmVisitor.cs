@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 
 namespace Compiler {
-//return stack usage
+//return stack usage in qwords
 public class AsmVisitor : IAstVisitor<int> {
     private readonly TextWriter _out;
     private readonly AstNode _astRoot;
@@ -33,6 +33,7 @@ public class AsmVisitor : IAstVisitor<int> {
                 
         // 64 bits mode
         _out.WriteLine("bits 64");
+        _out.WriteLine("default rel");
         
         //data section
         _out.WriteLine("section .data");
@@ -94,16 +95,38 @@ public class AsmVisitor : IAstVisitor<int> {
                     case WritelnSymFunc writeln:
                         _out.WriteLine($"{writeln.Name}:");
                         _out.WriteLine("enter 0, 0");
+                        
+                        GenWriteFunctionBody();
+                        
+                        _out.WriteLine("push 10");
+                        _out.WriteLine("mov rcx, rsp");
                         _out.WriteLine("sub rsp, 32");
-                        _out.WriteLine("lea rcx, [rbp + 16]");
                         _out.WriteLine("call printf");
                         _out.WriteLine("add rsp, 32");
+                        _out.WriteLine("add rsp, 8");
+                        
+                        _out.WriteLine("leave");        
+                        _out.WriteLine("ret");
+                        break;
+                    
+                    case WriteSymFunc write:
+                        _out.WriteLine($"{write.Name}:");
+                        _out.WriteLine("enter 0, 0");
+                        GenWriteFunctionBody();
                         _out.WriteLine("leave");
                         _out.WriteLine("ret");
                         break;
                 }
             }
         }
+    }
+
+    //without prologue and epilogue
+    private void GenWriteFunctionBody() {
+        _out.WriteLine("sub rsp, 32");
+        _out.WriteLine("lea rcx, [rbp + 16]");
+        _out.WriteLine("call printf");
+        _out.WriteLine("add rsp, 32");
     }
     
     
@@ -133,7 +156,9 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(IntegerNode node) {
-        throw new System.NotImplementedException();
+        //aways lval
+        PushImm64(node.Token.Value);
+        return 1;
     }
 
     public int Visit(FloatNode node) {
@@ -171,17 +196,24 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(StringNode node) {
-        var asciiBytes = Encoding.ASCII.GetBytes(node.Token.Value);
+        return PushStringInStack(node.Token.Value);
+    }
+
+    private int PushStringInStack(string str) {
+        var asciiBytes = Encoding.ASCII.GetBytes(str);
         var bytesInLastPart = asciiBytes.Length % 8;
         ulong part = 0;
 
+        var stackUsage = 0;
+        
         for (var i = asciiBytes.Length - 1; i >= asciiBytes.Length - bytesInLastPart; i--) {
             part <<= 8;
             part += asciiBytes[i];
         }
         
         PushImm64(part);
-
+        stackUsage += 1;
+        
         var gPointer = asciiBytes.Length - bytesInLastPart - 1;
 
         while (gPointer >= 0) {
@@ -191,11 +223,13 @@ public class AsmVisitor : IAstVisitor<int> {
                 part += asciiBytes[i];
                 
             }
-            
-            PushImm64(part);            
+
+            gPointer -= 8;
+            PushImm64(part);
+            stackUsage += 1;
         }
 
-        return asciiBytes.Length / 8 + asciiBytes.Length % 8 > 0 ? 1 : 0;
+        return stackUsage;
     }
 
     public int Visit(UnaryOperationNode node) {
@@ -227,7 +261,7 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(EmptyStatementNode node) {
-        throw new System.NotImplementedException();
+        return 0;
     }
 
     public int Visit(CharNode node) {
@@ -244,6 +278,14 @@ public class AsmVisitor : IAstVisitor<int> {
 
     //nasm cannot work with imm64 directly, only via reg
     private void PushImm64(ulong imm64) {
+        AllocateStack(2);
+        _out.WriteLine($"mov [rsp], rbx");
+        _out.WriteLine($"mov rbx, {imm64.ToString()}");        
+        _out.WriteLine($"mov [rsp+8], rbx");
+        _out.WriteLine("pop rbx");
+    }
+    
+    private void PushImm64(long imm64) {
         AllocateStack(2);
         _out.WriteLine($"mov [rsp], rbx");
         _out.WriteLine($"mov rbx, {imm64.ToString()}");        

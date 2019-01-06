@@ -112,9 +112,12 @@ public class SymbolPrinterVisitor : ISymVisitor {
         
         _entries.Add(new KeyValuePair<string, string>(name, type));
     }
+    
+    // dont print not to break all tests
+    public void Visit(WriteSymFunc symbol) {
+    }
 
     public void Visit(WritelnSymFunc symbol) {
-        // dont print not to break all tests
     }
 
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {

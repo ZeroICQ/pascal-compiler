@@ -271,8 +271,11 @@ class Tester {
             using (var answer = File.OpenText($"{testName}.test")) {
                 
                 while (!pr.StandardOutput.EndOfStream) {
-                    if (answer.EndOfStream)
+                    if (answer.EndOfStream) {
+                        tmpAsmFile?.Close();
+                        pr.WaitForExit();
                         break;
+                    }
                     
                     var outLine = pr.StandardOutput.ReadLine();
                     var answerLine = answer.ReadLine();
@@ -284,11 +287,16 @@ class Tester {
                     
                     foundError = true;
                     PrintDiff(answerLine, outLine, testName);
+                    tmpAsmFile?.Close();
+                    pr.WaitForExit();
                     break;
                 }
-                
-                if(foundError)
+
+                if (foundError) {
+                    tmpAsmFile?.Close();
+                    pr.WaitForExit();
                     break;
+                }
                 
                 if (!answer.EndOfStream || !pr.StandardOutput.EndOfStream) {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -361,7 +369,7 @@ class Tester {
                 
                 while (!compiledPr.StandardOutput.EndOfStream) {
                     if (answer.EndOfStream) {
-//                        compiledPr.WaitForExit();
+                        compiledPr.WaitForExit();
                         break;
                     }
                     
@@ -378,7 +386,7 @@ class Tester {
                 }
 
                 if (foundError) {
-//                    compiledPr.WaitForExit();
+                    compiledPr.WaitForExit();
                     break;
                 }
                 
