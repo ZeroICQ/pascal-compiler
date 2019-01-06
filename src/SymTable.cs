@@ -19,7 +19,9 @@ public class SymStack : IEnumerable<SymTable> {
         AddType(SymChar);        
         AddType(SymFloat);        
         AddType(SymBool);        
-        AddType(SymString);        
+        AddType(SymString);      
+        //predefined functions
+        _stack.Peek().Add(new WritelnSymFunc());
     }
 
     public void Push() {
@@ -453,6 +455,21 @@ public class SymFunc : SymType {
         }
     }
 
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
+//predefined functions
+
+public class WritelnSymFunc : SymFunc {
+    public WritelnSymFunc()
+        : base(
+            "writeln", 
+            new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)},
+            null, null, null
+            ) { }
 
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);

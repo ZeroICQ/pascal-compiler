@@ -25,6 +25,7 @@ internal class Compiler {
     public (AstNode, SymStack) Parse() {
         return new Parser(_lexer, _checkSemantics).Parse();
     }
+    
 
     public void PrintAst() {
         try {
@@ -51,6 +52,18 @@ internal class Compiler {
             foreach (var line in canvas) {
                 Console.WriteLine(line);
             } 
+        }
+        catch (ParsingException e) {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+    public void printAsm() {
+        try {
+            var (ast, symStack) = Parse();
+            var output = Console.Out;
+            var asmVisitor = new AsmVisitor(output, ast, symStack);
+            asmVisitor.Generate();
         }
         catch (ParsingException e) {
             Console.WriteLine(e.Message);

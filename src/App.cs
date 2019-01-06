@@ -16,13 +16,17 @@ internal static class App {
         var lexicalAnalysis = new SwitchArgument('l', "lexical", false);
         var syntaxAnalysis = new SwitchArgument('s', "syntax", false);
         var semanticsCheck = new SwitchArgument('c', "semantics", "turn off semantics check", true);
+        var codeGeneration = new SwitchArgument('a', "assembler", "generate assembler", false);
+        var optimization = new SwitchArgument('o', "optimization", "optimization", false);
         
         commandLineParser.Arguments.Add(sourcePath);
         commandLineParser.Arguments.Add(lexicalAnalysis);
         commandLineParser.Arguments.Add(syntaxAnalysis);
         commandLineParser.Arguments.Add(semanticsCheck);
+        commandLineParser.Arguments.Add(codeGeneration);
+        commandLineParser.Arguments.Add(optimization);
 
-        var compileStageGroupCertification = new ArgumentGroupCertification("l,s", EArgumentGroupCondition.ExactlyOneUsed);
+        var compileStageGroupCertification = new ArgumentGroupCertification("l,s,a", EArgumentGroupCondition.ExactlyOneUsed);
         commandLineParser.Certifications.Add(compileStageGroupCertification);
 
         try {
@@ -39,15 +43,22 @@ internal static class App {
             
             if (syntaxAnalysis.Value)
                 PerformSyntaxAnalysis(input, semanticsCheck.Value);
+            
+            if (codeGeneration.Value)
+                PerformCodeGeneration(input, optimization.Value);
         }
             
         return 0;
     }
 
+    private static void PerformCodeGeneration(StreamReader streamReader, bool useOptimization) {
+        var compiler = new Compiler(streamReader, true);
+        compiler.printAsm();
+    }
+
     private static void PerformSyntaxAnalysis(StreamReader streamReader, bool checkSemantics) {
         var compiler = new Compiler(streamReader, checkSemantics);
         compiler.PrintAst();
-        
     }
 
     private static void PerformLexicalAnalysis(StreamReader streamReader) {
