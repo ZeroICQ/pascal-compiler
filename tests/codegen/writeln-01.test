@@ -1,0 +1,21 @@
+bits 64
+section .data
+section .text
+global main
+extern printf
+writeln:
+enter 0, 0
+sub rsp, 32
+lea rcx, [rbp + 16]
+call printf
+add rsp, 32
+leave
+ret
+main:
+sub rsp, 16
+mov [rsp], rbx
+mov rbx, 127979127140976
+mov [rsp+8], rbx
+pop rbx
+call writeln
+add rsp, 8
