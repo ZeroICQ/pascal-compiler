@@ -230,117 +230,118 @@ class Tester {
         
         var testFiles = Directory.GetFiles($"{testDir}/{path}/").Reverse();
         var tmpDirPath = $"{testDir}/{path}/tmp";
+        
+        //clean tmp dir
+        if (Directory.Exists(tmpDirPath)) {
+            var di = new DirectoryInfo(tmpDirPath);
+                
+            foreach (var file in di.EnumerateFiles()) {
+                file.Delete(); 
+            }
+                
+            foreach (var dir in di.EnumerateDirectories()) {
+                dir.Delete(true); 
+            }
+        }
+        else {
+            Directory.CreateDirectory(tmpDirPath);
+        }
 
-        foreach (var testFile in testFiles) {
-            if (!testFile.EndsWith(".pas"))
+        foreach (var testSourcePath in testFiles) {
+            if (!testSourcePath.EndsWith(".pas"))
                 continue;
 
-            var testName = testFile.Substring(0, testFile.LastIndexOf('.'));
-            var pr = RunCompiler(compilerPath, $"-a -i {testFile}");
-            var foundError = false;
+            var testName = Path.GetFileNameWithoutExtension(testSourcePath);
+            var testAnswerPath = $"{testDir}/{path}/{testName}.test";
+            var compilerPr = RunCompiler(compilerPath, $"-a -i {testSourcePath}");
 
-            var testOutFilePath = $"{testName}.out";
-            var compile = File.Exists(testOutFilePath);
-
-            if (compile) {
-                if (Directory.Exists(tmpDirPath)) {
-                    var di = new DirectoryInfo(tmpDirPath);
-                    
-                    foreach (var file in di.EnumerateFiles()) {
-                        file.Delete(); 
-                    }
-                    
-                    foreach (var dir in di.EnumerateDirectories()) {
-                        dir.Delete(true); 
-                    }
-                }
-                else {
-                    Directory.CreateDirectory(tmpDirPath);
-                }
-            }
-
-
-            StreamWriter tmpAsmFile = null;
+            var testOutFilePath = $"{testDir}/{path}/{testName}.out";
             
+            var needCompile = File.Exists(testOutFilePath);
+
+//            commented out temporary
+//            var isErrorFound = false;
+//            using (var testAnswer = File.OpenText(testAnswerPath)) {
+//                while (!compilerPr.StandardOutput.EndOfStream) {
+//                    if (testAnswer.EndOfStream)
+//                        break;
+//                    
+//                    var outLine = compilerPr.StandardOutput.ReadLine();
+//                    var answerLine = testAnswer.ReadLine();
+//
+//                    if (outLine.Equals(answerLine))
+//                        continue;
+//                    
+//                    PrintDiff(answerLine, outLine, testName);
+//                    compilerPr.WaitForExit();
+//                    isErrorFound = true
+//                    break;
+//                }
+//                
+//                if(ifErrorFound) 
+//                    break;
+//                if (!testAnswer.EndOfStream || !compilerPr.StandardOutput.EndOfStream) {
+//                    Console.ForegroundColor = ConsoleColor.Red;
+//                    Console.WriteLine($"[-] line count mismatch in {testName}");
+//                }
+//                else {
+//                    Console.ForegroundColor = ConsoleColor.Green;
+//                    Console.WriteLine($"[+] passed {testName}");
+//                }
+//
+//                compilerPr.WaitForExit();
+//                Console.ForegroundColor = defaultForegroundColor;
+//            }
+
+            
+            if (!needCompile)
+                continue;
+
             var tmpAsmFilePath = $"{tmpDirPath}/{Path.GetFileName(testName)}.s";
-            if (compile) {
-                // nasm doesnt know about utf =(
-                tmpAsmFile = new StreamWriter(tmpAsmFilePath, true, Encoding.ASCII);
+
+            //nasm doesnt know about utf
+            compilerPr.Start();
+            using (var tmpAsmFile = new StreamWriter(tmpAsmFilePath, false, Encoding.ASCII)) {
+                while (!compilerPr.StandardOutput.EndOfStream) {
+                    tmpAsmFile.WriteLine(compilerPr.StandardOutput.ReadLine());
+                }
             }
 
-            using (var answer = File.OpenText($"{testName}.test")) {
-                
-                while (!pr.StandardOutput.EndOfStream) {
-                    if (answer.EndOfStream) {
-                        tmpAsmFile?.Close();
-                        pr.WaitForExit();
-                        break;
-                    }
-                    
-                    var outLine = pr.StandardOutput.ReadLine();
-                    var answerLine = answer.ReadLine();
-
-                    if (outLine.Equals(answerLine)) {
-                        tmpAsmFile?.WriteLine(outLine);
-                        continue;
-                    } 
-                    
-                    foundError = true;
-                    PrintDiff(answerLine, outLine, testName);
-                    tmpAsmFile?.Close();
-                    pr.WaitForExit();
-                    break;
-                }
-
-                if (foundError) {
-                    tmpAsmFile?.Close();
-                    pr.WaitForExit();
-                    break;
-                }
-                
-                if (!answer.EndOfStream || !pr.StandardOutput.EndOfStream) {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[-] line count mismatch in {testName}");
-                }
-                else {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[+] passed {testName}");
-                }
-                
-                Console.ForegroundColor = defaultForegroundColor;
-            }
-            
-            tmpAsmFile?.Close();
-            
-            pr.WaitForExit();// Waits here for the process to exit.
-
-            if (!compile) 
-                continue;
-            
             var nasmPr = new Process();
-            
             nasmPr.StartInfo.FileName = nasmPath;
-                
+            
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 nasmPr.StartInfo.Arguments = $"-f win64 -o {tmpAsmFilePath}.obj {tmpAsmFilePath}";
             }
             else {
                 //todo: check
-                nasmPr.StartInfo.Arguments = $"???";
+                nasmPr.StartInfo.Arguments = $"-f elf64 -o {tmpAsmFilePath}.obj {tmpAsmFilePath}";
             } 
                 
             nasmPr.StartInfo.UseShellExecute = false;
             nasmPr.StartInfo.RedirectStandardOutput = true;
             nasmPr.StartInfo.RedirectStandardError = true;
-            nasmPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            nasmPr.StartInfo.StandardOutputEncoding = Encoding.ASCII;
+            nasmPr.StartInfo.StandardErrorEncoding = Encoding.ASCII;
             nasmPr.Start();
             nasmPr.WaitForExit();
-            Console.Write(nasmPr.StandardError.ReadToEnd());
+
+            var nasmOutput = nasmPr.StandardOutput.ReadToEnd();
+            if (nasmOutput.Length != 0) {
+                Console.WriteLine("NASM output:");
+                Console.Write(nasmOutput);
+            }
+
+            if (nasmPr.ExitCode != 0) {
+                Console.WriteLine("NASM error:");
+                Console.Write(nasmPr.StandardError.ReadToEnd());
+                return;
+            }
+            
             var gccPr = new Process();
             gccPr.StartInfo.FileName = gccPath;
-            
             var exePostfix = "";
-                
+            
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 exePostfix = ".exe";
             }
@@ -351,52 +352,59 @@ class Tester {
             gccPr.StartInfo.RedirectStandardOutput = true;
             gccPr.StartInfo.RedirectStandardError = true;
             gccPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            gccPr.StartInfo.StandardErrorEncoding= Encoding.UTF8;
             gccPr.Start();
             gccPr.WaitForExit();
             
-            
+
+            var gccOutput = gccPr.StandardOutput.ReadToEnd();
+            if (gccOutput.Length != 0) {
+                Console.WriteLine("gcc output:");
+                Console.Write(gccOutput);
+            }
+
+            if (gccPr.ExitCode != 0) {
+                Console.WriteLine("gcc error:");
+                Console.Write(gccPr.StandardError.ReadToEnd());
+                return;
+            }
+
             var compiledPr = new Process();
-            
             compiledPr.StartInfo.FileName = $"{tmpAsmFilePath}{exePostfix}";
             compiledPr.StartInfo.UseShellExecute = false;
             compiledPr.StartInfo.RedirectStandardOutput = true;
-            compiledPr.StartInfo.RedirectStandardError = true;
             compiledPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             compiledPr.Start();
+            compiledPr.WaitForExit();
 
-            
-            using (var answer = File.OpenText($"{testName}.out")) {
-                
+            var errFound = false;
+            using (var answer = File.OpenText(testOutFilePath)) {
                 while (!compiledPr.StandardOutput.EndOfStream) {
-                    if (answer.EndOfStream) {
-                        compiledPr.WaitForExit();
+                    if (answer.EndOfStream)
                         break;
-                    }
                     
                     var outLine = compiledPr.StandardOutput.ReadLine();
                     var answerLine = answer.ReadLine();
 
-                    if (outLine.Equals(answerLine)) {
+                    if (outLine.Equals(answerLine))
                         continue;
-                    } 
                     
-                    foundError = true;
                     PrintDiff(answerLine, outLine, testName);
-                    break;
-                }
-
-                if (foundError) {
-                    compiledPr.WaitForExit();
+                    compilerPr.WaitForExit();
+                    errFound = true;
                     break;
                 }
                 
+                if (errFound)
+                    break;
+                
                 if (!answer.EndOfStream || !compiledPr.StandardOutput.EndOfStream) {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[-] line count mismatch in {testName}");
+                    Console.WriteLine($"[-] line count mismatch at compilation phase in {testName}");
                 }
                 else {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[+] passed {testName}");
+                    Console.WriteLine($"[+] passed compile {testName}");
                 }
                 
                 Console.ForegroundColor = defaultForegroundColor;
@@ -405,12 +413,10 @@ class Tester {
             compiledPr.WaitForExit();
         }
         
-        
-        
         //cleanup
-        if (Directory.Exists(tmpDirPath)) {
-            Directory.Delete(tmpDirPath, true);
-        }
+//        if (Directory.Exists(tmpDirPath)) {
+//            Directory.Delete(tmpDirPath, true);
+//        }
     }
 }
 }
