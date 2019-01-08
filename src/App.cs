@@ -13,13 +13,16 @@ internal static class App {
         var commandLineParser = new CommandLineParser.CommandLineParser();
         
         var sourcePath = new FileArgument('i', "input", "Source file path") { Optional = false };
+        var outPath = new FileArgument('o', "output", "Output file path") { Optional = true , FileMustExist = false};
+        
         var lexicalAnalysis = new SwitchArgument('l', "lexical", false);
         var syntaxAnalysis = new SwitchArgument('s', "syntax", false);
         var semanticsCheck = new SwitchArgument('c', "semantics", "turn off semantics check", true);
         var codeGeneration = new SwitchArgument('a', "assembler", "generate assembler", false);
-        var optimization = new SwitchArgument('o', "optimization", "optimization", false);
+        var optimization = new SwitchArgument('O', "optimization", "optimization", false);
         
         commandLineParser.Arguments.Add(sourcePath);
+        commandLineParser.Arguments.Add(outPath);
         commandLineParser.Arguments.Add(lexicalAnalysis);
         commandLineParser.Arguments.Add(syntaxAnalysis);
         commandLineParser.Arguments.Add(semanticsCheck);
@@ -36,33 +39,34 @@ internal static class App {
             commandLineParser.ShowUsage();
             return 1;
         }
-
+        using (var output = outPath.Value == null ? Console.Out : new StreamWriter(outPath.StringValue))
         using (var input = new StreamReader(sourcePath.OpenFileRead())) {
             if (lexicalAnalysis.Value)
-                PerformLexicalAnalysis(input);
+                PerformLexicalAnalysis(input, output);
             
             if (syntaxAnalysis.Value)
-                PerformSyntaxAnalysis(input, semanticsCheck.Value);
+                PerformSyntaxAnalysis(input, output, semanticsCheck.Value);
             
             if (codeGeneration.Value)
-                PerformCodeGeneration(input, optimization.Value);
+                PerformCodeGeneration(input, output, optimization.Value);
         }
             
         return 0;
     }
 
-    private static void PerformCodeGeneration(StreamReader streamReader, bool useOptimization) {
-        var compiler = new Compiler(streamReader, true);
+    private static void PerformCodeGeneration(TextReader reader, TextWriter writer, bool useOptimization) {
+        var compiler = new Compiler(reader, writer, true);
+        
         compiler.printAsm();
     }
 
-    private static void PerformSyntaxAnalysis(StreamReader streamReader, bool checkSemantics) {
-        var compiler = new Compiler(streamReader, checkSemantics);
+    private static void PerformSyntaxAnalysis(TextReader reader, TextWriter writer, bool checkSemantics) {
+        var compiler = new Compiler(reader, writer, checkSemantics);
         compiler.PrintAst();
     }
 
-    private static void PerformLexicalAnalysis(StreamReader streamReader) {
-        var compiler = new Compiler(streamReader, false);
+    private static void PerformLexicalAnalysis(StreamReader streamReader, TextWriter writer) {
+        var compiler = new Compiler(streamReader, writer, false);
             
         Token lt = null;
             

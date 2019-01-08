@@ -11,10 +11,12 @@ namespace Compiler {
 
 internal class Compiler {
     private LexemesAutomata _lexer;
+    private readonly TextWriter _output;
     private bool _checkSemantics;
     
-    public Compiler(in TextReader input, bool checkSemantics) {
+    public Compiler(in TextReader input, in TextWriter output, bool checkSemantics) {
         _lexer = new LexemesAutomata(new InputBuffer(input));
+        _output = output;
         _checkSemantics = checkSemantics;
     }
     
@@ -61,8 +63,7 @@ internal class Compiler {
     public void printAsm() {
         try {
             var (ast, symStack) = Parse();
-            var output = Console.Out;
-            var asmVisitor = new AsmVisitor(output, ast, symStack);
+            var asmVisitor = new AsmVisitor(_output, ast, symStack);
             asmVisitor.Generate();
         }
         catch (ParsingException e) {

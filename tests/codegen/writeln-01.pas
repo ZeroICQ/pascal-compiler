@@ -1,3 +1,0 @@
- begin
-    writeln('privet');
- end.

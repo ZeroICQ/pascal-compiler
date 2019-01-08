@@ -464,6 +464,21 @@ public class SymFunc : SymType {
 
 //predefined functions
 
+public class WriteSymFunc : SymFunc {
+    public WriteSymFunc() : 
+        base(
+            "write", 
+            new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null
+        ) { }
+
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
 public class WritelnSymFunc : SymFunc {
     public WritelnSymFunc()
         : base(
@@ -477,20 +492,7 @@ public class WritelnSymFunc : SymFunc {
     }
 }
 
-public class WriteSymFunc : SymFunc {
-    public WriteSymFunc() : 
-        base(
-            "write", 
-            new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)}, 
-            null, 
-            null, 
-            null
-            ) { }
-
-    public override void Accept(ISymVisitor visitor) {
-        visitor.Visit(this);
-    }
-}
+//public class IWriteSymFunc : 
     
 public class SymAlias : SymType {
     public override string Name { get; }
