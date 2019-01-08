@@ -114,10 +114,7 @@ public class SymbolPrinterVisitor : ISymVisitor {
     }
     
     // dont print not to break all tests
-    public void Visit(WriteSymFunc symbol) {
-    }
-
-    public void Visit(WritelnSymFunc symbol) {
+    public void Visit(PredefinedSymFunc symbol) {
     }
 
     public void Print(List<StringBuilder> canvas, string namespaceName = "Global") {

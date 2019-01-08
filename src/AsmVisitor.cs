@@ -93,40 +93,58 @@ public class AsmVisitor : IAstVisitor<int> {
 
                 switch (symFunc) {
                     case WritelnSymFunc writeln:
-                        _out.WriteLine($"{writeln.Name}:");
-                        _out.WriteLine("enter 0, 0");
-                        
-                        GenWriteFunctionBody();
-                        
-                        _out.WriteLine("push 10");
-                        _out.WriteLine("mov rcx, rsp");
-                        _out.WriteLine("sub rsp, 32");
-                        _out.WriteLine("call printf");
-                        _out.WriteLine("add rsp, 32");
-                        _out.WriteLine("add rsp, 8");
-                        
-                        _out.WriteLine("leave");        
-                        _out.WriteLine("ret");
+                        FunctionPrologue(writeln.Name);
+                        WriteFunctionBody();
+                        Push("10");
+                        Mov("rcx", "rsp");
+                        Sub("rsp", "32");
+                        Call("printf");
+                        Add("rsp", "32");
+                        Add("rsp", "8");
+                        FunctionEpilogue();
                         break;
                     
                     case WriteSymFunc write:
-                        _out.WriteLine($"{write.Name}:");
-                        _out.WriteLine("enter 0, 0");
-                        GenWriteFunctionBody();
-                        _out.WriteLine("leave");
-                        _out.WriteLine("ret");
+                        FunctionPrologue(write.Name);
+                        WriteFunctionBody();
+                        FunctionEpilogue();
+                        break;
+                    
+                    case IntWriteSymFunc intWrite:
+                        IntWriteFunctionBody(intWrite.Name, false);
+                        break;
+                    
+                    case IntWritelnSymFunc intWriteln:
+                        IntWriteFunctionBody(intWriteln.Name, true);
                         break;
                 }
             }
         }
     }
 
+
+    private void IntWriteFunctionBody(string name, bool isNewline) {
+        FunctionPrologue(name);
+        var intWritelnStackUse = PushStringInStack("%i" + (isNewline ? "\n" : ""));
+        Mov("rcx", "rsp");
+        Mov("rdx", ArgumentValue(0));
+        intWritelnStackUse += AllocateStack(4);
+        Call("printf");
+        FreeStack(intWritelnStackUse);
+        FunctionEpilogue();        
+    }
+    
+    // number starts with 0 
+    private string ArgumentValue(int number) {
+        return $"[rbp+{(16 + 8 * number).ToString()}]";
+    }
+
     //without prologue and epilogue
-    private void GenWriteFunctionBody() {
-        _out.WriteLine("sub rsp, 32");
-        _out.WriteLine("lea rcx, [rbp + 16]");
-        _out.WriteLine("call printf");
-        _out.WriteLine("add rsp, 32");
+    private void WriteFunctionBody() {
+        Sub("rsp", "32");
+        Lea("rcx", "[rbp + 16]");
+        Call("printf");
+        Add("rsp", "32");
     }
     
     
@@ -191,7 +209,7 @@ public class AsmVisitor : IAstVisitor<int> {
         throw new System.NotImplementedException();
     }
 
-    public int Visit(IndexNode node) {
+    public int Visit(IndexNode node) { 
         throw new System.NotImplementedException();
     }
 
@@ -272,8 +290,9 @@ public class AsmVisitor : IAstVisitor<int> {
         _out.WriteLine($"add rsp, {(8*qwords).ToString()}");
     }
 
-    private void AllocateStack(int qwords) {
+    private int AllocateStack(int qwords) {
         _out.WriteLine($"sub rsp, {(8*qwords).ToString()}");
+        return qwords;
     }
 
     //nasm cannot work with imm64 directly, only via reg
@@ -291,6 +310,41 @@ public class AsmVisitor : IAstVisitor<int> {
         _out.WriteLine($"mov rbx, {imm64.ToString()}");        
         _out.WriteLine($"mov [rsp+8], rbx");
         _out.WriteLine("pop rbx");
+    }
+    
+    // helpers
+    private void Lea(string lhs, string rhs) {
+        _out.WriteLine($"lea {lhs}, {rhs}");
+    }
+    
+    private void Call(string callee) {
+        _out.WriteLine($"call {callee}");
+    }
+
+    private void Sub(string lhs, string rhs) {
+        _out.WriteLine($"sub {lhs}, {rhs}");        
+    }
+    
+    private void Add(string lhs, string rhs) {
+        _out.WriteLine($"add {lhs}, {rhs}");        
+    }
+    
+    private void Mov(string to, string from) {
+        _out.WriteLine($"mov {to}, {from}");
+    }
+
+    private void Push(string arg) {
+        _out.WriteLine($"push {arg}");
+    }
+
+    private void FunctionPrologue(string func) {
+        _out.WriteLine($"{func}:");
+        _out.WriteLine("enter 0, 0");
+    }
+
+    private void FunctionEpilogue() {
+        _out.WriteLine("leave");
+        _out.WriteLine("ret");
     }
     
 }

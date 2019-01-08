@@ -8,7 +8,6 @@ public interface ISymVisitor {
     void Visit(SymRecord symbol);
     void Visit(SymFunc symbol);
     
-    void Visit(WritelnSymFunc symbol);
-    void Visit(WriteSymFunc symbol);
+    void Visit(PredefinedSymFunc symbol);
 }
 }

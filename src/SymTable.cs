@@ -23,6 +23,10 @@ public class SymStack : IEnumerable<SymTable> {
         //predefined functions
         _stack.Peek().Add(new WritelnSymFunc());
         _stack.Peek().Add(new WriteSymFunc());
+        
+        _stack.Peek().Add(new IntWriteSymFunc());
+        _stack.Peek().Add(new IntWritelnSymFunc());
+        
     }
 
     public void Push() {
@@ -463,8 +467,12 @@ public class SymFunc : SymType {
 }
 
 //predefined functions
+public abstract class PredefinedSymFunc : SymFunc {
+    protected PredefinedSymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType)
+        : base(name, parameters, localVariables, body, returnType) { }
+}
 
-public class WriteSymFunc : SymFunc {
+public class WriteSymFunc : PredefinedSymFunc {
     public WriteSymFunc() : 
         base(
             "write", 
@@ -479,7 +487,7 @@ public class WriteSymFunc : SymFunc {
     }
 }
 
-public class WritelnSymFunc : SymFunc {
+public class WritelnSymFunc : PredefinedSymFunc {
     public WritelnSymFunc()
         : base(
             "writeln", 
@@ -492,7 +500,26 @@ public class WritelnSymFunc : SymFunc {
     }
 }
 
-//public class IWriteSymFunc : 
+public class IntWriteSymFunc : PredefinedSymFunc {
+    public IntWriteSymFunc()
+        : base(
+            "iwrite", 
+            new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null
+        ) { }
+}
+
+public class IntWritelnSymFunc : PredefinedSymFunc {
+    public IntWritelnSymFunc() 
+        : base(
+            "iwriteln", 
+            new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)},
+            null,
+            null, null
+        ) { }
+}
     
 public class SymAlias : SymType {
     public override string Name { get; }
