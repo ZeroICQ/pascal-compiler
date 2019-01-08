@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -21,6 +22,7 @@ public class AsmVisitor : IAstVisitor<int> {
     
     // save state
     // all recursive callings should be called via this helper in order to save state
+    // Accept can modify any register freely
     private int Accept(AstNode node, bool isLval = false) {
         _isLval.Push(isLval);
         var r = node.Accept(this);
@@ -117,21 +119,36 @@ public class AsmVisitor : IAstVisitor<int> {
                     case IntWritelnSymFunc intWriteln:
                         IntWriteFunctionBody(intWriteln.Name, true);
                         break;
+                    
+                    case FloatWriteSymFunc floatWrite:
+                        FloatWriteFunctionBody(floatWrite.Name, false);
+                        break;
+                    
+                    case FloatWritelnSymFunc floatWriteln:
+                        FloatWriteFunctionBody(floatWriteln.Name, true);
+                        break;
                 }
             }
         }
     }
 
-
-    private void IntWriteFunctionBody(string name, bool isNewline) {
+    private void CallPrintfDecorator(string format, string name, bool isNewline) {
         FunctionPrologue(name);
-        var intWritelnStackUse = PushStringInStack("%i" + (isNewline ? "\n" : ""));
+        var intWritelnStackUse = PushStringInStack(format + (isNewline ? "\n" : ""));
         Mov("rcx", "rsp");
         Mov("rdx", ArgumentValue(0));
         intWritelnStackUse += AllocateStack(4);
         Call("printf");
         FreeStack(intWritelnStackUse);
-        FunctionEpilogue();        
+        FunctionEpilogue();
+    }
+
+    private void FloatWriteFunctionBody(string name, bool isNewline) {
+        CallPrintfDecorator("%g", name, isNewline);
+    }
+
+    private void IntWriteFunctionBody(string name, bool isNewline) {
+        CallPrintfDecorator("%i", name, isNewline);        
     }
     
     // number starts with 0 
@@ -175,12 +192,15 @@ public class AsmVisitor : IAstVisitor<int> {
 
     public int Visit(IntegerNode node) {
         //aways lval
-        PushImm64(node.Token.Value);
+        PushImm64(node.Token.StringValue);
         return 1;
     }
 
     public int Visit(FloatNode node) {
-        throw new System.NotImplementedException();
+        //nasm requires dot in float number
+        var dot = node.Token.StringValue.Contains('.') ? "" : ".";
+        PushImm64($"__float64__({node.Token.StringValue}{dot})");
+        return 1;
     }
 
     public int Visit(IdentifierNode node) {
@@ -202,7 +222,15 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(CastNode node) {
-        throw new System.NotImplementedException();
+        // only int->float cast is allowed now
+        var stackUse = Accept(node.Expr);
+        Debug.Assert(stackUse == 1);
+        Finit();
+        //ASK: better conversion?
+        Fild("qword [rsp]");
+        Fst("qword  [rsp]");
+        
+        return stackUse;
     }
 
     public int Visit(AccessNode node) {
@@ -229,7 +257,7 @@ public class AsmVisitor : IAstVisitor<int> {
             part += asciiBytes[i];
         }
         
-        PushImm64(part);
+        PushImm64(part.ToString());
         stackUsage += 1;
         
         var gPointer = asciiBytes.Length - bytesInLastPart - 1;
@@ -243,7 +271,7 @@ public class AsmVisitor : IAstVisitor<int> {
             }
 
             gPointer -= 8;
-            PushImm64(part);
+            PushImm64(part.ToString());
             stackUsage += 1;
         }
 
@@ -296,20 +324,12 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     //nasm cannot work with imm64 directly, only via reg
-    private void PushImm64(ulong imm64) {
+    private void PushImm64(string imm64) {
         AllocateStack(2);
-        _out.WriteLine($"mov [rsp], rbx");
-        _out.WriteLine($"mov rbx, {imm64.ToString()}");        
-        _out.WriteLine($"mov [rsp+8], rbx");
-        _out.WriteLine("pop rbx");
-    }
-    
-    private void PushImm64(long imm64) {
-        AllocateStack(2);
-        _out.WriteLine($"mov [rsp], rbx");
-        _out.WriteLine($"mov rbx, {imm64.ToString()}");        
-        _out.WriteLine($"mov [rsp+8], rbx");
-        _out.WriteLine("pop rbx");
+        Mov("[rsp]", "rbx");
+        Mov("rbx", imm64);
+        Mov("[rsp+8]", "rbx");
+        Pop("rbx");
     }
     
     // helpers
@@ -335,6 +355,22 @@ public class AsmVisitor : IAstVisitor<int> {
 
     private void Push(string arg) {
         _out.WriteLine($"push {arg}");
+    }
+    
+    private void Pop(string to) {
+        _out.WriteLine($"pop {to}");
+    }
+
+    private void Finit() {
+        _out.WriteLine("finit");
+    }
+
+    private void Fild(string arg) {
+        _out.WriteLine($"fild {arg}");
+    }
+    
+    private void Fst(string arg) {
+        _out.WriteLine($"fst {arg}");
     }
 
     private void FunctionPrologue(string func) {

@@ -65,8 +65,8 @@ internal static class App {
         compiler.PrintAst();
     }
 
-    private static void PerformLexicalAnalysis(StreamReader streamReader, TextWriter writer) {
-        var compiler = new Compiler(streamReader, writer, false);
+    private static void PerformLexicalAnalysis(TextReader reader, TextWriter writer) {
+        var compiler = new Compiler(reader, writer, false);
             
         Token lt = null;
             

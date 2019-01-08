@@ -27,6 +27,9 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(new IntWriteSymFunc());
         _stack.Peek().Add(new IntWritelnSymFunc());
         
+        _stack.Peek().Add(new FloatWriteSymFunc());
+        _stack.Peek().Add(new FloatWritelnSymFunc());
+        
     }
 
     public void Push() {
@@ -470,6 +473,10 @@ public class SymFunc : SymType {
 public abstract class PredefinedSymFunc : SymFunc {
     protected PredefinedSymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType)
         : base(name, parameters, localVariables, body, returnType) { }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
 }
 
 public class WriteSymFunc : PredefinedSymFunc {
@@ -481,10 +488,6 @@ public class WriteSymFunc : PredefinedSymFunc {
             null, 
             null
         ) { }
-
-    public override void Accept(ISymVisitor visitor) {
-        visitor.Visit(this);
-    }
 }
 
 public class WritelnSymFunc : PredefinedSymFunc {
@@ -494,10 +497,6 @@ public class WritelnSymFunc : PredefinedSymFunc {
             new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)},
             null, null, null
             ) { }
-
-    public override void Accept(ISymVisitor visitor) {
-        visitor.Visit(this);
-    }
 }
 
 public class IntWriteSymFunc : PredefinedSymFunc {
@@ -519,6 +518,26 @@ public class IntWritelnSymFunc : PredefinedSymFunc {
             null,
             null, null
         ) { }
+}
+
+public class FloatWriteSymFunc : PredefinedSymFunc {
+    public FloatWriteSymFunc()
+        : base(
+            "fwrite", 
+            new List<SymVar>() {new SymVar("floatnum", new SymFloat(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null) { }
+}
+
+public class FloatWritelnSymFunc : PredefinedSymFunc {
+    public FloatWritelnSymFunc()
+        : base(
+            "fwriteln", 
+            new List<SymVar>() {new SymVar("floatnum", new SymFloat(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null) { }
 }
     
 public class SymAlias : SymType {
