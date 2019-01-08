@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -10,6 +11,7 @@ public class AsmVisitor : IAstVisitor<int> {
     private readonly TextWriter _out;
     private readonly AstNode _astRoot;
     private readonly SymStack _symStack;
+    private ulong _labelCounter;
     
     private Stack<bool> _isLval = new Stack<bool>();
     private bool IsLval => _isLval.Peek();
@@ -55,6 +57,8 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     private void GenerateGlobals() {
+        
+        //todo: add records, arrays, initializers
         foreach (var table in _symStack) {
             foreach (var symbol in table) {
                 
@@ -204,7 +208,82 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(IdentifierNode node) {
-        throw new System.NotImplementedException();
+        var stackUse = 0;
+        
+        var realType = node.Type;
+
+        if (realType is SymTypeAlias symTypeAlias)
+            realType = symTypeAlias.Type;
+        
+        switch (node.Symbol) {
+            case SymVar symVar:
+
+                switch (IsLval) {
+                    case true:
+                        switch (symVar.VarType) {
+                            case SymVar.VarTypeEnum.Global:
+                                Push($"{symVar.Name}");
+                                stackUse = 1;
+                                break;
+                            case SymVar.VarTypeEnum.Local:
+                            case SymVar.VarTypeEnum.Parameter:
+                            case SymVar.VarTypeEnum.VarParameter:
+                            case SymVar.VarTypeEnum.ConstParameter:
+                            case SymVar.VarTypeEnum.OutParameter:
+                                throw new NotImplementedException();
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                        
+                        break;
+                    
+                    //case rval
+                    case false:
+                        switch (symVar.VarType) {
+                            case SymVar.VarTypeEnum.Global:
+                                
+                                switch (realType) {
+                                    case SymScalar scalar:
+                                        Push($"qword [{symVar.Name}]");
+                                        stackUse = 1;
+                                        break;
+                                }
+                                
+                                break;
+                            case SymVar.VarTypeEnum.Local:
+                            case SymVar.VarTypeEnum.Parameter:
+                            case SymVar.VarTypeEnum.VarParameter:
+                            case SymVar.VarTypeEnum.ConstParameter:
+                            case SymVar.VarTypeEnum.OutParameter:
+                                throw new NotImplementedException();
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                        
+                        break;
+                }
+                
+                break;
+            
+            case SymConst symConst:
+                Debug.Assert(!IsLval);
+                stackUse = 1;
+                switch (symConst) {
+                    case SymIntConst intConst: 
+                        Push(intConst.Value.ToString());
+                        break;
+                    case SymFloatConst floatConst:
+                        Push(floatConst.Value.ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case SymCharConst charConst:
+                        Push(charConst.Value.ToString());
+                        break;
+                }
+                
+                break;
+        }
+
+        return stackUse;
     }
 
     public int Visit(FunctionCallNode node) {
@@ -283,9 +362,32 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(AssignNode node) {
-        throw new System.NotImplementedException();
+        var lhsStackUse = Accept(node.Left, true);
+        var rhsStackUse = Accept(node.Right);
+        //todo: test with records
+        Debug.Assert(lhsStackUse == 1);
+        
+        //keep in r9 dst pointer        
+        Mov("r9", "rsp");
+        Add("r9", (8*rhsStackUse).ToString());
+        Mov("r9", "[r9]");
+        
+        //rcx - counter
+        Xor("rcx", "rcx");
+        // loop
+        var label = WriteGetUniqueLabel();
+        Pop("qword [r9]");
+        Add("r9", "8");
+        
+        Inc("rcx");
+        Cmp("rcx", rhsStackUse.ToString());
+        Jl(label);
+        
+        //lhs
+        FreeStack(1);
+        return 0;
     }
-
+    
     public int Visit(IfNode node) {
         throw new System.NotImplementedException();
     }
@@ -323,13 +425,19 @@ public class AsmVisitor : IAstVisitor<int> {
         return qwords;
     }
 
-    //nasm cannot work with imm64 directly, only via reg
+    // nasm cannot work with imm64 directly, only via register
     private void PushImm64(string imm64) {
         AllocateStack(2);
         Mov("[rsp]", "rbx");
         Mov("rbx", imm64);
         Mov("[rsp+8]", "rbx");
         Pop("rbx");
+    }
+
+    private string WriteGetUniqueLabel() {
+        var label = $"meh_{(_labelCounter++).ToString()}";
+        _out.Write($"{label}:");
+        return label;
     }
     
     // helpers
@@ -353,12 +461,28 @@ public class AsmVisitor : IAstVisitor<int> {
         _out.WriteLine($"mov {to}, {from}");
     }
 
+    private void Xor(string lhs, string rhs) {
+        _out.WriteLine($"xor {lhs}, {rhs}");
+    }
+
     private void Push(string arg) {
         _out.WriteLine($"push {arg}");
     }
     
     private void Pop(string to) {
         _out.WriteLine($"pop {to}");
+    }
+    
+    private void Inc(string arg) {
+        _out.WriteLine($"inc {arg}");
+    }
+
+    private void Cmp(string lhs, string rhs) {
+        _out.WriteLine($"cmp {lhs}, {rhs}");
+    }
+    
+    private void Jl(string label) {
+        _out.WriteLine($"jl {label}");
     }
 
     private void Finit() {
