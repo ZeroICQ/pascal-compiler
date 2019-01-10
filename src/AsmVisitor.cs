@@ -131,6 +131,14 @@ public class AsmVisitor : IAstVisitor<int> {
                     case FloatWritelnSymFunc floatWriteln:
                         FloatWriteFunctionBody(floatWriteln.Name, true);
                         break;
+                    
+                    case CharWriteSymFunc charWrite:
+                        CharWriteFunctionBody(charWrite.Name, false);
+                        break;
+                    
+                    case CharWritelnSymFunc charWriteln:
+                        CharWriteFunctionBody(charWriteln.Name, true);
+                        break;
                 }
             }
         }
@@ -147,6 +155,10 @@ public class AsmVisitor : IAstVisitor<int> {
         FunctionEpilogue();
     }
 
+    private void CharWriteFunctionBody(string name, bool isNewline) {
+        CallPrintfDecorator("%c", name, isNewline);
+    }
+    
     private void FloatWriteFunctionBody(string name, bool isNewline) {
         CallPrintfDecorator("%g", name, isNewline);
     }
@@ -367,6 +379,8 @@ public class AsmVisitor : IAstVisitor<int> {
         //todo: test with records
         Debug.Assert(lhsStackUse == 1);
         
+        
+        Comment($"assign");
         //keep in r9 dst pointer        
         Mov("r9", "rsp");
         Add("r9", (8*rhsStackUse).ToString());
@@ -413,7 +427,8 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(CharNode node) {
-        throw new System.NotImplementedException();
+        PushImm64(((long)node.Value).ToString());
+        return 1;
     }
 
     private void FreeStack(int qwords) {
@@ -495,6 +510,10 @@ public class AsmVisitor : IAstVisitor<int> {
     
     private void Fst(string arg) {
         _out.WriteLine($"fst {arg}");
+    }
+
+    private void Comment(string comment) {
+        _out.WriteLine($"; {comment}");
     }
 
     private void FunctionPrologue(string func) {

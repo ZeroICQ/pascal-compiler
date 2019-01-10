@@ -30,6 +30,9 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(new FloatWriteSymFunc());
         _stack.Peek().Add(new FloatWritelnSymFunc());
         
+        _stack.Peek().Add(new CharWriteSymFunc());
+        _stack.Peek().Add(new CharWritelnSymFunc());
+        
     }
 
     public void Push() {
@@ -539,6 +542,27 @@ public class FloatWritelnSymFunc : PredefinedSymFunc {
             null, 
             null) { }
 }
+
+public class CharWriteSymFunc : PredefinedSymFunc {
+    public CharWriteSymFunc()
+        : base(
+            "cwrite", 
+            new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null) { }
+}
+
+public class CharWritelnSymFunc : PredefinedSymFunc {
+    public CharWritelnSymFunc()
+        : base(
+            "cwriteln", 
+            new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null) { }
+}
+
     
 public class SymAlias : SymType {
     public override string Name { get; }
