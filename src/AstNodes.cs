@@ -208,6 +208,18 @@ public class IndexNode : ExprNode {
 public abstract class StatementNode : AstNode {
 }
 
+public class WritelnStatementNode : StatementNode {
+    public List<ExprNode> Args { get; } 
+    
+    public WritelnStatementNode(List<ExprNode> args) {
+        Args = args;
+    }
+    
+    public override T Accept<T>(IAstVisitor<T> visitor) {
+        return visitor.Visit(this);
+    }
+}
+
 public class BlockNode : StatementNode {
     public List<StatementNode> Statements { get; } = new List<StatementNode>();
     public bool IsMain { get; set; } = false;

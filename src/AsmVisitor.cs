@@ -3,7 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+
+using static Compiler.CodeGenerator;
+using static Compiler.AsmArg;
+using static Compiler.DoubleArgCmd;
+using static Compiler.SingleArgCmd;
+using static Compiler.NoArgCmd;
 
 namespace Compiler {
 //return stack usage in qwords
@@ -12,6 +20,7 @@ public class AsmVisitor : IAstVisitor<int> {
     private readonly AstNode _astRoot;
     private readonly SymStack _symStack;
     private ulong _labelCounter;
+    private CodeGenerator g;
     
     private Stack<bool> _isLval = new Stack<bool>();
     private bool IsLval => _isLval.Peek();
@@ -20,6 +29,7 @@ public class AsmVisitor : IAstVisitor<int> {
         _out = output;
         _astRoot = astRoot;
         _symStack = symStack;
+        g = new CodeGenerator(_out);
     }
     
     // save state
@@ -75,7 +85,7 @@ public class AsmVisitor : IAstVisitor<int> {
                             
                             case SymDouble symInt:
                                 var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
-                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal.ToString()}");
+                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal.ToString(CultureInfo.InvariantCulture)}");
                                 break;
                             
                             case SymChar symInt:
@@ -98,88 +108,40 @@ public class AsmVisitor : IAstVisitor<int> {
                     continue;
 
                 switch (symFunc) {
-                    case WritelnSymFunc writeln:
-                        FunctionPrologue(writeln.Name);
-                        WriteFunctionBody();
-                        Push("10");
-                        Mov("rcx", "rsp");
-                        Sub("rsp", "32");
-                        Call("printf");
-                        Add("rsp", "32");
-                        Add("rsp", "8");
-                        FunctionEpilogue();
-                        break;
-                    
-                    case WriteSymFunc write:
-                        FunctionPrologue(write.Name);
-                        WriteFunctionBody();
-                        FunctionEpilogue();
+                    case StringWriteSymFunc strWrite:
+                        g.FunctionPrologue(strWrite.Name);
+                        g.G(Lea, Rcx(), g.ArgumentValue(0));
+                        g.CallPrintf();
+                        g.FunctionEpilogue();
                         break;
                     
                     case IntWriteSymFunc intWrite:
-                        IntWriteFunctionBody(intWrite.Name, false);
-                        break;
-                    
-                    case IntWritelnSymFunc intWriteln:
-                        IntWriteFunctionBody(intWriteln.Name, true);
+                        CallPrintfDecorator("%i", intWrite.Name);
                         break;
                     
                     case DoubleWriteSymFunc doubleWrite:
-                        DoubleWriteFunctionBody(doubleWrite.Name, false);
-                        break;
-                    
-                    case DoubleWritelnSymFunc doubleWriteln:
-                        DoubleWriteFunctionBody(doubleWriteln.Name, true);
+                        CallPrintfDecorator("%.16E", doubleWrite.Name);
                         break;
                     
                     case CharWriteSymFunc charWrite:
-                        CharWriteFunctionBody(charWrite.Name, false);
-                        break;
-                    
-                    case CharWritelnSymFunc charWriteln:
-                        CharWriteFunctionBody(charWriteln.Name, true);
+                        CallPrintfDecorator("%c", charWrite.Name);
                         break;
                 }
             }
         }
     }
 
-    private void CallPrintfDecorator(string format, string name, bool isNewline) {
-        FunctionPrologue(name);
-        var intWritelnStackUse = PushStringInStack(format + (isNewline ? "\n" : ""));
-        Mov("rcx", "rsp");
-        Mov("rdx", ArgumentValue(0));
-        intWritelnStackUse += AllocateStack(4);
-        Call("printf");
-        FreeStack(intWritelnStackUse);
-        FunctionEpilogue();
+    private void CallPrintfDecorator(string format, string name) {
+        g.FunctionPrologue(name);
+        var stackUse = g.PushStringInStack(format);
+        g.G(Mov, Rdx(), g.ArgumentValue(0));
+        g.G(Mov, Rcx(), Rsp());
+        
+        g.CallPrintf();
+        g.FreeStack(stackUse);
+        g.FunctionEpilogue();
     }
 
-    private void CharWriteFunctionBody(string name, bool isNewline) {
-        CallPrintfDecorator("%c", name, isNewline);
-    }
-    
-    private void DoubleWriteFunctionBody(string name, bool isNewline) {
-        CallPrintfDecorator("%g", name, isNewline);
-    }
-
-    private void IntWriteFunctionBody(string name, bool isNewline) {
-        CallPrintfDecorator("%i", name, isNewline);        
-    }
-    
-    // number starts with 0 
-    private string ArgumentValue(int number) {
-        return $"[rbp+{(16 + 8 * number).ToString()}]";
-    }
-
-    //without prologue and epilogue
-    private void WriteFunctionBody() {
-        Sub("rsp", "32");
-        Lea("rcx", "[rbp + 16]");
-        Call("printf");
-        Add("rsp", "32");
-    }
-    
     
     // left operand goes in stack first
     public int Visit(BlockNode node) {
@@ -208,18 +170,22 @@ public class AsmVisitor : IAstVisitor<int> {
 
     public int Visit(IntegerNode node) {
         //aways lval
-        PushImm64(node.Token.StringValue);
+        g.Comment($"pushing imm64 integer {node.Token.Value.ToString()}");
+        g.PushImm64(node.Token.Value);
         return 1;
     }
 
     public int Visit(DoubleNode node) {
         //nasm requires dot in double number
-        var dot = node.Token.StringValue.Contains('.') ? "" : ".";
-        PushImm64($"__float64__({node.Token.StringValue}{dot})");
+//        var dot = node.Token.StringValue.Contains('.') ? "" : ".";
+//        PushImm64($"__float64__({node.Token.StringValue}{dot})");
+        g.PushImm64(node.Token.Value);
         return 1;
     }
 
     public int Visit(IdentifierNode node) {
+        g.Comment($"visiting identifier node {node.Token.Lexeme}");
+        
         var stackUse = 0;
         
         var realType = node.Type;
@@ -234,7 +200,7 @@ public class AsmVisitor : IAstVisitor<int> {
                     case true:
                         switch (symVar.VarType) {
                             case SymVar.VarTypeEnum.Global:
-                                Push($"{symVar.Name}");
+                                g.G(Push, symVar.Name);
                                 stackUse = 1;
                                 break;
                             case SymVar.VarTypeEnum.Local:
@@ -256,7 +222,8 @@ public class AsmVisitor : IAstVisitor<int> {
                                 
                                 switch (realType) {
                                     case SymScalar scalar:
-                                        Push($"qword [{symVar.Name}]");
+                                        g.G(Push, $"qword [{symVar.Name}]");
+//                                        Push($"qword [{symVar.Name}]");
                                         stackUse = 1;
                                         break;
                                 }
@@ -277,28 +244,29 @@ public class AsmVisitor : IAstVisitor<int> {
                 
                 break;
             
-            case SymConst symConst:
-                Debug.Assert(!IsLval);
-                stackUse = 1;
-                switch (symConst) {
-                    case SymIntConst intConst: 
-                        Push(intConst.Value.ToString());
-                        break;
-                    case SymDoubleConst doubleConst:
-                        Push(doubleConst.Value.ToString(CultureInfo.InvariantCulture));
-                        break;
-                    case SymCharConst charConst:
-                        Push(charConst.Value.ToString());
-                        break;
-                }
-                
-                break;
+//            case SymConst symConst:
+//                Debug.Assert(!IsLval);
+//                stackUse = 1;
+//                switch (symConst) {
+//                    case SymIntConst intConst: 
+//                        Push(intConst.Value.ToString());
+//                        break;
+//                    case SymDoubleConst doubleConst:
+//                        Push(doubleConst.Value.ToString(CultureInfo.InvariantCulture));
+//                        break;
+//                    case SymCharConst charConst:
+//                        Push(charConst.Value.ToString());
+//                        break;
+//                }
+//                
+//                break;
         }
 
         return stackUse;
     }
 
     public int Visit(FunctionCallNode node) {
+        throw new NotImplementedException();
         var stackUse = 0;
         for (var i = node.Args.Count - 1; i >= 0; i--) {
             //todo: check l/rval
@@ -308,7 +276,7 @@ public class AsmVisitor : IAstVisitor<int> {
         var funcIdentifier = node.Name as IdentifierNode;
         
         _out.WriteLine($"call {funcIdentifier.Token.Value}");
-        FreeStack(stackUse);
+//        FreeStack(stackUse);
         return 0;
     }
 
@@ -316,10 +284,9 @@ public class AsmVisitor : IAstVisitor<int> {
         // only int->double cast is allowed now
         var stackUse = Accept(node.Expr);
         Debug.Assert(stackUse == 1);
-        Finit();
-        //ASK: better conversion?
-        Fild("qword [rsp]");
-        Fst("qword  [rsp]");
+        g.G(Finit);
+        g.G(Fild, Der(Rsp()));
+        g.G(Fst, Der(Rsp()));
         
         return stackUse;
     }
@@ -333,40 +300,7 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(StringNode node) {
-        return PushStringInStack(node.Token.Value);
-    }
-
-    private int PushStringInStack(string str) {
-        var asciiBytes = Encoding.ASCII.GetBytes(str);
-        var bytesInLastPart = asciiBytes.Length % 8;
-        ulong part = 0;
-
-        var stackUsage = 0;
-        
-        for (var i = asciiBytes.Length - 1; i >= asciiBytes.Length - bytesInLastPart; i--) {
-            part <<= 8;
-            part += asciiBytes[i];
-        }
-        
-        PushImm64(part.ToString());
-        stackUsage += 1;
-        
-        var gPointer = asciiBytes.Length - bytesInLastPart - 1;
-
-        while (gPointer >= 0) {
-            part = 0;
-            for (var i = gPointer; gPointer - i < 8; i--) {
-                part <<= 8;
-                part += asciiBytes[i];
-                
-            }
-
-            gPointer -= 8;
-            PushImm64(part.ToString());
-            stackUsage += 1;
-        }
-
-        return stackUsage;
+        return g.PushStringInStack(node.Token.Value);
     }
 
     public int Visit(UnaryOperationNode node) {
@@ -374,34 +308,44 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(AssignNode node) {
+        g.Comment("assignment. evaluating lhs");
         var lhsStackUse = Accept(node.Left, true);
+        
+        g.Comment("assignment. evaluating rhs");
         var rhsStackUse = Accept(node.Right);
         //todo: test with records
         Debug.Assert(lhsStackUse == 1);
+
+        if (rhsStackUse == 1) {
+            g.Comment("assign scalar.");
+            g.G(Pop, Rbx());
+            g.G(Pop, Rax());
+            g.G(Mov, Der(Rax()), Rbx());
+        }
         
-        
-        Comment($"assign");
-        //keep in r9 dst pointer        
-        Mov("r9", "rsp");
-        Add("r9", (8*rhsStackUse).ToString());
-        Mov("r9", "[r9]");
-        
-        //rcx - counter
-        Xor("rcx", "rcx");
-        // loop
-        var label = WriteGetUniqueLabel();
-        Pop("qword [r9]");
-        Add("r9", "8");
-        
-        Inc("rcx");
-        Cmp("rcx", rhsStackUse.ToString());
-        Jl(label);
-        
-        //lhs
-        FreeStack(1);
+//        Comment($"assign");
+//        //keep in r9 dst pointer        
+//        Mov("r9", "rsp");
+//        Add("r9", (8*rhsStackUse).ToString());
+//        Mov("r9", "[r9]");
+//        
+//        //rcx - counter
+//        Xor("rcx", "rcx");
+//        // loop
+//        var label = WriteGetUniqueLabel();
+//        Pop("qword [r9]");
+//        Add("r9", "8");
+//        
+//        Inc("rcx");
+//        Cmp("rcx", rhsStackUse.ToString());
+//        Jl(label);
+//        
+//        //lhs
+//        g.FreeStack(1);
+
         return 0;
     }
-    
+
     public int Visit(IfNode node) {
         throw new System.NotImplementedException();
     }
@@ -427,27 +371,70 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(CharNode node) {
-        PushImm64(((long)node.Value).ToString());
+        g.PushImm64((long)node.Value);
         return 1;
     }
 
-    private void FreeStack(int qwords) {
-        _out.WriteLine($"add rsp, {(8*qwords).ToString()}");
+    public int Visit(WritelnStatementNode node) {
+        
+        foreach (var arg in node.Args) {
+            var realType = arg.Type;
+            
+            if (realType is SymTypeAlias symTypeAlias)
+                realType = symTypeAlias.Type;
+            
+            Debug.Assert(realType is SymInt || realType is SymDouble || realType is SymChar || realType is SymString);
+            
+            switch (realType) {
+                case SymInt symInt:
+                    var intStackUsage = Accept(arg);
+                    g.G(Call, _symStack.IntWrite.Name);
+                    g.FreeStack(intStackUsage);
+                    break;
+                
+                case SymDouble symDouble:
+                    var doubleStackUsage = Accept(arg);
+                    g.G(Call, _symStack.DoubleWrite.Name);
+                    g.FreeStack(doubleStackUsage);
+                    break;
+                
+                case SymChar symChar:
+                    var charStackUsage = Accept(arg);
+                    g.G(Call, _symStack.CharWrite.Name);
+                    g.FreeStack(charStackUsage);
+                    break;
+                
+                case SymString symString:
+                    var stringStackUsage = Accept(arg);
+                    g.G(Call, _symStack.StringWrite.Name);
+                    g.FreeStack(stringStackUsage);
+                    break;
+            }
+        }
+
+        var su = g.PushStringInStack("\n");
+        g.G(Mov, Rcx(), Rsp());
+        g.CallPrintf();
+        g.FreeStack(su);
+        
+        return 0;
     }
 
-    private int AllocateStack(int qwords) {
-        _out.WriteLine($"sub rsp, {(8*qwords).ToString()}");
-        return qwords;
-    }
+//    private int AllocateStack(int qwords) {
+//        _out.WriteLine($"sub rsp, {(8*qwords).ToString()}");
+//        return qwords;
+//    }
 
     // nasm cannot work with imm64 directly, only via register
-    private void PushImm64(string imm64) {
-        AllocateStack(2);
-        Mov("[rsp]", "rbx");
-        Mov("rbx", imm64);
-        Mov("[rsp+8]", "rbx");
-        Pop("rbx");
-    }
+//    private void PushImm64(string imm64) {
+//        AllocateStack(2);
+//        g.G(Mov, Addr(Rsp()), Rbx());
+//        g.G(Mov, Rbx(), imm64);
+////        Mov("[rsp]", "rbx");
+////        Mov("rbx", imm64);
+////        Mov("[rsp+8]", "rbx");
+////        Pop("rbx");
+//    }
 
     private string WriteGetUniqueLabel() {
         var label = $"meh_{(_labelCounter++).ToString()}";
@@ -456,75 +443,42 @@ public class AsmVisitor : IAstVisitor<int> {
     }
     
     // helpers
-    private void Lea(string lhs, string rhs) {
-        _out.WriteLine($"lea {lhs}, {rhs}");
-    }
-    
-    private void Call(string callee) {
-        _out.WriteLine($"call {callee}");
-    }
 
-    private void Sub(string lhs, string rhs) {
-        _out.WriteLine($"sub {lhs}, {rhs}");        
-    }
-    
-    private void Add(string lhs, string rhs) {
-        _out.WriteLine($"add {lhs}, {rhs}");        
-    }
-    
-    private void Mov(string to, string from) {
-        _out.WriteLine($"mov {to}, {from}");
-    }
-
-    private void Xor(string lhs, string rhs) {
-        _out.WriteLine($"xor {lhs}, {rhs}");
-    }
-
-    private void Push(string arg) {
-        _out.WriteLine($"push {arg}");
-    }
-    
-    private void Pop(string to) {
-        _out.WriteLine($"pop {to}");
-    }
-    
-    private void Inc(string arg) {
-        _out.WriteLine($"inc {arg}");
-    }
-
-    private void Cmp(string lhs, string rhs) {
-        _out.WriteLine($"cmp {lhs}, {rhs}");
-    }
-    
-    private void Jl(string label) {
-        _out.WriteLine($"jl {label}");
-    }
-
-    private void Finit() {
-        _out.WriteLine("finit");
-    }
-
-    private void Fild(string arg) {
-        _out.WriteLine($"fild {arg}");
-    }
-    
-    private void Fst(string arg) {
-        _out.WriteLine($"fst {arg}");
-    }
-
-    private void Comment(string comment) {
-        _out.WriteLine($"; {comment}");
-    }
-
-    private void FunctionPrologue(string func) {
-        _out.WriteLine($"{func}:");
-        _out.WriteLine("enter 0, 0");
-    }
-
-    private void FunctionEpilogue() {
-        _out.WriteLine("leave");
-        _out.WriteLine("ret");
-    }
+//    private void Sub(string lhs, string rhs) {
+//        _out.WriteLine($"sub {lhs}, {rhs}");        
+//    }
+//    
+//    private void Add(string lhs, string rhs) {
+//        _out.WriteLine($"add {lhs}, {rhs}");        
+//    }
+//
+//    private void Xor(string lhs, string rhs) {
+//        _out.WriteLine($"xor {lhs}, {rhs}");
+//    }
+//    
+//    private void Inc(string arg) {
+//        _out.WriteLine($"inc {arg}");
+//    }
+//
+//    private void Cmp(string lhs, string rhs) {
+//        _out.WriteLine($"cmp {lhs}, {rhs}");
+//    }
+//    
+//    private void Jl(string label) {
+//        _out.WriteLine($"jl {label}");
+//    }
+//
+//    private void Finit() {
+//        _out.WriteLine("finit");
+//    }
+//
+//    private void Fild(string arg) {
+//        _out.WriteLine($"fild {arg}");
+//    }
+//    
+//    private void Fst(string arg) {
+//        _out.WriteLine($"fst {arg}");
+//    }
     
 }
 }

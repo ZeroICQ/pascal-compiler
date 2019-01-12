@@ -51,4 +51,5 @@
 51,1    Reserved        While               while
 52,1    Reserved        With                with
 53,1    Reserved        Xor                 xor
-53,4    Eof             EOF
+54,1    Reserved        Writeln writeln
+55,1    Eof     EOF

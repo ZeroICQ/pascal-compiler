@@ -22,5 +22,6 @@ public interface IAstVisitor<out T> {
     T Visit(ControlSequence node);
     T Visit(EmptyStatementNode node);
     T Visit(CharNode node);
+    T Visit(WritelnStatementNode node);
 }
 }

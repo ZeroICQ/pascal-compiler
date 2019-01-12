@@ -149,6 +149,15 @@ public class FunctionExpectedException : ParserException {
     }
 }
 
+public class WritelnUnsupportedType : ParserException {
+    private readonly SymType _type;
+    
+    public override string Message => $"Cannot write \"{Lexeme}\' of type \"{_type.Name}\" at {Line},{Column}";
+    
+    public WritelnUnsupportedType(SymType type, string lexeme, int line, int column) : base(lexeme, line, column) {
+        _type = type;
+    }
+} 
 
 public class WrongParameterTypeException : Exception {
     public override string Message => "Wrong argument vartype.";

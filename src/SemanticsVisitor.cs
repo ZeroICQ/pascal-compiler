@@ -237,7 +237,33 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         node.Type = _stack.SymChar;
         return true;
     }
-    
+
+    public bool Visit(WritelnStatementNode node) {
+        //todo: rmk when add pointers
+        
+        foreach (var arg in node.Args) {
+            arg.Accept(this);
+            
+            var realType = arg.Type;
+                        
+            if (realType is SymTypeAlias symTypeAlias)
+                realType = symTypeAlias.Type;
+            
+            switch (realType) {
+                case SymInt _:
+                case SymChar _:
+                case SymString _:
+                case SymDouble _:
+                    break;
+                default:
+                    var t = ExprNode.GetClosestToken(arg);
+                    throw new WritelnUnsupportedType(realType, t.Lexeme, t.Line, t.Column);
+            }
+        }
+        //todo: function cal return lvalues
+        return true;
+    }
+
     private static T BuildException<T>(Token token) where T : ParserException {
         try {
             return (T)Activator.CreateInstance(typeof(T), token.Lexeme, token.Line, token.Column);

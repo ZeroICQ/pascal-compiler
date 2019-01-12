@@ -131,6 +131,14 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
     public PrinterNode Visit(CharNode node) {
         return new PrinterNode(node.Token.StringValue);
     }
+
+    public PrinterNode Visit(WritelnStatementNode node) {
+        var pNode = new PrinterNode("Wrtiteln");
+        foreach (var arg in node.Args) {
+            pNode.AddChild(arg.Accept(this));
+        }
+        return pNode;
+    }
 }
 
 public class PrinterNode {

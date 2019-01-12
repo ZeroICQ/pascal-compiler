@@ -51,3 +51,4 @@ var
 while
 with
 xor
+writeln

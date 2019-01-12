@@ -536,39 +536,6 @@ public class Parser {
         var t = _lexer.GetNextToken();
                 
         switch (t) {
-// todo: remove            
-//            case IdentifierToken identifier:
-//                _lexer.Retract();
-//                var left = ParseExprWithCheck(false);
-//
-//                if (left is FunctionCallNode f) {
-//                    return new ProcedureCallNode(f.Name, f.Args);
-//                }
-//                
-//                // now it can be either procedure statement or assign
-//                var nextToken = _lexer.GetNextToken();
-//
-//                switch (nextToken) {
-//                    case OperatorToken op:
-//                        switch (op.Value) {
-//                            case Constants.Operators.Assign:
-//                            case Constants.Operators.PlusAssign:
-//                            case Constants.Operators.MinusAssign:
-//                            case  Constants.Operators.MultiplyAssign:
-//                            case  Constants.Operators.DivideAssign:
-//                                return new AssignNode(left, op, ParseExprWithCheck(false));
-//                            
-//                            case Constants.Operators.OpenParenthesis:
-//                                //procedure call
-//                                var paramList = ParseParamList();
-//                                return new ProcedureCallNode(left, paramList);
-//                        }
-//                        break;
-//                }
-//                
-//                _lexer.Retract();
-//                throw Illegal(nextToken);
-                
             // statements that starts with reserved words
             case SeparatorToken separatorToken:
                 break;
@@ -598,6 +565,9 @@ public class Parser {
                             throw new NotAllowedException(reserved.Lexeme, reserved.Line, reserved.Column);
                         }
                         return new ControlSequence(reserved);
+                    case Constants.Words.Writeln:
+                        _lexer.Retract();
+                        return ParseWritelnStatement();
                 }
                 break;
             
@@ -640,6 +610,19 @@ public class Parser {
         _lexer.Retract();
         return new EmptyStatementNode();
 //        throw Illegal(t);
+    }
+
+    //starts at "->writeln[...]"
+    private WritelnStatementNode ParseWritelnStatement() {
+        Require(Constants.Words.Writeln);
+        var t = _lexer.GetNextToken();
+        
+        if (t is OperatorToken sep && sep.Value == Constants.Operators.OpenParenthesis) {
+            return new WritelnStatementNode(ParseArgumentList());
+        }
+        
+         _lexer.Retract();
+        return new WritelnStatementNode(new List<ExprNode>());
     }
 
     private ForNode ParseForStatement() {
