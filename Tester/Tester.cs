@@ -231,6 +231,9 @@ class Tester {
         var testFiles = Directory.GetFiles($"{testDir}/{path}/").Reverse();
         var tmpDirPath = $"{testDir}/{path}/tmp";
         
+        var fpcPath = @"C:\Users\Alexey\dev\toolchains\lazarus\fpc\3.0.4\bin\x86_64-win64";
+        var compatibilityUnitName = "compatibility";
+        
         //clean tmp dir
         if (Directory.Exists(tmpDirPath)) {
             var di = new DirectoryInfo(tmpDirPath);
@@ -258,41 +261,6 @@ class Tester {
             var testOutFilePath = $"{testDir}/{path}/{testName}.out";
             
             var needCompile = File.Exists(testOutFilePath);
-
-//            commented out temporary
-//            var isErrorFound = false;
-//            using (var testAnswer = File.OpenText(testAnswerPath)) {
-//                while (!compilerPr.StandardOutput.EndOfStream) {
-//                    if (testAnswer.EndOfStream)
-//                        break;
-//                    
-//                    var outLine = compilerPr.StandardOutput.ReadLine();
-//                    var answerLine = testAnswer.ReadLine();
-//
-//                    if (outLine.Equals(answerLine))
-//                        continue;
-//                    
-//                    PrintDiff(answerLine, outLine, testName);
-//                    compilerPr.WaitForExit();
-//                    isErrorFound = true
-//                    break;
-//                }
-//                
-//                if(ifErrorFound) 
-//                    break;
-//                if (!testAnswer.EndOfStream || !compilerPr.StandardOutput.EndOfStream) {
-//                    Console.ForegroundColor = ConsoleColor.Red;
-//                    Console.WriteLine($"[-] line count mismatch in {testName}");
-//                }
-//                else {
-//                    Console.ForegroundColor = ConsoleColor.Green;
-//                    Console.WriteLine($"[+] passed {testName}");
-//                }
-//
-//                compilerPr.WaitForExit();
-//                Console.ForegroundColor = defaultForegroundColor;
-//            }
-
             
             if (!needCompile)
                 continue;
@@ -369,48 +337,86 @@ class Tester {
                 return;
             }
 
-            var compiledPr = new Process();
-            compiledPr.StartInfo.FileName = $"{tmpAsmFilePath}{exePostfix}";
-            compiledPr.StartInfo.UseShellExecute = false;
-            compiledPr.StartInfo.RedirectStandardOutput = true;
-            compiledPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-            compiledPr.Start();
-            compiledPr.WaitForExit();
+            
+            //now compile with fpc
+            
+            var fpcPr = new Process();
+            fpcPr.StartInfo.FileName = $"{fpcPath}\\fpc.exe";
+            
+            //facompatibility
+            var fpcCompiledExePath = $"{tmpDirPath}/{Path.GetFileName(testName)}FPC.exe";
+            fpcPr.StartInfo.Arguments = $"-Fa{compatibilityUnitName} -Fu{testDir}/{path} -FE{tmpDirPath} -o{Path.GetFileName(testName)}FPC.exe {testSourcePath}";
+            
+            fpcPr.StartInfo.UseShellExecute = false;
+            fpcPr.StartInfo.RedirectStandardOutput = true;
+            fpcPr.StartInfo.RedirectStandardError = true;
+            fpcPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            fpcPr.StartInfo.StandardErrorEncoding= Encoding.UTF8;
+            fpcPr.Start();
+            fpcPr.WaitForExit();
+            
+            
+            var fpcOutput = fpcPr.StandardOutput.ReadToEnd();
+            if (fpcOutput.Length != 0) {
+                Console.WriteLine("fpc output:");
+                Console.Write(fpcOutput);
+            }
 
-            var errFound = false;
-            using (var answer = File.OpenText(testOutFilePath)) {
-                while (!compiledPr.StandardOutput.EndOfStream) {
-                    if (answer.EndOfStream)
-                        break;
-                    
-                    var outLine = compiledPr.StandardOutput.ReadLine();
-                    var answerLine = answer.ReadLine();
-
-                    if (outLine.Equals(answerLine))
-                        continue;
-                    
-                    PrintDiff(answerLine, outLine, testName);
-                    compilerPr.WaitForExit();
-                    errFound = true;
-                    break;
-                }
-                
-                if (errFound)
-                    break;
-                
-                if (!answer.EndOfStream || !compiledPr.StandardOutput.EndOfStream) {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[-] line count mismatch at compilation phase in {testName}");
-                }
-                else {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[+] passed compile {testName}");
-                }
-                
-                Console.ForegroundColor = defaultForegroundColor;
+            if (fpcPr.ExitCode != 0) {
+                Console.WriteLine("fpc error:");
+                Console.Write(fpcPr.StandardError.ReadToEnd());
+                return;
             }
             
-            compiledPr.WaitForExit();
+            
+            var compiledMyPr = new Process();
+            compiledMyPr.StartInfo.FileName = $"{tmpAsmFilePath}{exePostfix}";
+            compiledMyPr.StartInfo.UseShellExecute = false;
+            compiledMyPr.StartInfo.RedirectStandardOutput = true;
+            compiledMyPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            compiledMyPr.Start();
+            compiledMyPr.WaitForExit();
+            
+            var compiledFpcPr = new Process();
+            compiledFpcPr.StartInfo.FileName = $"{fpcCompiledExePath}";
+            compiledFpcPr.StartInfo.UseShellExecute = false;
+            compiledFpcPr.StartInfo.RedirectStandardOutput = true;
+            compiledFpcPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            compiledFpcPr.Start();
+            compiledFpcPr.WaitForExit();
+            
+            var errFound = false;
+            while (!compiledMyPr.StandardOutput.EndOfStream) {
+                if (compiledFpcPr.StandardOutput.EndOfStream)
+                    break;
+                
+                var outLine = compiledMyPr.StandardOutput.ReadLine();
+                var answerLine = compiledFpcPr.StandardOutput.ReadLine();
+
+                if (outLine.Equals(answerLine))
+                    continue;
+                
+                PrintDiff(answerLine, outLine, testName);
+                compilerPr.WaitForExit();
+                errFound = true;
+                break;
+            }
+            
+            if (errFound)
+                break;
+            
+            if (!compiledFpcPr.StandardOutput.EndOfStream || !compiledMyPr.StandardOutput.EndOfStream) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"[-] line count mismatch at compilation phase in {testName}");
+            }
+            else {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"[+] passed compile {testName}");
+            }
+            
+            Console.ForegroundColor = defaultForegroundColor;
+            
+            compiledMyPr.WaitForExit();
         }
         
         //cleanup

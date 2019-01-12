@@ -120,7 +120,7 @@ public class AsmVisitor : IAstVisitor<int> {
                         break;
                     
                     case DoubleWriteSymFunc doubleWrite:
-                        CallPrintfDecorator("%.16E", doubleWrite.Name);
+                        CallPrintfDecorator("%24.16E", doubleWrite.Name);
                         break;
                     
                     case CharWriteSymFunc charWrite:
