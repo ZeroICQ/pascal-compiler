@@ -184,6 +184,10 @@ public class AsmArg {
     public static AsmArg Der(AsmArg arg) {
         return new AsmArg($"[{arg.Val}]");
     }
+    
+    public static AsmArg QWord(AsmArg arg) {
+        return new AsmArg($"qword {arg.Val}");
+    }
 
     public static AsmArg operator +(AsmArg lhs, int rhs) {
         return new AsmArg($"{lhs.Val} + {rhs.ToString()}"); 

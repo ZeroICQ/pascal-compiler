@@ -285,8 +285,8 @@ public class AsmVisitor : IAstVisitor<int> {
         var stackUse = Accept(node.Expr);
         Debug.Assert(stackUse == 1);
         g.G(Finit);
-        g.G(Fild, Der(Rsp()));
-        g.G(Fst, Der(Rsp()));
+        g.G(Fild, QWord(Der(Rsp())));
+        g.G(Fst, QWord(Der(Rsp())));
         
         return stackUse;
     }
