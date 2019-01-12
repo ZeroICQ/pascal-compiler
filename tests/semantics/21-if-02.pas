@@ -1,6 +1,6 @@
 var 
     i : integer = -200 * 2;
-    f : float = 10;
+    f : double = 10;
     mem : Array[20..25] of Integer;
     
 begin

@@ -1,12 +1,12 @@
 type
   film = record
     length : integer;
-    rating: float;
+    rating: double;
   end;
                           
 
 var a : integer;
-    f : float;
+    f : double;
     c : char;
     greenmile : film;   
 begin

@@ -1,6 +1,6 @@
 var 
     a : Array[1..100] of integer;
-    b : float;
+    b : double;
 begin
     
     b := a[20*2 - 7];

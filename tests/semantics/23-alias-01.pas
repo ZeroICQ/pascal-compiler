@@ -2,16 +2,16 @@ type
     myint = Integer;
     yourint = myint;
     
-    myfloat = Float;
-    yourfloat = myfloat;
-    theirsfloat = yourfloat;
+    mydouble = double;
+    yourdouble = mydouble;
+    theirsdouble = yourdouble;
 
 var
     a : MyInt;
     b : yourint;
     c : Integer;
     
-    f1 : float; f2 : myfloat; f3 : yourfloat; f4 : theirsfloat;
+    f1 : double; f2 : mydouble; f3 : yourdouble; f4 : theirsdouble;
  
 begin
     c := a + b;

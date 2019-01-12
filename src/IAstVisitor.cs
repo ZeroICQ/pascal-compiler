@@ -4,7 +4,7 @@ public interface IAstVisitor<out T> {
     
     T Visit(BinaryExprNode node);
     T Visit(IntegerNode node);
-    T Visit(FloatNode node);
+    T Visit(DoubleNode node);
     T Visit(IdentifierNode node);
     
     T Visit(FunctionCallNode node);

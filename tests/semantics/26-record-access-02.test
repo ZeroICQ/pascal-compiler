@@ -1,8 +1,8 @@
-                                                                                         Main Block
+﻿                                                                                         Main Block
             ┌──────────────────────────┬─────────────────────────────┬────────────────────────┴──────┬────────────────────────────────┬────────────────────────────────────┐
          Assign                     Assign                        Assign                          Assign                           Assign                               Assign
    ┌────────┴───┐                  ┌───┴─────────┐     ┌─────────────┴─┐                          ┌──┴────────────┐      ┌────────────┴───┐                            ┌───┴──────────────┐
-actors       Access             Access        actors  age           Access                     Access            age  salary           (float)                      Access             salary
+actors       Access             Access        actors  age           Access                     Access            age  salary          (double)                      Access             salary
             ┌───┴─────┐        ┌───┴─────┐                           ┌─┴──────────┐             ┌─┴──────────┐                            ┴                        ┌───┴──────────┐
         greenmile  actors  greenmile  actors                      Index          age         Index          age                        Access                   Index          salary
                                                                    ┌─┴────────┐               ┌─┴────────┐                              ┌─┴──────────┐           ┌─┴────────┐
@@ -18,7 +18,7 @@ Global:
 ═════════════════════════════════════
 │age       │integer                 │
 ─────────────────────────────────────
-│salary    │float                   │
+│salary    │double                  │
 ─────────────────────────────────────
 │children  │array[-1..10] of integer│
 ─────────────────────────────────────
@@ -30,7 +30,7 @@ Global:
 ─────────────────────────────────────
 │char      │Scalar type             │
 ─────────────────────────────────────
-│float     │Scalar type             │
+│double    │Scalar type             │
 ─────────────────────────────────────
 │boolean   │Scalar type             │
 ─────────────────────────────────────
@@ -43,7 +43,7 @@ Record "actor":
 ════════════════════════════════════
 │age      │integer                 │
 ────────────────────────────────────
-│salary   │float                   │
+│salary   │double                  │
 ────────────────────────────────────
 │children │array[-1..10] of integer│
 ────────────────────────────────────

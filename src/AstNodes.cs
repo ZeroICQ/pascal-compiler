@@ -80,14 +80,14 @@ public class IntegerNode : ConstantNode {
     }
 }
 
-public class FloatNode : ConstantNode {
-    public FloatToken Token { get; }
+public class DoubleNode : ConstantNode {
+    public DoubleToken Token { get; }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {
         return visitor.Visit(this);
     }
 
-    public FloatNode(FloatToken token) : base(token) {
+    public DoubleNode(DoubleToken token) : base(token) {
         Token = token;
     }
 }

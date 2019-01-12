@@ -1,11 +1,11 @@
-Main Block
+﻿Main Block
      ┴
   Assign
-┌────┴┐
-b  (float)
-      ┴
-   (float)
-   ┌──┴
+┌────┴─┐
+b  (double)
+       ┴
+   (double)
+   ┌───┴
    b
 
 Global:
@@ -14,13 +14,13 @@ Global:
 ══════════════════════
 │a       │integer    │
 ──────────────────────
-│b       │float      │
+│b       │double     │
 ──────────────────────
 │integer │Scalar type│
 ──────────────────────
 │char    │Scalar type│
 ──────────────────────
-│float   │Scalar type│
+│double  │Scalar type│
 ──────────────────────
 │boolean │Scalar type│
 ──────────────────────

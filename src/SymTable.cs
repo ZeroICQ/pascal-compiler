@@ -9,7 +9,7 @@ public class SymStack : IEnumerable<SymTable> {
     // standard types
     public readonly SymInt SymInt = new SymInt();
     public readonly SymChar SymChar = new SymChar();
-    public readonly SymFloat SymFloat = new SymFloat();
+    public readonly SymDouble SymDouble = new SymDouble();
     public readonly SymBool SymBool = new SymBool();
     public readonly SymString SymString = new SymString();
 
@@ -17,7 +17,7 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Push(new SymTable());
         AddType(SymInt);        
         AddType(SymChar);        
-        AddType(SymFloat);        
+        AddType(SymDouble);        
         AddType(SymBool);        
         AddType(SymString);      
         //predefined functions
@@ -27,8 +27,8 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(new IntWriteSymFunc());
         _stack.Peek().Add(new IntWritelnSymFunc());
         
-        _stack.Peek().Add(new FloatWriteSymFunc());
-        _stack.Peek().Add(new FloatWritelnSymFunc());
+        _stack.Peek().Add(new DoubleWriteSymFunc());
+        _stack.Peek().Add(new DoubleWritelnSymFunc());
         
         _stack.Peek().Add(new CharWriteSymFunc());
         _stack.Peek().Add(new CharWritelnSymFunc());
@@ -266,8 +266,8 @@ public class SymInt : SymScalar {
     }
 }
 
-public class SymFloat : SymScalar {
-    public override string Name => "float";
+public class SymDouble : SymScalar {
+    public override string Name => "double";
 
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -357,10 +357,10 @@ public class SymIntConst : SymConst {
     }
 }
 
-public class SymFloatConst : SymConst {
+public class SymDoubleConst : SymConst {
     public double Value { get; }
 
-    public SymFloatConst(string name, SymType type, double value) : base(name, type) {
+    public SymDoubleConst(string name, SymType type, double value) : base(name, type) {
         Value = value;
         InitialStringValue = value.ToString();
     }
@@ -485,7 +485,7 @@ public abstract class PredefinedSymFunc : SymFunc {
 public class WriteSymFunc : PredefinedSymFunc {
     public WriteSymFunc() : 
         base(
-            "write", 
+            "__swrite", 
             new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -496,7 +496,7 @@ public class WriteSymFunc : PredefinedSymFunc {
 public class WritelnSymFunc : PredefinedSymFunc {
     public WritelnSymFunc()
         : base(
-            "writeln", 
+            "__swriteln", 
             new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)},
             null, null, null
             ) { }
@@ -505,7 +505,7 @@ public class WritelnSymFunc : PredefinedSymFunc {
 public class IntWriteSymFunc : PredefinedSymFunc {
     public IntWriteSymFunc()
         : base(
-            "iwrite", 
+            "__iwrite", 
             new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -516,28 +516,28 @@ public class IntWriteSymFunc : PredefinedSymFunc {
 public class IntWritelnSymFunc : PredefinedSymFunc {
     public IntWritelnSymFunc() 
         : base(
-            "iwriteln", 
+            "__iwriteln", 
             new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)},
             null,
             null, null
         ) { }
 }
 
-public class FloatWriteSymFunc : PredefinedSymFunc {
-    public FloatWriteSymFunc()
+public class DoubleWriteSymFunc : PredefinedSymFunc {
+    public DoubleWriteSymFunc()
         : base(
-            "fwrite", 
-            new List<SymVar>() {new SymVar("floatnum", new SymFloat(), null, SymVar.VarTypeEnum.Parameter)}, 
+            "__dwrite", 
+            new List<SymVar>() {new SymVar("doublenum", new SymDouble(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }
 }
 
-public class FloatWritelnSymFunc : PredefinedSymFunc {
-    public FloatWritelnSymFunc()
+public class DoubleWritelnSymFunc : PredefinedSymFunc {
+    public DoubleWritelnSymFunc()
         : base(
-            "fwriteln", 
-            new List<SymVar>() {new SymVar("floatnum", new SymFloat(), null, SymVar.VarTypeEnum.Parameter)}, 
+            "__dwriteln", 
+            new List<SymVar>() {new SymVar("doublenum", new SymDouble(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }
@@ -546,7 +546,7 @@ public class FloatWritelnSymFunc : PredefinedSymFunc {
 public class CharWriteSymFunc : PredefinedSymFunc {
     public CharWriteSymFunc()
         : base(
-            "cwrite", 
+            "__cwrite", 
             new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -556,7 +556,7 @@ public class CharWriteSymFunc : PredefinedSymFunc {
 public class CharWritelnSymFunc : PredefinedSymFunc {
     public CharWritelnSymFunc()
         : base(
-            "cwriteln", 
+            "__cwriteln", 
             new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 

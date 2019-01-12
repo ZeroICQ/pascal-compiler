@@ -1,4 +1,4 @@
-Main Block
+﻿Main Block
 
 Global:
 ───────────────────────
@@ -6,15 +6,15 @@ Global:
 ═══════════════════════
 │a       │integer = 20│
 ───────────────────────
-│b       │float = 4,4 │
+│b       │double = 4,4│
 ───────────────────────
-│c       │float = -80 │
+│c       │double = -80│
 ───────────────────────
 │integer │Scalar type │
 ───────────────────────
 │char    │Scalar type │
 ───────────────────────
-│float   │Scalar type │
+│double  │Scalar type │
 ───────────────────────
 │boolean │Scalar type │
 ───────────────────────

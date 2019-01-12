@@ -1,4 +1,4 @@
-     Main Block
+﻿     Main Block
           ┴
        Assign
       ┌───┴──────┐
@@ -20,7 +20,7 @@ Global:
 ───────────────────────────
 │char         │Scalar type│
 ───────────────────────────
-│float        │Scalar type│
+│double       │Scalar type│
 ───────────────────────────
 │boolean      │Scalar type│
 ───────────────────────────
@@ -31,11 +31,11 @@ Record "point":
 ───────────────
 │Name │Type   │
 ═══════════════
-│x    │float  │
+│x    │double │
 ───────────────
-│y    │float  │
+│y    │double │
 ───────────────
-│z    │float  │
+│z    │double │
 ───────────────
 │s    │char   │
 ───────────────
@@ -46,9 +46,9 @@ Record "image":
 ──────────────────────
 │Name  │Type         │
 ══════════════════════
-│x     │float        │
+│x     │double       │
 ──────────────────────
-│y     │float        │
+│y     │double       │
 ──────────────────────
 │wall  │char = s     │
 ──────────────────────

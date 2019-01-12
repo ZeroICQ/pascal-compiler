@@ -1,5 +1,5 @@
 var
-    b : float;
+    b : double;
     
 begin
     b:= not 2.2; 

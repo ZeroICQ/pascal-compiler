@@ -27,7 +27,7 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         return new PrinterNode(node.Token.StringValue);
     }
 
-    public PrinterNode Visit(FloatNode node) {
+    public PrinterNode Visit(DoubleNode node) {
         return new PrinterNode(node.Token.StringValue);
     }
 

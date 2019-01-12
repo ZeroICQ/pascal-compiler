@@ -246,7 +246,7 @@ public static class DecimalNumberAutomata {
                 case States.BeforeDot:
                     switch (symbol) {
                         case '.':
-                            // sample case array of[1..2] should be <int>..<int>. not <float>.<int>
+                            // sample case array of[1..2] should be <int>..<int>. not <double>.<int>
                             if (input.Peek() == '.') {
                                 input.Retract();
                                 return TokenFactory.Build<IntegerToken>(input);
@@ -279,7 +279,7 @@ public static class DecimalNumberAutomata {
                             }
                             else {
                                 input.Retract();
-                                return TokenFactory.Build<FloatToken>(input);
+                                return TokenFactory.Build<DoubleToken>(input);
                             }
                             break;
                         }
@@ -297,7 +297,7 @@ public static class DecimalNumberAutomata {
                         default: {
                             if (!Constants.decDigits.Contains((char) symbol)) {
                                 input.Retract();
-                                return TokenFactory.Build<FloatToken>(input);
+                                return TokenFactory.Build<DoubleToken>(input);
                             }
 
                             break;
@@ -317,7 +317,7 @@ public static class DecimalNumberAutomata {
                 case States.AfterExponentAfterSign:
                     if (!Constants.decDigits.Contains((char) symbol)) {
                         input.Retract();
-                        return TokenFactory.Build<FloatToken>(input);
+                        return TokenFactory.Build<DoubleToken>(input);
                     }
                     break;
             }

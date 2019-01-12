@@ -1,6 +1,6 @@
 type
     Point = Record
-        X,Y,Z : Float;
+        X,Y,Z : double;
         s : char;
         meh : integer;
     end;

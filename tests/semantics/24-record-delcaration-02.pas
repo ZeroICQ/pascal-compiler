@@ -1,12 +1,12 @@
 type
     Point = Record
-        X,Y,Z : Float;
+        X,Y,Z : double;
         s : char;
         meh : integer;
     end;
     
     Image = Record
-        x, y : Float;
+        x, y : double;
         wall: char = 's';
         price: integer = 2 + 2 * 200;
     end;

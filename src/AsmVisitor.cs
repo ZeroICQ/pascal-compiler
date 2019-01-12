@@ -73,9 +73,9 @@ public class AsmVisitor : IAstVisitor<int> {
                                 _out.WriteLine($"{symVar.Name}: dq {initIntVal.ToString()}");
                                 break;
                             
-                            case SymFloat symInt:
-                                var initFloatVal = ((SymFloatConst) symVar.InitialValue)?.Value ?? 0;
-                                _out.WriteLine($"{symVar.Name}: dq {initFloatVal.ToString()}");
+                            case SymDouble symInt:
+                                var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
+                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal.ToString()}");
                                 break;
                             
                             case SymChar symInt:
@@ -124,12 +124,12 @@ public class AsmVisitor : IAstVisitor<int> {
                         IntWriteFunctionBody(intWriteln.Name, true);
                         break;
                     
-                    case FloatWriteSymFunc floatWrite:
-                        FloatWriteFunctionBody(floatWrite.Name, false);
+                    case DoubleWriteSymFunc doubleWrite:
+                        DoubleWriteFunctionBody(doubleWrite.Name, false);
                         break;
                     
-                    case FloatWritelnSymFunc floatWriteln:
-                        FloatWriteFunctionBody(floatWriteln.Name, true);
+                    case DoubleWritelnSymFunc doubleWriteln:
+                        DoubleWriteFunctionBody(doubleWriteln.Name, true);
                         break;
                     
                     case CharWriteSymFunc charWrite:
@@ -159,7 +159,7 @@ public class AsmVisitor : IAstVisitor<int> {
         CallPrintfDecorator("%c", name, isNewline);
     }
     
-    private void FloatWriteFunctionBody(string name, bool isNewline) {
+    private void DoubleWriteFunctionBody(string name, bool isNewline) {
         CallPrintfDecorator("%g", name, isNewline);
     }
 
@@ -212,8 +212,8 @@ public class AsmVisitor : IAstVisitor<int> {
         return 1;
     }
 
-    public int Visit(FloatNode node) {
-        //nasm requires dot in float number
+    public int Visit(DoubleNode node) {
+        //nasm requires dot in double number
         var dot = node.Token.StringValue.Contains('.') ? "" : ".";
         PushImm64($"__float64__({node.Token.StringValue}{dot})");
         return 1;
@@ -284,8 +284,8 @@ public class AsmVisitor : IAstVisitor<int> {
                     case SymIntConst intConst: 
                         Push(intConst.Value.ToString());
                         break;
-                    case SymFloatConst floatConst:
-                        Push(floatConst.Value.ToString(CultureInfo.InvariantCulture));
+                    case SymDoubleConst doubleConst:
+                        Push(doubleConst.Value.ToString(CultureInfo.InvariantCulture));
                         break;
                     case SymCharConst charConst:
                         Push(charConst.Value.ToString());
@@ -313,7 +313,7 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(CastNode node) {
-        // only int->float cast is allowed now
+        // only int->double cast is allowed now
         var stackUse = Accept(node.Expr);
         Debug.Assert(stackUse == 1);
         Finit();

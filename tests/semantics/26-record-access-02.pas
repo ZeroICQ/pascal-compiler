@@ -1,7 +1,7 @@
 type
   actor = record
     age: integer;
-    salary: float; 
+    salary: double; 
     children: Array[-1..10] of Integer; 
   end;
 
@@ -11,7 +11,7 @@ type
                           
 
 var age: integer;
-    salary : float;
+    salary : double;
     children :  Array[-1..10] of Integer;
     actors : Array[1..20] of actor;
     greenmile : film;

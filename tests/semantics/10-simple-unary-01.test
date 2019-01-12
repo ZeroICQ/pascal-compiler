@@ -1,11 +1,11 @@
-  Main Block
-       ┴
-    Assign
-┌──────┴─┐
-f     Minus
-    ┌────┴─┐
-   1.2  (float)
-          ┌┴
+﻿   Main Block
+        ┴
+     Assign
+┌───────┴┐
+f      Minus
+    ┌────┴──┐
+   1.2  (double)
+          ┌─┴
         Plus
           ┴
         Minus
@@ -30,13 +30,13 @@ Global:
 ──────────────────────
 │Name    │Type       │
 ══════════════════════
-│f       │float      │
+│f       │double     │
 ──────────────────────
 │integer │Scalar type│
 ──────────────────────
 │char    │Scalar type│
 ──────────────────────
-│float   │Scalar type│
+│double  │Scalar type│
 ──────────────────────
 │boolean │Scalar type│
 ──────────────────────

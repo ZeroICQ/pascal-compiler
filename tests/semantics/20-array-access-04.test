@@ -1,9 +1,9 @@
-Main Block
+﻿Main Block
      ┴
   Assign
-┌────┴┐
-b  (float)
-     ┌┴
+┌────┴─┐
+b  (double)
+     ┌─┴
    Index
    ┌─┴─┐
    a  33
@@ -14,13 +14,13 @@ Global:
 ═══════════════════════════════════
 │a       │array[1..100] of integer│
 ───────────────────────────────────
-│b       │float                   │
+│b       │double                  │
 ───────────────────────────────────
 │integer │Scalar type             │
 ───────────────────────────────────
 │char    │Scalar type             │
 ───────────────────────────────────
-│float   │Scalar type             │
+│double  │Scalar type             │
 ───────────────────────────────────
 │boolean │Scalar type             │
 ───────────────────────────────────

@@ -3,7 +3,7 @@ type
     sample = record
         integer : integer;
         char : char;
-        float: float;
+        double: double;
     end;
     
 var

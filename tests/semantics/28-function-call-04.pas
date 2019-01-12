@@ -3,7 +3,7 @@ type
     otherInt = type myint;
 
 
-procedure mem(a: Float; b: Integer; c: myint; d: otherInt);
+procedure mem(a: Double; b: Integer; c: myint; d: otherInt);
 begin
     a := b  + c + d;
 end;

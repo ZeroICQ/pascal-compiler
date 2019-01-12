@@ -89,7 +89,7 @@ public class IntegerToken : NumberToken {
     }
 }
 
-public class FloatToken : NumberToken {
+public class DoubleToken : NumberToken {
     public override TokenType Type => TokenType.Real;
     public override string Lexeme { get; }
     public override string StringValue => Value.ToString(CultureInfo.InvariantCulture);
@@ -97,7 +97,7 @@ public class FloatToken : NumberToken {
     public double Value { get; }
     static readonly NumberFormatInfo NumberFormat = new NumberFormatInfo {NumberDecimalSeparator = "."};
 
-    public FloatToken(string lexeme, int line, int column) : base(line, column) {
+    public DoubleToken(string lexeme, int line, int column) : base(line, column) {
         Lexeme = lexeme;
         try {
             Value = double.Parse(lexeme, NumberStyles.Float, NumberFormat);

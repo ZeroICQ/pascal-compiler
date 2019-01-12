@@ -1,8 +1,8 @@
-procedure mem(a,b : Integer; const c,d: float);
+procedure mem(a,b : Integer; const c,d: double);
 begin
 end;
 
-function kek(var b,c : Array of const; out d : Array[1..2] of Integer): Float;
+function kek(var b,c : Array of const; out d : Array[1..2] of Integer): double;
 var 
     testarr: array[1..2] of integer;
 begin

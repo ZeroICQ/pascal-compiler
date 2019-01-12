@@ -1,6 +1,6 @@
 var
     a, b : Integer;
-    c, d : float;
+    c, d : double;
     e, f : char;
 begin
     a := b;
@@ -15,7 +15,7 @@ begin
     c *= d;
     c /= d;
     
-    //float-integer
+    //double-integer
     c := a;
     c += a;
     c -= a;

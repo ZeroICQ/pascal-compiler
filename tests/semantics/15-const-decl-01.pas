@@ -7,7 +7,7 @@ const
   
 var 
     i: Integer;
-    f: Float;
+    f: double;
    
 begin
     f := 2 / 2;

@@ -1,6 +1,6 @@
 var
     i: Integer;
-    f: float;
+    f: double;
     c: char;
 begin
     c /= c;

@@ -1,7 +1,7 @@
 var 
     a : Array[1..100] of integer;
     b : Integer;
-    f : float;
+    f : double;
 begin
     
     b := f[b];

@@ -1,5 +1,5 @@
 var i:integer;
- f: float = 1.2e100;
+ f: double = 1.2e100;
  
 begin
     

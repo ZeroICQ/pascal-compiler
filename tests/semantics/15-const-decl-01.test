@@ -1,12 +1,12 @@
-                Main Block
-         ┌───────────┴─────────┐
-      Assign                Assign
-┌────────┴─┐         ┌─────────┴─┐
-f       Divide       f         Plus
-      ┌────┴───┐            ┌────┴────┐
-   (float)  (float)     (float)   fconst_2
-   ┌──┴     ┌──┴            ┴
-   2        2           iconst_1
+﻿                 Main Block
+          ┌───────────┴──────────┐
+       Assign                 Assign
+┌─────────┴─┐          ┌─────────┴─┐
+f        Divide        f         Plus
+       ┌────┴────┐            ┌────┴────┐
+   (double)  (double)     (double)  fconst_2
+   ┌───┴     ┌───┴            ┴
+   2         2            iconst_1
 
 Global:
 ──────────────────────────────
@@ -14,19 +14,19 @@ Global:
 ══════════════════════════════
 │iconst_1 │const integer = 32│
 ──────────────────────────────
-│fconst_1 │const float = 2   │
+│fconst_1 │const double = 2  │
 ──────────────────────────────
-│fconst_2 │const float = 21  │
+│fconst_2 │const double = 21 │
 ──────────────────────────────
 │i        │integer           │
 ──────────────────────────────
-│f        │float             │
+│f        │double            │
 ──────────────────────────────
 │integer  │Scalar type       │
 ──────────────────────────────
 │char     │Scalar type       │
 ──────────────────────────────
-│float    │Scalar type       │
+│double   │Scalar type       │
 ──────────────────────────────
 │boolean  │Scalar type       │
 ──────────────────────────────

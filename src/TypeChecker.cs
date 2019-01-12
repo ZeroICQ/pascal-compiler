@@ -142,7 +142,7 @@ public class TypeChecker {
                     
                     case Constants.Operators.Divide:
                         return realSourceType is SymScalar && !(realSourceType is SymChar || realSourceType is SymBool) && 
-                               TryCast(_stack.SymFloat, ref source, false) && TryCast(_stack.SymFloat, ref target);
+                               TryCast(_stack.SymDouble, ref source, false) && TryCast(_stack.SymDouble, ref target);
                     
                     case Constants.Operators.Less:
                     case Constants.Operators.LessOrEqual:
@@ -193,24 +193,24 @@ public class TypeChecker {
         
         switch (realTargetType) {
             // scalars
-            // float
-            case SymFloat _:
+            // double
+            case SymDouble _:
                 switch (realSourceType) {
                     case SymInt _:
                         var t = ExprNode.GetClosestToken(source);
                         if (!canModify) 
                             return true;
                         
-                        source = new CastNode(_stack.SymFloat, source);
-                        source.Type = _stack.SymFloat;
+                        source = new CastNode(_stack.SymDouble, source);
+                        source.Type = _stack.SymDouble;
                         return true;
 
-                    case SymFloat _:
+                    case SymDouble _:
                         return true;
                 }
 
                 break;
-            // end float
+            // end double
             // int
             case SymInt _:
                 switch (realSourceType) {

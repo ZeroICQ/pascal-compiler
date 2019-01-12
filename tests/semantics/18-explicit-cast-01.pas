@@ -1,6 +1,6 @@
 var 
     a : integer;
-    b : float; 
+    b : double; 
 begin
-    b := float(float(b));
+    b := double(double(b));
 end.     

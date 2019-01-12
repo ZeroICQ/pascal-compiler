@@ -1,5 +1,5 @@
 var
-    f : float;
+    f : double;
 begin
     f := 1.2 -+-+-+-+-+  2;
 end.

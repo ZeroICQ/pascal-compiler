@@ -1,4 +1,4 @@
-                                 Main Block
+﻿                                 Main Block
            ┌─────────────────────────┬┴─────────────────────────┐
          While                     While                      While
      ┌─────┴──────┐            ┌─────┴───────┐          ┌───────┴────┐
@@ -18,7 +18,7 @@ Global:
 ──────────────────────
 │char    │Scalar type│
 ──────────────────────
-│float   │Scalar type│
+│double  │Scalar type│
 ──────────────────────
 │boolean │Scalar type│
 ──────────────────────

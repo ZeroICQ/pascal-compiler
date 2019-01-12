@@ -58,10 +58,10 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         return true;
     }
 
-    public bool Visit(FloatNode node) {
+    public bool Visit(DoubleNode node) {
         if (node.Type != null) return true;
         
-        node.Type = _stack.SymFloat;
+        node.Type = _stack.SymDouble;
         return true;
     }
 
@@ -182,7 +182,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
         // constraints to not
         if (node.Operation is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Not) {
-            if (!(node.Expr.Type is SymScalar) || node.Expr.Type is SymFloat)
+            if (!(node.Expr.Type is SymScalar) || node.Expr.Type is SymDouble)
                 throw BuildException<OperatorNotOverloaded>(node.Expr.Type, node.Operation);
         }
         node.Type = node.Expr.Type;

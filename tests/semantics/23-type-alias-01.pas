@@ -2,8 +2,8 @@ type
     myint = type integer;
     yourint = type myint;
     
-    myfloat = type float;
-    yourfloat = type float;
+    mydouble = type double;
+    yourdouble = type double;
     
     mychar = type char;
     yourchar = type mychar;
@@ -13,9 +13,9 @@ var
     i1 : yourint;
     i2 : integer;
     
-    f0 : myfloat;
-    f1 : yourfloat;
-    f2 : float;
+    f0 : mydouble;
+    f1 : yourdouble;
+    f2 : double;
     
     c0 : mychar;
     c1 : yourchar;

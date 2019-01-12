@@ -907,7 +907,7 @@ public class Parser {
         return node;
     }
 
-    // (expr), float, Integer, Identifier
+    // (expr), Double, Integer, Identifier
     private ExprNode ParseFactor(bool isConst) {
         var t = _lexer.GetNextToken();
         
@@ -932,8 +932,8 @@ public class Parser {
                 }
                 break;
             
-            case FloatToken floatToken:
-                return new FloatNode(floatToken);
+            case DoubleToken doubleToken:
+                return new DoubleNode(doubleToken);
             case IntegerToken integerToken:
                 return new IntegerNode(integerToken);
             case StringToken stringToken:

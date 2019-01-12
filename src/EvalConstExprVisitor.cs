@@ -46,13 +46,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymFloatConst(Name, _symStack.SymFloat, (double) leftInt.Value / rightInt.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble, (double) leftInt.Value / rightInt.Value);
                 }
                 break;
-            case SymFloatConst leftFloat:
+            case SymDoubleConst leftDouble:
                 switch (right) {
-                    case SymFloatConst rightFloat:
-                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value / rightFloat.Value);
+                    case SymDoubleConst rightDouble:
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value / rightDouble.Value);
                 }
                 break;
         }
@@ -68,10 +68,10 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                         return new SymIntConst(Name, _symStack.SymInt, leftInt.Value * rightInt.Value);
                 }
                 break;
-            case SymFloatConst leftFloat:
+            case SymDoubleConst leftDouble:
                 switch (right) {
-                    case SymFloatConst rightFloat:
-                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value * rightFloat.Value);
+                    case SymDoubleConst rightDouble:
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value * rightDouble.Value);
                 }
                 break;
         }
@@ -87,10 +87,10 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                         return new SymIntConst(Name, _symStack.SymInt, leftInt.Value + rightInt.Value);
                 }
                 break;
-            case SymFloatConst leftFloat:
+            case SymDoubleConst leftDouble:
                 switch (right) {
-                    case SymFloatConst rightFloat:
-                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value + rightFloat.Value);
+                    case SymDoubleConst rightDouble:
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value + rightDouble.Value);
                 }
                 break;
         }
@@ -106,10 +106,10 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                         return new SymIntConst(Name, _symStack.SymInt, leftInt.Value - rightInt.Value);
                 }
                 break;
-            case SymFloatConst leftFloat:
+            case SymDoubleConst leftDouble:
                 switch (right) {
-                    case SymFloatConst rightFloat:
-                        return new SymFloatConst(Name, _symStack.SymFloat,leftFloat.Value - rightFloat.Value);
+                    case SymDoubleConst rightDouble:
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value - rightDouble.Value);
                 }
                 break;
         }
@@ -121,8 +121,8 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
         return new SymIntConst(Name, _symStack.SymInt, node.Token.Value);
     }
 
-    public SymConst Visit(FloatNode node) {
-        return new SymFloatConst(Name, _symStack.SymFloat, node.Token.Value);
+    public SymConst Visit(DoubleNode node) {
+        return new SymDoubleConst(Name, _symStack.SymDouble, node.Token.Value);
     }
 
     public SymConst Visit(CharNode node) {
@@ -140,13 +140,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
 
     public SymConst Visit(CastNode node) {
         var castingConst = node.Expr.Accept(this);
-        // Explicit casts are currently not allowed in const expr. The only available implicit cast is int -> float.
+        // Explicit casts are currently not allowed in const expr. The only available implicit cast is int -> double.
         switch (node.Type) {
-            case SymFloat s:
+            case SymDouble s:
                 switch (castingConst) {
                     case SymIntConst intConst:
-                        return new SymFloatConst(intConst.Name, _symStack.SymFloat, intConst.Value);
-                    case SymFloatConst floatConst:
+                        return new SymDoubleConst(intConst.Name, _symStack.SymDouble, intConst.Value);
+                    case SymDoubleConst doubleConst:
                         return castingConst;
                 }
                 break;
@@ -181,8 +181,8 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                             
                             case SymIntConst intConst:
                                 return new SymIntConst(intConst.Name, intConst.Type, -intConst.Value);
-                            case SymFloatConst floatConst:
-                                return new SymFloatConst(floatConst.Name, floatConst.Type, -floatConst.Value);
+                            case SymDoubleConst doubleConst:
+                                return new SymDoubleConst(doubleConst.Name, doubleConst.Type, -doubleConst.Value);
                         }
                         break;
                 }
