@@ -155,18 +155,48 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(BinaryExprNode node) {
-//        switch (node.Operation) {
-//            
-//            case OperatorToken op:
-//                switch (op.Value) {
-//                    case Constants.Operators.Assign:
-//                        Accept(node.Left, );
-//                }
-//                break;
-//            
-//        }
+        g.Comment($"binary operation for {node.Operation.StringValue} before eval operands");
 
-        return 0;
+        var lhsStackUsage = Accept(node.Left);
+        var rhsStackUsage = Accept(node.Right);
+        
+        g.Comment($"binary operation for {node.Operation.StringValue} after eval operands");
+        var stackUsage = 0;
+        
+        switch (node.Operation) {
+            
+            case OperatorToken op:
+                
+                switch (op.Value) {
+                    case Constants.Operators.Plus:
+
+                        switch (node.Type) {
+                            case SymInt _:
+                                g.G(Pop, Rbx());
+                                g.G(Add, Der(Rsp()), Rbx());
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    case Constants.Operators.Minus:
+                        
+                        switch (node.Type) {
+                            case SymInt _:
+                                g.G(Pop, Rbx());
+                                g.G(Sub, Der(Rsp()), Rbx());
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                        
+                }
+                break;
+            
+        }
+
+        return stackUsage;
     }
 
     public int Visit(IntegerNode node) {
@@ -386,7 +416,6 @@ public class AsmVisitor : IAstVisitor<int> {
 //        
 //        //lhs
 //        g.FreeStack(1);
-
         return 0;
     }
 
