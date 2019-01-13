@@ -232,6 +232,14 @@ public class AsmArg {
     public static AsmArg R8() {
         return new AsmArg("r8");
     }
+    
+    public static AsmArg Xmm0() {
+        return new AsmArg("xmm0");
+    }
+    
+    public static AsmArg Xmm1() {
+        return new AsmArg("xmm1");
+    }
 }
 
 //cmds
@@ -243,6 +251,9 @@ public enum DoubleArgCmd {
     Enter,
     Xor,
     Imul,
+    Movq,
+    Mulsd,
+    Divsd
 }
 
 

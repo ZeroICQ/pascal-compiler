@@ -202,8 +202,36 @@ public class AsmVisitor : IAstVisitor<int> {
                                 g.G(Push, Rax());
                                 stackUsage = 1;
                                 break;
+                            
+                            case SymDouble _:
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm1(), Rax());
+                                
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm0(), Rax());
+                                
+                                g.G(Mulsd, Xmm0(), Xmm1());
+                                
+                                g.G(Movq, Rax(), Xmm0());
+                                g.G(Push, Rax());
+                                stackUsage = 1;
+                                break;
                         }
+                        break;
+                    
+                    case Constants.Operators.Divide:
+                        Debug.Assert(node.Type is SymDouble);
+                        g.G(Pop, Rax());
+                        g.G(Movq, Xmm1(), Rax());
                         
+                        g.G(Pop, Rax());
+                        g.G(Movq, Xmm0(), Rax());
+                                
+                        g.G(Divsd, Xmm0(), Xmm1());
+                                
+                        g.G(Movq, Rax(), Xmm0());
+                        g.G(Push, Rax());
+                        stackUsage = 1;
                         break;
                 }
                 break;
