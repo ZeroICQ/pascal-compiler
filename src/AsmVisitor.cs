@@ -330,6 +330,21 @@ public class AsmVisitor : IAstVisitor<int> {
                         break;
                 }
                 break;
+            
+            case ReservedToken wrd:
+                switch (wrd.Value) {
+                    
+                    case Constants.Words.Not:
+                        Debug.Assert(node.Type is SymInt);
+                        
+                        switch (node.Type) {
+                            case SymInt _:
+                                g.G(Not, QWord(Der(Rsp())));
+                                return 1;
+                        }
+                        break;
+                }
+                break;
         }
         
         Debug.Assert(false);

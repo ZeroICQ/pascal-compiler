@@ -251,7 +251,8 @@ public enum SingleArgCmd {
     Call,
     Fild,
     Fst,
-    Neg
+    Neg,
+    Not
 }
 
 public enum NoArgCmd {

@@ -199,6 +199,19 @@ public class SemanticsVisitor : IAstVisitor<bool> {
                         return true;
                 }
                 break;
+            
+            case ReservedToken word:
+                switch (word.Value) {
+                    case Constants.Words.Not:
+                        
+                            switch (node.Type) {
+                                case SymInt _:
+                                    return true;
+                            }
+                            
+                        break;
+                }
+                break;
         }
         
         throw BuildException<OperatorNotOverloaded>(node.Expr.Type, node.Operation);
