@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Text;
-using CommandLineParser.Arguments;
 using static Compiler.AsmArg;
 using static Compiler.DoubleArgCmd;
 using static Compiler.SingleArgCmd;
@@ -98,22 +95,26 @@ public class AsmVisitor : IAstVisitor<int> {
                 //main switch start
                                         
                     case SymVar symVar:
+                        g.Comment($"global var {symVar.Name} of type {symVar.Type.Name}");
                         
                         switch (symVar.Type) {
                             case SymInt symInt:
                                 var initIntVal = ((SymIntConst) symVar.InitialValue)?.Value ?? 0;
-                                _out.WriteLine($"{symVar.Name}: dq {initIntVal.ToString()}");
+                                g.DeclareVariable(symVar.Name, initIntVal);
                                 break;
                             
                             case SymDouble symInt:
-                                var initDoubleVal = (((SymDoubleConst) symVar.InitialValue)?.Value ?? 0).ToString(CultureInfo.InvariantCulture);
-                                var dot = initDoubleVal.Contains('.') ? "" : ".";
-                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal}{dot}");
+                                var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
+                                g.DeclareVariable(symVar.Name, initDoubleVal);
                                 break;
                             
                             case SymChar symChar:
                                 var initCharVal = ((SymCharConst) symVar.InitialValue)?.Value ?? 0;
-                                _out.WriteLine($"{symVar.Name}: db {initCharVal.ToString()}");
+                                g.DeclareVariable(symVar.Name, initCharVal);
+                                break;
+                            
+                            case SymArray symArr:
+                                g.DeclareVariable(symVar.Name, symArr);
                                 break;
                         }
                         
@@ -488,6 +489,10 @@ public class AsmVisitor : IAstVisitor<int> {
 //                                        Push($"qword [{symVar.Name}]");
                                         stackUse = 1;
                                         break;
+                                    
+//                                    case SymArray arr:
+//                                        
+//                                        break;
                                 }
                                 
                                 break;
@@ -581,8 +586,68 @@ public class AsmVisitor : IAstVisitor<int> {
         throw new System.NotImplementedException();
     }
 
-    public int Visit(IndexNode node) { 
-        throw new System.NotImplementedException();
+    public int Visit(IndexNode node) {
+        g.Comment($"access array islval: {IsLval.ToString()}");
+        var isLval = IsLval;
+        var stackUsage = Accept(node.IndexExpr);
+        Debug.Assert(stackUsage == 1);
+        
+        stackUsage += Accept(node.Operand, true);
+        Debug.Assert(stackUsage == 2);
+        g.G(Pop, Rax());
+        g.G(Pop, Rdx());
+        continue froom here
+        var
+        i: array[1..3] of array[2..3] of integer;
+        begin
+        i[2][2] := 228;
+        writeln(i[2][2]);
+        end.
+            
+        g.G(Imul, Rdx(), node.Operand.Type.BSize);
+        g.G(Add, Rax(), Rdx());
+        g.G(Push, Rax());
+        stackUsage = 1;
+        if (isLval)             
+            return stackUsage;
+
+        //addr
+        g.G(Pop, Rax());
+        stackUsage = 0;
+        // if rval
+        g.G(Mov, Rcx(), node.Type.BSize / 8);
+        g.G(Add, Rax(), Rcx());
+
+        var loop = g.GetUniqueLabel();
+        g.Label(loop);
+        
+        g.G(Push, QWord(Der(Rax())));
+        stackUsage += 1;
+        g.G(Dec, Rax());
+        
+        g.G(SingleArgCmd.Loop, loop);
+        return stackUsage;
+
+//        Comment($"assign");
+//        //keep in r9 dst pointer        
+//        Mov("r9", "rsp");
+//        Add("r9", (8*rhsStackUse).ToString());
+//        Mov("r9", "[r9]");
+//        
+//        //rcx - counter
+//        Xor("rcx", "rcx");
+//        // loop
+//        var label = WriteGetUniqueLabel();
+//        Pop("qword [r9]");
+//        Add("r9", "8");
+//        
+//        Inc("rcx");
+//        Cmp("rcx", rhsStackUse.ToString());
+//        Jl(label);
+//        
+//        //lhs
+//        g.FreeStack(1);
+
     }
 
     public int Visit(StringNode node) {

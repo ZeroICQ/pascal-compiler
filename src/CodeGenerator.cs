@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Compiler {
@@ -130,10 +132,26 @@ public class CodeGenerator {
 
         return stackUsage;
     }
-
+    //strings
     public void DeclareVariable(string name, string val) {
         _out.WriteLine($"{name}: db \"{val}\", 0");
     }
+    //scalars
+    public void DeclareVariable(string name, long initVal) {
+        _out.WriteLine($"{name}: dq {initVal.ToString()}");
+    }
+    
+    public void DeclareVariable(string name, double initVal) {
+        var initDoubleVal = initVal.ToString(CultureInfo.InvariantCulture);
+        var dot = initDoubleVal.Contains('.') ? "" : ".";
+        _out.WriteLine($"{name}: dq {initDoubleVal}{dot}");
+    }
+    
+    //arrays
+    public void DeclareVariable(string name, SymArray symArray) {
+        _out.WriteLine($"{name}: times {(symArray.BSize / 8).ToString()} db 0");
+    }
+
 
     public void AllocateStack(int qwords) {
         G(Sub, Rsp(), qwords * 8);
@@ -319,7 +337,7 @@ public enum DoubleArgCmd {
     Cmpeqsd,
     And,
     Subsd,
-    Addsd
+    Addsd,
 }
 
 
@@ -341,7 +359,8 @@ public enum SingleArgCmd {
     Jg,
     Je,
     Inc,
-    Dec
+    Dec,
+    Loop
 }
 
 public enum NoArgCmd {

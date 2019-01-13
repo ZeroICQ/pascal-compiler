@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -240,6 +241,8 @@ public abstract class Symbol {
 
 // types
 public abstract class SymType : Symbol {
+    //in bits
+    public abstract ulong BSize { get; }
 }
 
 // should be only used for parameters
@@ -248,7 +251,9 @@ public class ArrayOfConst : SymType {
     
     private ArrayOfConst() {}
     private static ArrayOfConst _instance;
-    
+    //should not be used
+    public override ulong BSize => throw new NotImplementedException();
+
     public static ArrayOfConst Instance => _instance ?? (_instance = new ArrayOfConst());
 
     public override void Accept(ISymVisitor visitor) {
@@ -262,6 +267,7 @@ public abstract class SymScalar : SymType {
 
 public class SymInt : SymScalar {
     public override string Name => "integer";
+    public override ulong BSize => 64;
 
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -271,6 +277,8 @@ public class SymInt : SymScalar {
 public class SymDouble : SymScalar {
     public override string Name => "double";
 
+    public override ulong BSize => 64;
+    
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
@@ -278,7 +286,7 @@ public class SymDouble : SymScalar {
 
 public class SymChar : SymScalar {
     public override string Name => "char";
-    
+    public override ulong BSize => 8;
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
@@ -286,6 +294,7 @@ public class SymChar : SymScalar {
 
 public class SymVoid : SymType {
     public override string Name => "void";
+    public override ulong BSize => 0;
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
@@ -293,6 +302,7 @@ public class SymVoid : SymType {
 
 public class SymString : SymType {
     public override string Name => "string";
+    public override ulong BSize => throw new NotImplementedException();
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -301,6 +311,7 @@ public class SymString : SymType {
 
 public class SymBool : SymScalar {
     public override string Name => "boolean";
+    public override ulong BSize => throw new NotImplementedException();
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
@@ -416,6 +427,10 @@ public class SymArray : SymType {
     public SymIntConst MinIndex { get; }
     public SymIntConst MaxIndex { get; }
     public SymType Type { get; }
+    
+    public long Size => MaxIndex.Value - MinIndex.Value + 1;
+    public override ulong BSize { get; }
+    
 
     public override string Name => $"array[{MinIndex.Value}..{MaxIndex.Value}] of {Type.Name}";
 
@@ -423,6 +438,7 @@ public class SymArray : SymType {
         MinIndex = minIndex;
         MaxIndex = maxIndex;
         Type = type;
+        BSize = (ulong)Size * Type.BSize;
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -434,10 +450,16 @@ public class SymArray : SymType {
 public class SymRecord : SymType {
     public override string Name { get; }
     public SymTable Fields { get; }
+    public override ulong BSize { get; }
 
     public SymRecord(string name, SymTable fields) {
         Name = name;
         Fields = fields;
+
+        foreach (var field in Fields) {
+            if (field is SymVar symVar)
+                BSize += symVar.Type.BSize;
+        }
     }
     
     public override void Accept(ISymVisitor visitor) {
@@ -447,6 +469,7 @@ public class SymRecord : SymType {
 
 public class SymFunc : SymType {
     public override string Name { get; }
+    public override ulong BSize => throw new NotImplementedException();
     
     public List<SymVar> Parameters { get; }
     public SymTable LocalVariables { get; }
@@ -541,7 +564,8 @@ public class BoolWriteSymFunc : PredefinedSymFunc {
 public class SymAlias : SymType {
     public override string Name { get; }
     public SymType Type { get; }
-
+    public override ulong BSize => throw new NotImplementedException();
+    
     public SymAlias(string name, SymType type) {
         Name = name;
         Type = type;
@@ -555,7 +579,8 @@ public class SymAlias : SymType {
 public class SymTypeAlias : SymType {
     public override string Name { get; }
     public SymType Type { get; }
-
+    public override ulong BSize => throw new NotImplementedException();
+    
     public SymTypeAlias(string name, SymType type) {
         Name = name;
         Type = type;
