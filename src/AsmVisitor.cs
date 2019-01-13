@@ -3,12 +3,25 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
+using CommandLineParser.Arguments;
 using static Compiler.AsmArg;
 using static Compiler.DoubleArgCmd;
 using static Compiler.SingleArgCmd;
 using static Compiler.NoArgCmd;
 
 namespace Compiler {
+
+class Loop {
+    public string Advance { get; }
+    public string AfterEnd { get; }
+
+    public Loop(string advance, string afterEnd) {
+        Advance = advance;
+        AfterEnd = afterEnd;
+    }
+}
+
 //return stack usage in qwords
 public class AsmVisitor : IAstVisitor<int> {
     private readonly TextWriter _out;
@@ -16,8 +29,8 @@ public class AsmVisitor : IAstVisitor<int> {
     private readonly SymStack _symStack;
     private CodeGenerator g;
     
-    private Stack<bool> _isLval = new Stack<bool>();
-    private bool IsLval => _isLval.Peek();
+    private Stack<Loop> _loopStack = new Stack<Loop>();
+    private bool IsLval { get; set; }
 
     private readonly string _txtLabelFalse = $"{SymStack.InternalPrefix}FALSE"; 
     private readonly string _txtLabelTrue = $"{SymStack.InternalPrefix}TRUE"; 
@@ -36,9 +49,8 @@ public class AsmVisitor : IAstVisitor<int> {
     // all recursive callings should be called via this helper in order to save state
     // Accept can modify any register freely
     private int Accept(AstNode node, bool isLval = false) {
-        _isLval.Push(isLval);
+        IsLval = isLval;
         var r = node.Accept(this);
-        _isLval.Pop();
         return r;
     }
 
@@ -204,6 +216,20 @@ public class AsmVisitor : IAstVisitor<int> {
                                 g.G(Add, Der(Rsp()), Rbx());
                                 stackUsage = 1;
                                 break;
+                            
+                            case SymDouble _:
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm1(), Rax());
+                        
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm0(), Rax());
+                                
+                                g.G(Addsd, Xmm0(), Xmm1());
+                                
+                                g.G(Movq, Rax(), Xmm0());
+                                g.G(Push, Rax());
+                                stackUsage = 1;
+                                break;
                         }
                         
                         break;
@@ -213,6 +239,20 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymInt _:
                                 g.G(Pop, Rbx());
                                 g.G(Sub, Der(Rsp()), Rbx());
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm1(), Rax());
+                        
+                                g.G(Pop, Rax());
+                                g.G(Movq, Xmm0(), Rax());
+                                
+                                g.G(Subsd, Xmm0(), Xmm1());
+                                
+                                g.G(Movq, Rax(), Xmm0());
+                                g.G(Push, Rax());
                                 stackUsage = 1;
                                 break;
                         }
@@ -503,13 +543,37 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(CastNode node) {
-        // only int->double cast is allowed now
+        // only
+        // int->double
+        // int->boolean
+        // cast are allowed now
         var stackUse = Accept(node.Expr);
         Debug.Assert(stackUse == 1);
-        g.G(Finit);
-        g.G(Fild, QWord(Der(Rsp())));
-        g.G(Fst, QWord(Der(Rsp())));
+        g.Comment($"casting {node.Expr.Type.Name} to {node.CastTo.Name}");
         
+        switch (node.CastTo) {
+            case SymDouble _:
+                g.G(Finit);
+                g.G(Fild, QWord(Der(Rsp())));
+                g.G(Fst, QWord(Der(Rsp())));
+                return 1;
+            case SymBool _:
+                var notZeroLabel = g.GetUniqueLabel();
+                var exitLabel = g.GetUniqueLabel();
+                
+                g.G(Cmp, QWord(Der(Rsp())), 0);
+                g.G(Jne, notZeroLabel);
+                g.G(Mov, QWord(Der(Rsp())), 0);
+                g.G(Jmp, exitLabel);
+                
+                g.Label(notZeroLabel);
+                g.G(Mov, QWord(Der(Rsp())), 1);
+                
+                g.Label(exitLabel);
+                return 1;
+        }
+        
+        Debug.Assert(false);
         return stackUse;
     }
 
@@ -572,6 +636,33 @@ public class AsmVisitor : IAstVisitor<int> {
     public int Visit(AssignNode node) {
         g.Comment("assignment. evaluating lhs");
         var lhsStackUse = Accept(node.Left, true);
+        
+        switch (node.Operation.Value) {
+            case Constants.Operators.PlusAssign:
+                var fakePlus = new BinaryExprNode(node.Left, node.Right, new OperatorToken("+", Constants.Operators.Plus, 0, 0));
+                fakePlus.Type = node.Right.Type;
+                node.Right = fakePlus;
+                break;
+            
+            case Constants.Operators.MinusAssign:
+                var fakeMinus = new BinaryExprNode(node.Left, node.Right, new OperatorToken("-", Constants.Operators.Minus, 0, 0));
+                fakeMinus.Type = node.Right.Type;
+                node.Right = fakeMinus;
+                break;
+            
+            case Constants.Operators.DivideAssign:
+                var fakeDivide = new BinaryExprNode(node.Left, node.Right, new OperatorToken("/", Constants.Operators.Divide, 0, 0));
+                fakeDivide.Type = node.Right.Type;
+                node.Right = fakeDivide;
+                break;
+            
+            case Constants.Operators.MultiplyAssign:
+                var fakeMul= new BinaryExprNode(node.Left, node.Right, new OperatorToken("*", Constants.Operators.Multiply, 0, 0));
+                fakeMul.Type = node.Right.Type;
+                node.Right = fakeMul;
+                break;
+
+        }
         
         g.Comment("assignment. evaluating rhs");
         var rhsStackUse = Accept(node.Right);
@@ -657,25 +748,89 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(ForNode node) {
-        throw new NotImplementedException();
-        var initSu = Accept(node.Initial);
-        Debug.Assert(initSu == 0);
+        g.Comment("for node");
+        // stack invariant layout
+        // [final value]
+        // [var address]
+
+        g.Comment("for node before final value eval");
+        var stackUsage = Accept(node.Final);
+        Debug.Assert(stackUsage == 1);
+        
+        g.Comment("for node before var eval");
+        stackUsage += Accept(node.Initial.Left, true);
+        Debug.Assert(stackUsage == 2);
+
+        g.Comment("for node before initial value eval");
+        stackUsage += Accept(node.Initial.Right);
+        Debug.Assert(stackUsage == 3);
+        // stack state
+        //[final value]
+        //[variable address]
+        //[initial value]
+        g.G(Pop, Rbx());
+        g.G(Mov, Rax(), Der(Rsp()));
+        g.G(Mov, Der(Rax()), Rbx());
+         
+        // stack state
+        //[final value]
+        //[variable address]
+        stackUsage = 2;
+        
+        var conditionLabel = g.GetUniqueLabel();
+        var advanceLabel = g.GetUniqueLabel();
+        var exitLabel = g.GetUniqueLabel();
+        
+        _loopStack.Push(new Loop(advanceLabel, exitLabel));
+        
         //compare
+        g.Label(conditionLabel);
+        //load addr
+        g.G(Mov, Rcx(), Der(Rsp()));
+        // load value
+        g.G(Mov, Rdx(), Der(Rsp()+8));
         
+        g.G(Cmp, Der(Rcx()), Rdx());
+        g.G(node.Direction == ForNode.DirectionType.To ? Jg : Jl, exitLabel);
         //body
+        //save important registers. x64 has no pusha/popa 64 command
         
-        //label_to:continue
-        //increase counter
-        //jmp compare
+        stackUsage += Accept(node.Body);
+        Debug.Assert(stackUsage == 2);
         
-        //label_to:end
+        g.Label(advanceLabel);
+        //advance counter and save
+        g.G(Mov, Rax(), Der(Rsp()));
+        g.G(Mov, Rcx(), Der(Rax()));
+        
+        g.G(node.Direction == ForNode.DirectionType.To ? Inc : Dec, Rcx());
+        g.G(Mov, Der(Rax()), Rcx());
+        g.G(Jmp, conditionLabel);
+
+        g.Label(exitLabel);
+        g.FreeStack(2);
+        
+        _loopStack.Pop();
+        return 0;
     }
 
     public int Visit(ControlSequence node) {
-        throw new System.NotImplementedException();
+        Debug.Assert(_loopStack.Count != 0);
+        switch (node.ControlWord.Value) {
+            case Constants.Words.Break:
+                g.G(Jmp, _loopStack.Peek().AfterEnd);
+                return 0;
+            case Constants.Words.Continue:
+                g.G(Jmp, _loopStack.Peek().Advance);
+                return 0;
+        }
+        
+        Debug.Assert(false);
+        return 0;
     }
 
     public int Visit(EmptyStatementNode node) {
+        g.G(Nop);
         return 0;
     }
 

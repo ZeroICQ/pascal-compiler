@@ -186,7 +186,7 @@ public class TypeChecker {
         return TryCast(targetType, ref source, false);
     }
 
-    // try cast target to source
+    // try cast source to target
     public bool TryCast(SymType targetType, ref ExprNode source, bool canModify = true) {
         var realSourceType = source.Type is SymTypeAlias sourceTypeAlias ? sourceTypeAlias.Type : source.Type;
         var realTargetType = targetType is SymTypeAlias targetTypeAlias ? targetTypeAlias.Type : targetType;
@@ -233,6 +233,12 @@ public class TypeChecker {
             case SymBool _ :
                 switch (realSourceType) {
                     case SymBool _ :
+                    case SymInt _:
+                        if (!canModify)
+                            return true;
+                        
+                        source = new CastNode(_stack.SymBool, source);
+                        source.Type = _stack.SymBool;
                         return true;
                 }
                 

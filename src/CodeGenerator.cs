@@ -287,6 +287,10 @@ public class AsmArg {
         return new AsmArg("r8");
     }
     
+    public static AsmArg R9() {
+            return new AsmArg("r9");
+        }
+    
     public static AsmArg Xmm0() {
         return new AsmArg("xmm0");
     }
@@ -313,7 +317,9 @@ public enum DoubleArgCmd {
     Cmplesd,
     Cmpneqsd,
     Cmpeqsd,
-    And
+    And,
+    Subsd,
+    Addsd
 }
 
 
@@ -333,7 +339,9 @@ public enum SingleArgCmd {
     Jle,
     Jl,
     Jg,
-    Je
+    Je,
+    Inc,
+    Dec
 }
 
 public enum NoArgCmd {
@@ -341,7 +349,7 @@ public enum NoArgCmd {
     Ret,
     Finit,
     Cqo,
-    Nop
+    Nop,
 }
 
 public enum DataTypes {
