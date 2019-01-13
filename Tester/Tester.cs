@@ -345,7 +345,7 @@ class Tester {
             
             //facompatibility
             var fpcCompiledExePath = $"{tmpDirPath}/{Path.GetFileName(testName)}FPC.exe";
-            fpcPr.StartInfo.Arguments = $"-Fa{compatibilityUnitName} -Fu{testDir}/{path} -FE{tmpDirPath} -o{Path.GetFileName(testName)}FPC.exe {testSourcePath}";
+            fpcPr.StartInfo.Arguments = $"-CF64 -Fa{compatibilityUnitName} -Fu{testDir}/{path} -FE{tmpDirPath} -o{Path.GetFileName(testName)}FPC.exe {testSourcePath}";
             
             fpcPr.StartInfo.UseShellExecute = false;
             fpcPr.StartInfo.RedirectStandardOutput = true;
@@ -355,14 +355,10 @@ class Tester {
             fpcPr.Start();
             fpcPr.WaitForExit();
             
-            
-            var fpcOutput = fpcPr.StandardOutput.ReadToEnd();
-            if (fpcOutput.Length != 0) {
-                Console.WriteLine("fpc output:");
-                Console.Write(fpcOutput);
-            }
-
             if (fpcPr.ExitCode != 0) {
+                Console.WriteLine("fpc output:");
+                Console.Write(fpcPr.StandardOutput.ReadToEnd());
+                
                 Console.WriteLine("fpc error:");
                 Console.Write(fpcPr.StandardError.ReadToEnd());
                 return;
