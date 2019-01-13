@@ -222,7 +222,7 @@ public class AsmVisitor : IAstVisitor<int> {
                                 
                                 switch (realType) {
                                     case SymScalar scalar:
-                                        g.G(Push, $"qword [{symVar.Name}]");
+                                        g.G(Push, QWord(Der(symVar.Name)));
 //                                        Push($"qword [{symVar.Name}]");
                                         stackUse = 1;
                                         break;
@@ -244,22 +244,25 @@ public class AsmVisitor : IAstVisitor<int> {
                 
                 break;
             
-//            case SymConst symConst:
-//                Debug.Assert(!IsLval);
-//                stackUse = 1;
-//                switch (symConst) {
-//                    case SymIntConst intConst: 
+            case SymConst symConst:
+                Debug.Assert(!IsLval);
+                stackUse = 1;
+                switch (symConst) {
+                    case SymIntConst intConst:
+                        g.PushImm64(intConst.Value);
 //                        Push(intConst.Value.ToString());
-//                        break;
-//                    case SymDoubleConst doubleConst:
+                        break;
+                    case SymDoubleConst doubleConst:
+                        g.PushImm64(doubleConst.Value);
 //                        Push(doubleConst.Value.ToString(CultureInfo.InvariantCulture));
-//                        break;
-//                    case SymCharConst charConst:
+                        break;
+                    case SymCharConst charConst:
+                        g.PushImm64(charConst.Value);
 //                        Push(charConst.Value.ToString());
-//                        break;
-//                }
-//                
-//                break;
+                        break;
+                }
+                
+                break;
         }
 
         return stackUse;
@@ -420,65 +423,11 @@ public class AsmVisitor : IAstVisitor<int> {
         return 0;
     }
 
-//    private int AllocateStack(int qwords) {
-//        _out.WriteLine($"sub rsp, {(8*qwords).ToString()}");
-//        return qwords;
-//    }
-
-    // nasm cannot work with imm64 directly, only via register
-//    private void PushImm64(string imm64) {
-//        AllocateStack(2);
-//        g.G(Mov, Addr(Rsp()), Rbx());
-//        g.G(Mov, Rbx(), imm64);
-////        Mov("[rsp]", "rbx");
-////        Mov("rbx", imm64);
-////        Mov("[rsp+8]", "rbx");
-////        Pop("rbx");
-//    }
-
     private string WriteGetUniqueLabel() {
         var label = $"meh_{(_labelCounter++).ToString()}";
         _out.Write($"{label}:");
         return label;
     }
-    
-    // helpers
-
-//    private void Sub(string lhs, string rhs) {
-//        _out.WriteLine($"sub {lhs}, {rhs}");        
-//    }
-//    
-//    private void Add(string lhs, string rhs) {
-//        _out.WriteLine($"add {lhs}, {rhs}");        
-//    }
-//
-//    private void Xor(string lhs, string rhs) {
-//        _out.WriteLine($"xor {lhs}, {rhs}");
-//    }
-//    
-//    private void Inc(string arg) {
-//        _out.WriteLine($"inc {arg}");
-//    }
-//
-//    private void Cmp(string lhs, string rhs) {
-//        _out.WriteLine($"cmp {lhs}, {rhs}");
-//    }
-//    
-//    private void Jl(string label) {
-//        _out.WriteLine($"jl {label}");
-//    }
-//
-//    private void Finit() {
-//        _out.WriteLine("finit");
-//    }
-//
-//    private void Fild(string arg) {
-//        _out.WriteLine($"fild {arg}");
-//    }
-//    
-//    private void Fst(string arg) {
-//        _out.WriteLine($"fst {arg}");
-//    }
     
 }
 }

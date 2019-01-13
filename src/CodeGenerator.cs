@@ -185,8 +185,16 @@ public class AsmArg {
         return new AsmArg($"[{arg.Val}]");
     }
     
+    public static AsmArg Der(string arg) {
+        return new AsmArg($"[{arg}]");
+    }
+    
     public static AsmArg QWord(AsmArg arg) {
         return new AsmArg($"qword {arg.Val}");
+    }
+
+    public static AsmArg QWord(string arg) {
+        return new AsmArg($"qword {arg}");
     }
 
     public static AsmArg operator +(AsmArg lhs, int rhs) {
