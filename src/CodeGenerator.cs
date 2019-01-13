@@ -240,7 +240,8 @@ public enum DoubleArgCmd {
     Sub,
     Add,
     Lea,
-    Enter
+    Enter,
+    Xor
 }
 
 
@@ -250,6 +251,7 @@ public enum SingleArgCmd {
     Call,
     Fild,
     Fst,
+    Neg
 }
 
 public enum NoArgCmd {

@@ -231,8 +231,8 @@ class Tester {
         var testFiles = Directory.GetFiles($"{testDir}/{path}/").Reverse();
         var tmpDirPath = $"{testDir}/{path}/tmp";
         
-        var fpcPath = @"C:\Users\Alexey\dev\toolchains\lazarus\fpc\3.0.4\bin\x86_64-win64";
-        var compatibilityUnitName = "compatibility";
+        const string fpcPath = @"C:\Users\Alexey\dev\toolchains\lazarus\fpc\3.0.4\bin\x86_64-win64";
+        const string compatibilityUnitName = "compatibility";
         
         //clean tmp dir
         if (Directory.Exists(tmpDirPath)) {
@@ -251,19 +251,19 @@ class Tester {
         }
 
         foreach (var testSourcePath in testFiles) {
-            if (!testSourcePath.EndsWith(".pas"))
+            if (!testSourcePath.EndsWith(".pas") || testSourcePath.EndsWith(compatibilityUnitName+".pas"))
                 continue;
 
             var testName = Path.GetFileNameWithoutExtension(testSourcePath);
             var testAnswerPath = $"{testDir}/{path}/{testName}.test";
             var compilerPr = RunCompiler(compilerPath, $"-a -i {testSourcePath}");
 
-            var testOutFilePath = $"{testDir}/{path}/{testName}.out";
+//            var testOutFilePath = $"{testDir}/{path}/{testName}.out";
+//            
+//            var needCompile = File.Exists(testOutFilePath);
             
-            var needCompile = File.Exists(testOutFilePath);
-            
-            if (!needCompile)
-                continue;
+//            if (!needCompile)
+//                continue;
 
             var tmpAsmFilePath = $"{tmpDirPath}/{Path.GetFileName(testName)}.s";
 

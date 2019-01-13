@@ -182,11 +182,26 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
         // constraints to not
         if (node.Operation is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Not) {
-            if (!(node.Expr.Type is SymScalar) || node.Expr.Type is SymDouble)
+            if (!(node.Expr.Type is SymInt || node.Expr.Type is SymBool || node.Expr.Type is SymChar))
                 throw BuildException<OperatorNotOverloaded>(node.Expr.Type, node.Operation);
+            
+            node.Type = node.Expr.Type;
+            return true;
         }
+
         node.Type = node.Expr.Type;
-        return true;
+        
+        switch (node.Operation) {
+            case OperatorToken op:
+                switch (node.Expr.Type) {
+                    case SymInt _:
+                    case SymDouble _:
+                        return true;
+                }
+                break;
+        }
+        
+        throw BuildException<OperatorNotOverloaded>(node.Expr.Type, node.Operation);
     }
 
     public bool Visit(AssignNode node) {

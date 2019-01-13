@@ -84,11 +84,12 @@ public class AsmVisitor : IAstVisitor<int> {
                                 break;
                             
                             case SymDouble symInt:
-                                var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
-                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal.ToString(CultureInfo.InvariantCulture)}");
+                                var initDoubleVal = (((SymDoubleConst) symVar.InitialValue)?.Value ?? 0).ToString(CultureInfo.InvariantCulture);
+                                var dot = initDoubleVal.Contains('.') ? "" : ".";
+                                _out.WriteLine($"{symVar.Name}: dq {initDoubleVal}{dot}");
                                 break;
                             
-                            case SymChar symInt:
+                            case SymChar symChar:
                                 var initCharVal = ((SymCharConst) symVar.InitialValue)?.Value ?? 0;
                                 _out.WriteLine($"{symVar.Name}: db {initCharVal.ToString()}");
                                 break;
@@ -116,11 +117,11 @@ public class AsmVisitor : IAstVisitor<int> {
                         break;
                     
                     case IntWriteSymFunc intWrite:
-                        CallPrintfDecorator("%i", intWrite.Name);
+                        CallPrintfDecorator("%lli", intWrite.Name);
                         break;
                     
                     case DoubleWriteSymFunc doubleWrite:
-                        CallPrintfDecorator("% .16E", doubleWrite.Name);
+                        CallPrintfDecorator("% .16LE", doubleWrite.Name);
                         break;
                     
                     case CharWriteSymFunc charWrite:
@@ -307,7 +308,32 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(UnaryOperationNode node) {
-        throw new System.NotImplementedException();
+        g.Comment($"unary operation before arg process {node.Operation.StringValue}");
+        Accept(node.Expr);
+        g.Comment($"unary operation after arg process {node.Operation.StringValue}");            
+        switch (node.Operation) {
+            
+            case OperatorToken opT:
+                switch (opT.Value) {
+                    
+                    case Constants.Operators.Minus:
+
+                        switch (node.Type) {
+                            case SymInt _:
+                                g.G(Neg, QWord(Der(Rsp())));
+                                return 1;
+                            case SymDouble _:
+                                g.G(Mov, Rcx(), 0x8000000000000000);
+                                g.G(Xor, Der(Rsp()), Rcx());
+                                return 1;
+                        }
+                        break;
+                }
+                break;
+        }
+        
+        Debug.Assert(false);
+        return 0;
     }
 
     public int Visit(AssignNode node) {
