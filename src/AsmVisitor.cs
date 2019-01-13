@@ -190,10 +190,57 @@ public class AsmVisitor : IAstVisitor<int> {
                         }
                         
                         break;
+                    
+                    case Constants.Operators.Multiply:
                         
+                        switch (node.Type) {
+                            case SymInt _:
+                                g.G(Pop, Rbx());
+                                g.G(Pop, Rax());
+                                g.G(Cqo);
+                                g.G(Imul, Rax(), Rbx());
+                                g.G(Push, Rax());
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
                 }
                 break;
             
+            case ReservedToken word:
+
+                switch (word.Value) {
+                    case Constants.Words.Div:
+                        Debug.Assert(node.Left.Type is SymInt);
+                        Debug.Assert(node.Right.Type is SymInt);
+                        
+                        g.G(Xor, Rdx(), Rdx());
+                        
+                        g.G(Pop, Rbx());
+                        g.G(Pop, Rax());
+                        g.G(Cqo);
+                        g.G(Idiv, Rbx());
+                        g.G(Push, Rax());
+                        stackUsage = 1;
+                        break;
+                    
+                    case Constants.Words.Mod:
+                        Debug.Assert(node.Left.Type is SymInt);
+                        Debug.Assert(node.Right.Type is SymInt);
+                        
+                        g.G(Xor, Rdx(), Rdx());
+                        
+                        g.G(Pop, Rbx());
+                        g.G(Pop, Rax());
+                        g.G(Cqo);
+                        g.G(Idiv, Rbx());
+                        g.G(Push, Rdx());
+                        stackUsage = 1;
+                        break;
+                }
+                
+                break;    
         }
 
         return stackUsage;

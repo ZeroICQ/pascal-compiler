@@ -43,6 +43,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
                     case Constants.Operators.NotEqual:
                         node.Type = _stack.SymBool;
                         return true;
+//                    case Constants.Operators.Divide:
                 }
                 break;
         }

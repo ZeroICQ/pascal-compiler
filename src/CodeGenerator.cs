@@ -241,7 +241,8 @@ public enum DoubleArgCmd {
     Add,
     Lea,
     Enter,
-    Xor
+    Xor,
+    Imul,
 }
 
 
@@ -252,13 +253,15 @@ public enum SingleArgCmd {
     Fild,
     Fst,
     Neg,
-    Not
+    Not,
+    Idiv
 }
 
 public enum NoArgCmd {
     Leave,
     Ret,
-    Finit
+    Finit,
+    Cqo
 }
 
 }
