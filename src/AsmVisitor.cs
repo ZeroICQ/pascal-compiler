@@ -277,7 +277,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                     case Constants.Operators.More:
@@ -292,7 +291,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                     case Constants.Operators.LessOrEqual:
@@ -307,7 +305,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                     case Constants.Operators.MoreOreEqual:
@@ -322,7 +319,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                     case Constants.Operators.NotEqual:
@@ -337,7 +333,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                     case Constants.Operators.Equal:
@@ -352,11 +347,9 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUsage = 1;
                                 break;
                         }
-                        
                         break;
                     
                 }
-                
                 break;
             
             case ReservedToken word:
@@ -619,7 +612,40 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(IfNode node) {
-        throw new System.NotImplementedException();
+        g.Comment($"if node start");
+        var stackUsage = 0;
+        g.Comment($"if node condition");
+        stackUsage += Accept(node.Condition);
+        Debug.Assert(stackUsage == 1);
+        
+        var exitLabel = g.GetUniqueLabel();
+        var falseBranchLabel = g.GetUniqueLabel();
+        g.G(Pop, Rax());
+        stackUsage -= 1;
+        g.G(Cmp, Rax(), 1);
+        
+        g.G(Jne, falseBranchLabel);
+        
+        //true
+        if (node.TrueBranch != null) {
+            g.Comment($"true branch");
+            stackUsage += Accept(node.TrueBranch);
+        }
+        g.G(Jmp, exitLabel);
+        
+        //false
+        g.Label(falseBranchLabel);
+        g.G(Nop);
+
+        if (node.FalseBranch != null) {
+            g.Comment($"false branch");
+            stackUsage += Accept(node.FalseBranch);
+        } 
+        
+        g.Label(exitLabel);
+        
+        Debug.Assert(stackUsage == 0);
+        return stackUsage;
     }
 
     public int Visit(WhileNode node) {

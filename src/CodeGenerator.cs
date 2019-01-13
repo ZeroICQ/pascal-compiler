@@ -340,7 +340,8 @@ public enum NoArgCmd {
     Leave,
     Ret,
     Finit,
-    Cqo
+    Cqo,
+    Nop
 }
 
 public enum DataTypes {
