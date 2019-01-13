@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-
-using static Compiler.CodeGenerator;
 using static Compiler.AsmArg;
 using static Compiler.DoubleArgCmd;
 using static Compiler.SingleArgCmd;
@@ -19,11 +14,16 @@ public class AsmVisitor : IAstVisitor<int> {
     private readonly TextWriter _out;
     private readonly AstNode _astRoot;
     private readonly SymStack _symStack;
-    private ulong _labelCounter;
     private CodeGenerator g;
     
     private Stack<bool> _isLval = new Stack<bool>();
     private bool IsLval => _isLval.Peek();
+
+    private readonly string _txtLabelFalse = $"{SymStack.InternalPrefix}FALSE"; 
+    private readonly string _txtLabelTrue = $"{SymStack.InternalPrefix}TRUE"; 
+    private readonly string _txtLabelPrintInt = $"{SymStack.InternalPrefix}PRINT_INT"; 
+    private readonly string _txtLabelPrintDouble = $"{SymStack.InternalPrefix}PRINT_DOUBLE"; 
+    private readonly string _txtLabelPrintChar = $"{SymStack.InternalPrefix}PRINT_CHAR"; 
     
     public AsmVisitor(TextWriter output, AstNode astRoot, SymStack symStack) {
         _out = output;
@@ -44,13 +44,19 @@ public class AsmVisitor : IAstVisitor<int> {
 
 
     public void Generate() {
-                
         // 64 bits mode
         _out.WriteLine("bits 64");
         _out.WriteLine("default rel");
         
         //data section
         _out.WriteLine("section .data");
+        //predefined globals
+        g.DeclareVariable(_txtLabelFalse, "FALSE");
+        g.DeclareVariable(_txtLabelTrue, "TRUE");
+        g.DeclareVariable(_txtLabelPrintInt, "%lli");
+        g.DeclareVariable(_txtLabelPrintDouble, "% .16LE");
+        g.DeclareVariable(_txtLabelPrintChar, "%c");
+        
         GenerateGlobals();
         
         // code section
@@ -64,6 +70,10 @@ public class AsmVisitor : IAstVisitor<int> {
         //start main
         _out.WriteLine("main:");
         Accept(_astRoot);
+        
+        //return code 0
+        g.G(Xor, Rax(), Rax());
+        g.G(Ret);
     }
 
     private void GenerateGlobals() {
@@ -117,29 +127,47 @@ public class AsmVisitor : IAstVisitor<int> {
                         break;
                     
                     case IntWriteSymFunc intWrite:
-                        CallPrintfDecorator("%lli", intWrite.Name);
+                        CallPrintfDecorator(_txtLabelPrintInt, intWrite.Name);
                         break;
                     
                     case DoubleWriteSymFunc doubleWrite:
-                        CallPrintfDecorator("% .16LE", doubleWrite.Name);
+                        CallPrintfDecorator(_txtLabelPrintDouble, doubleWrite.Name);
                         break;
                     
                     case CharWriteSymFunc charWrite:
-                        CallPrintfDecorator("%c", charWrite.Name);
+                        CallPrintfDecorator(_txtLabelPrintChar, charWrite.Name);
+                        break;
+                    
+                    case BoolWriteSymFunc boolWrite:
+                        g.FunctionPrologue(boolWrite.Name);
+
+                        var endLabel = g.GetUniqueLabel();
+                        var printFalseLabel = g.GetUniqueLabel();
+                        
+                        g.G(Cmp, QWord(g.ArgumentValue(0)), 1);
+                        g.G(Jne, printFalseLabel);
+                        
+                        g.G(Mov, Rcx(), _txtLabelTrue);
+                        g.G(Jmp, endLabel);
+                        
+                        g.Label(printFalseLabel);
+                        g.G(Mov, Rcx(), _txtLabelFalse);
+                        
+                        g.Label(endLabel);
+                        g.CallPrintf();
+                        g.FunctionEpilogue();
                         break;
                 }
             }
         }
     }
 
-    private void CallPrintfDecorator(string format, string name) {
+    private void CallPrintfDecorator(string formatLabel, string name) {
         g.FunctionPrologue(name);
-        var stackUse = g.PushStringInStack(format);
-        g.G(Mov, Rdx(), g.ArgumentValue(0));
-        g.G(Mov, Rcx(), Rsp());
         
+        g.G(Mov, Rdx(), g.ArgumentValue(0));
+        g.G(Mov, Rcx(), formatLabel);
         g.CallPrintf();
-        g.FreeStack(stackUse);
         g.FunctionEpilogue();
     }
 
@@ -233,7 +261,102 @@ public class AsmVisitor : IAstVisitor<int> {
                         g.G(Push, Rax());
                         stackUsage = 1;
                         break;
+                    
+                    // compare operators
+                    
+                    case Constants.Operators.Less:
+                        //node.left.type should be == node.right.type
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Jl);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmpltsd);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
+                    case Constants.Operators.More:
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Jg);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmpltsd, true);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
+                    case Constants.Operators.LessOrEqual:
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Jle);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmplesd);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
+                    case Constants.Operators.MoreOreEqual:
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Jge);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmplesd, true);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
+                    case Constants.Operators.NotEqual:
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Jne);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmpneqsd);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
+                    case Constants.Operators.Equal:
+                        switch (node.Left.Type) {
+                            case SymInt _:
+                                g.CmpIntegers(Je);
+                                stackUsage = 1;
+                                break;
+                            
+                            case SymDouble _:
+                                g.CmpDoubles(Cmpeqsd);
+                                stackUsage = 1;
+                                break;
+                        }
+                        
+                        break;
+                    
                 }
+                
                 break;
             
             case ReservedToken word:
@@ -356,15 +479,12 @@ public class AsmVisitor : IAstVisitor<int> {
                 switch (symConst) {
                     case SymIntConst intConst:
                         g.PushImm64(intConst.Value);
-//                        Push(intConst.Value.ToString());
                         break;
                     case SymDoubleConst doubleConst:
                         g.PushImm64(doubleConst.Value);
-//                        Push(doubleConst.Value.ToString(CultureInfo.InvariantCulture));
                         break;
                     case SymCharConst charConst:
                         g.PushImm64(charConst.Value);
-//                        Push(charConst.Value.ToString());
                         break;
                 }
                 
@@ -469,7 +589,11 @@ public class AsmVisitor : IAstVisitor<int> {
             g.Comment("assign scalar.");
             g.G(Pop, Rbx());
             g.G(Pop, Rax());
-            g.G(Mov, Der(Rax()), Rbx());
+            
+            if (node.Left.Type is SymChar)
+                g.G(Mov, Der(Rax()), Bl());
+            else
+                g.G(Mov, Der(Rax()), Rbx());
         }
         
 //        Comment($"assign");
@@ -507,7 +631,18 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(ForNode node) {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
+        var initSu = Accept(node.Initial);
+        Debug.Assert(initSu == 0);
+        //compare
+        
+        //body
+        
+        //label_to:continue
+        //increase counter
+        //jmp compare
+        
+        //label_to:end
     }
 
     public int Visit(ControlSequence node) {
@@ -531,7 +666,7 @@ public class AsmVisitor : IAstVisitor<int> {
             if (realType is SymTypeAlias symTypeAlias)
                 realType = symTypeAlias.Type;
             
-            Debug.Assert(realType is SymInt || realType is SymDouble || realType is SymChar || realType is SymString);
+            Debug.Assert(realType is SymInt || realType is SymDouble || realType is SymChar || realType is SymString || realType is SymBool);
             
             switch (realType) {
                 case SymInt symInt:
@@ -552,6 +687,12 @@ public class AsmVisitor : IAstVisitor<int> {
                     g.FreeStack(charStackUsage);
                     break;
                 
+                case SymBool symBool:
+                    var boolStackUsage = Accept(arg);
+                    g.G(Call, _symStack.BoolWrite.Name);
+                    g.FreeStack(boolStackUsage);
+                    break;
+                
                 case SymString symString:
                     var stringStackUsage = Accept(arg);
                     g.G(Call, _symStack.StringWrite.Name);
@@ -566,12 +707,6 @@ public class AsmVisitor : IAstVisitor<int> {
         g.FreeStack(su);
         
         return 0;
-    }
-
-    private string WriteGetUniqueLabel() {
-        var label = $"meh_{(_labelCounter++).ToString()}";
-        _out.Write($"{label}:");
-        return label;
     }
     
 }

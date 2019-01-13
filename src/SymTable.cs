@@ -17,6 +17,9 @@ public class SymStack : IEnumerable<SymTable> {
     public readonly IntWriteSymFunc IntWrite = new IntWriteSymFunc();
     public readonly DoubleWriteSymFunc DoubleWrite = new DoubleWriteSymFunc();
     public readonly CharWriteSymFunc CharWrite = new CharWriteSymFunc();
+    public readonly BoolWriteSymFunc BoolWrite = new BoolWriteSymFunc();
+
+    public static string InternalPrefix => "_@@@_"; 
 
     public SymStack() {
         _stack.Push(new SymTable());
@@ -30,6 +33,7 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(IntWrite);
         _stack.Peek().Add(DoubleWrite);
         _stack.Peek().Add(CharWrite);
+        _stack.Peek().Add(BoolWrite);
         
     }
 
@@ -483,7 +487,7 @@ public abstract class PredefinedSymFunc : SymFunc {
 public class StringWriteSymFunc : PredefinedSymFunc {
     public StringWriteSymFunc() : 
         base(
-            "__swrite", 
+            $"{SymStack.InternalPrefix}swrite", 
             new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -495,7 +499,7 @@ public class StringWriteSymFunc : PredefinedSymFunc {
 public class IntWriteSymFunc : PredefinedSymFunc {
     public IntWriteSymFunc()
         : base(
-            "__iwrite", 
+            $"{SymStack.InternalPrefix}iwrite", 
             new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -507,7 +511,7 @@ public class IntWriteSymFunc : PredefinedSymFunc {
 public class DoubleWriteSymFunc : PredefinedSymFunc {
     public DoubleWriteSymFunc()
         : base(
-            "__dwrite", 
+            $"{SymStack.InternalPrefix}dwrite", 
             new List<SymVar>() {new SymVar("doublenum", new SymDouble(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
@@ -517,8 +521,18 @@ public class DoubleWriteSymFunc : PredefinedSymFunc {
 public class CharWriteSymFunc : PredefinedSymFunc {
     public CharWriteSymFunc()
         : base(
-            "__cwrite", 
+            $"{SymStack.InternalPrefix}cwrite", 
             new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
+            null, 
+            null, 
+            null) { }
+}
+
+public class BoolWriteSymFunc : PredefinedSymFunc {
+    public BoolWriteSymFunc()
+        : base(
+            $"{SymStack.InternalPrefix}bwrite", 
+            new List<SymVar>() {new SymVar("b", new SymBool(), null, SymVar.VarTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }

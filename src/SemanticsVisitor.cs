@@ -1,6 +1,4 @@
 using System;
-using System.Data;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Compiler {
@@ -283,6 +281,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
                 case SymChar _:
                 case SymString _:
                 case SymDouble _:
+                case SymBool _:
                     break;
                 default:
                     var t = ExprNode.GetClosestToken(arg);

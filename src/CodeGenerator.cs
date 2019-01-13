@@ -11,7 +11,8 @@ using static AsmArg;
 
 public class CodeGenerator {
     private TextWriter _out;
-
+    private ulong _labelCounter;
+    
     public CodeGenerator(TextWriter output) {
         _out = output;
     }
@@ -130,6 +131,10 @@ public class CodeGenerator {
         return stackUsage;
     }
 
+    public void DeclareVariable(string name, string val) {
+        _out.WriteLine($"{name}: db \"{val}\", 0");
+    }
+
     public void AllocateStack(int qwords) {
         G(Sub, Rsp(), qwords * 8);
     }
@@ -157,8 +162,45 @@ public class CodeGenerator {
 
     public void Label(string label) {
         _out.WriteLine($"{label}: ");
-    } 
-    
+    }
+
+    public string GetUniqueLabel() {
+        return $"{SymStack.InternalPrefix}meh_{(_labelCounter++).ToString()}";
+    }
+
+    public void CmpIntegers(SingleArgCmd jmpIftrue) {
+        G(Pop, Rbx());
+        G(Pop, Rax());
+        G(Cmp, Rax(), Rbx());
+                                
+        var trueLabel = GetUniqueLabel();
+        var endLabel = GetUniqueLabel();
+                                
+        G(jmpIftrue, trueLabel);
+        PushImm64(0);
+        G(Jmp, endLabel);
+                                
+        Label(trueLabel);
+        PushImm64(1);
+                                
+        Label(endLabel);
+    }
+
+    public void CmpDoubles(DoubleArgCmd cmpCmd, bool inverseArguments = false) {
+        G(Pop, Rax());
+
+        G(Movq, inverseArguments ? Xmm0() : Xmm1(), Rax());
+
+        G(Pop, Rax());
+        G(Movq, inverseArguments ? Xmm1() : Xmm0(), Rax());
+                              
+        G(cmpCmd, Xmm0(), Xmm1());
+                              
+        G(Movq, Rax(), Xmm0());
+        G(And, Rax(), 1);
+        G(Push, Rax());
+    }
+
     //argument counting starts with 0
     public AsmArg ArgumentValue(int number) {
         return Der(Rbp() + (16 + 8 * number));
@@ -192,6 +234,14 @@ public class AsmArg {
     public static AsmArg QWord(AsmArg arg) {
         return new AsmArg($"qword {arg.Val}");
     }
+    
+    public static AsmArg QWord(int arg) {
+        return new AsmArg($"qword {arg.ToString()}");
+    }
+    
+    public static AsmArg Word(AsmArg arg) {
+        return new AsmArg($"word {arg.Val}");
+    }
 
     public static AsmArg QWord(string arg) {
         return new AsmArg($"qword {arg}");
@@ -211,6 +261,10 @@ public class AsmArg {
     
     public static AsmArg Rbx() {
         return new AsmArg("rbx");
+    }
+    
+    public static AsmArg Bl() {
+        return new AsmArg("bl");
     }
     
     public static AsmArg Rcx() {
@@ -253,7 +307,13 @@ public enum DoubleArgCmd {
     Imul,
     Movq,
     Mulsd,
-    Divsd
+    Divsd,
+    Cmp,
+    Cmpltsd,
+    Cmplesd,
+    Cmpneqsd,
+    Cmpeqsd,
+    And
 }
 
 
@@ -265,7 +325,15 @@ public enum SingleArgCmd {
     Fst,
     Neg,
     Not,
-    Idiv
+    Idiv,
+    Jmp,
+    Jnz,
+    Jne,
+    Jge,
+    Jle,
+    Jl,
+    Jg,
+    Je
 }
 
 public enum NoArgCmd {
@@ -273,6 +341,11 @@ public enum NoArgCmd {
     Ret,
     Finit,
     Cqo
+}
+
+public enum DataTypes {
+    Dq,
+    Db
 }
 
 }

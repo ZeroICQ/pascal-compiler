@@ -9,4 +9,3 @@ begin
     writeln(1.22222222);
     writeln(123.3e-12);
 end.
-end.
