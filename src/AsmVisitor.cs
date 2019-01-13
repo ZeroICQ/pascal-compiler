@@ -740,7 +740,26 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(WhileNode node) {
-        throw new System.NotImplementedException();
+        g.Comment("while node");
+        
+        var conditionLabel = g.GetUniqueLabel();
+        var exitLabel = g.GetUniqueLabel();
+        
+        _loopStack.Push(new Loop(conditionLabel, exitLabel));
+        
+        g.Label(conditionLabel);
+        var stackUse = Accept(node.Condition);
+        Debug.Assert(stackUse == 1);
+        g.G(Pop, Rax());
+        stackUse = 0;
+        g.G(Cmp, Rax(), 0);
+        g.G(Je, exitLabel);
+        stackUse += Accept(node.Block);
+        Debug.Assert(stackUse == 0);
+        g.G(Jmp, conditionLabel);
+        
+        g.Label(exitLabel);
+        return stackUse;
     }
 
     public int Visit(ProcedureCallNode node) {
