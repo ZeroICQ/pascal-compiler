@@ -240,11 +240,11 @@ public class CodeGenerator {
         
         G(Xor, Rdx(), Rdx());
         if (reminder > 0) {
-            G(Add, Rax(), 8 * (reminder - 1));
+            G(Add, Rax(), (reminder - 1));
             for (var i = 0; i < reminder; i++) {
                 G(Shl, Rdx(), 8);
                 G(Mov, Dl(), Der(Rax()));
-                G(Sub, Rax(), 8);
+                G(Sub, Rax(), 1);
             }
 
             

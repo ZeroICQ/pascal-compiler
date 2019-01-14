@@ -4,10 +4,13 @@ begin
     for i := 1 to 10 do
         for j := 1 to 10 do
             for k := 1 to 100 do
-                if (j+k+i div 2) <> 0 then
+                if (((j+k+i) mod 3)) = 0 then
                     a[i,j,k] := 'z'
-                else
-                    a[i,j,k] := 'a';
+                else if (((j+k+i) mod 3)) =1 then
+                    a[i,j,k] := 'a'
+                else 
+                    a[i,j,k] := 'c';
+                
             
     for i := 1 to 10 do 
         for j := 1 to 10 do

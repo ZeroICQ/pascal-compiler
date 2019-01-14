@@ -3,8 +3,10 @@ var a,b : array[1..10] of array[1..10] of char;
 begin
     for i := 1 to 10 do
         for j := 1 to 10 do
-            if (j+i div 2) <> 0 then
+            if ((j+i) mod 3) = 0 then
                 a[i,j] := 'z'
+            else if ((j+i) mod 3) = 1 then
+                 a[i,j] := 'f'
             else
                 a[i,j] := 'a';
 
