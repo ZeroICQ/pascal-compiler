@@ -222,6 +222,46 @@ public class CodeGenerator {
         G(And, Rax(), 1);
         G(Push, Rax());
     }
+    
+    //args
+    // rax - source address
+    // rbx - dest  address
+    public void MovStruct(int wholeQwords, int reminder) {
+        // rax - source address
+        // rbx - dest  address
+        // calc last qword
+        // rsi - source
+        G(Add, Rax(), 8*wholeQwords);
+        G(Mov, Rsi(), Rax());
+        
+//        G(Mov, Rbx(), Rsp());
+        G(Add, Rbx(), 8*wholeQwords);
+        G(Mov, Rdi(), Rbx());
+        
+        G(Xor, Rdx(), Rdx());
+        if (reminder > 0) {
+            for (var i = 0; i < reminder; i++) {
+                G(Mov, Dl(), Der(Rax()));
+                G(Shl, Rdx(), 8);
+                G(Add, Rax(), 8);
+            }
+
+            for (var i = reminder + 1; i < 8; i++) {
+                G(Shl, Rdx(), 8);
+            }
+            
+            G(Mov, Der(Rdi()), Rdx());
+        }
+
+        if (wholeQwords > 0) {
+            G(Sub, Rsi(), 8);
+            G(Sub, Rdi(), 8);
+            G(Std);
+            G(Mov, Rcx(), wholeQwords);
+            _out.WriteLine("rep Movsq");
+        }
+        
+    }
 
     //argument counting starts with 0
     public AsmArg ArgumentValue(int number) {

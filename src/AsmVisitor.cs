@@ -633,43 +633,10 @@ public class AsmVisitor : IAstVisitor<int> {
         //in qwords
         var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
         g.AllocateStack(totalInMemoryQSize);
-        
-        // rax - source address
-        // rbx - dest  address
-        // calc last qword
-        // rsi - source
-        g.G(Add, Rax(), 8*wholeQwords);
-        g.G(Mov, Rsi(), Rax());
-        
         g.G(Mov, Rbx(), Rsp());
-        g.G(Add, Rbx(), 8*wholeQwords);
-        g.G(Mov, Rdi(), Rbx());
-        
-        g.G(Xor, Rdx(), Rdx());
-        if (reminder > 0) {
-            for (var i = 0; i < reminder; i++) {
-                g.G(Mov, Dl(), Der(Rax()));
-                g.G(Shl, Rdx(), 8);
-                g.G(Add, Rax(), 8);
-            }
-
-            for (var i = reminder + 1; i < 8; i++) {
-                g.G(Shl, Rdx(), 8);
-            }
-            
-            g.G(Mov, Der(Rdi()), Rdx());
-        }
-
-        if (wholeQwords > 0) {
-            g.G(Sub, Rsi(), 8);
-            g.G(Sub, Rdi(), 8);
-            g.G(Std);
-            g.G(Mov, Rcx(), wholeQwords);
-            g.G(Movsq);
-        }
+        g.MovStruct(wholeQwords, reminder);
 
         return totalInMemoryQSize;
-
     }
 
     public int Visit(StringNode node) {
@@ -765,8 +732,26 @@ public class AsmVisitor : IAstVisitor<int> {
                 g.G(Mov, Der(Rax()), Bl());
             else
                 g.G(Mov, Der(Rax()), Rbx());
+
+            return 0;
         }
         
+        g.Comment("assign struct.");
+        var wholeQwords = node.Right.Type.BSize / 8;
+        var reminder = node.Right.Type.BSize % 8;
+        //in qwords
+        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+        
+        g.G(Lea, Rbx(), Der(Rsp() + rhsStackUse));
+        g.G(Mov, Rbx(), Der(Rbx()));
+        
+        g.G(Mov, Rax(), Rsp());
+        
+        g.MovStruct(wholeQwords, reminder);
+        g.FreeStack(totalInMemoryQSize);
+        return 0;
+        
+        //non scalar types assign record/array
 //        Comment($"assign");
 //        //keep in r9 dst pointer        
 //        Mov("r9", "rsp");

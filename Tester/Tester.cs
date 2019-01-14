@@ -371,7 +371,6 @@ class Tester {
             compiledMyPr.StartInfo.RedirectStandardOutput = true;
             compiledMyPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             compiledMyPr.Start();
-            compiledMyPr.WaitForExit();
             
             var compiledFpcPr = new Process();
             compiledFpcPr.StartInfo.FileName = $"{fpcCompiledExePath}";
@@ -379,7 +378,6 @@ class Tester {
             compiledFpcPr.StartInfo.RedirectStandardOutput = true;
             compiledFpcPr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
             compiledFpcPr.Start();
-            compiledFpcPr.WaitForExit();
             
             var errFound = false;
             while (!compiledMyPr.StandardOutput.EndOfStream) {
@@ -393,13 +391,16 @@ class Tester {
                     continue;
                 
                 PrintDiff(answerLine, outLine, testName);
-                compilerPr.WaitForExit();
                 errFound = true;
                 break;
             }
-            
-            if (errFound)
+
+
+            if (errFound) {
+                compiledFpcPr.WaitForExit();
+                compiledMyPr.WaitForExit();
                 break;
+            }
             
             if (!compiledFpcPr.StandardOutput.EndOfStream || !compiledMyPr.StandardOutput.EndOfStream) {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -412,6 +413,7 @@ class Tester {
             
             Console.ForegroundColor = defaultForegroundColor;
             
+            compiledFpcPr.WaitForExit();
             compiledMyPr.WaitForExit();
         }
         
