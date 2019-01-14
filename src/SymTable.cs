@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-    
+using System.Reflection.Metadata;
+
 namespace Compiler {
 
 public class SymStack : IEnumerable<SymTable> {
@@ -487,6 +488,8 @@ public class SymFunc : SymType {
     public SymType ReturnType { get; }
     public StatementNode Body { get; }
     
+    public int LocalVariableBsize { get; } 
+    
     public SymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType) {
         Name = name;
         Parameters = parameters;
@@ -498,6 +501,16 @@ public class SymFunc : SymType {
         }
         else {
             ReturnType = returnType;
+        }
+
+        //predefined
+        if (localVariables == null)
+            return;
+        
+        foreach (var localSymbol in LocalVariables) {
+            var lvar = localSymbol as SymVar;
+            Debug.Assert(lvar != null);
+            LocalVariableBsize += lvar.Type.BSize;
         }
     }
 

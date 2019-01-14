@@ -20,6 +20,14 @@ class Loop {
     }
 }
 
+class FuncCall {
+    public SymFunc Symbol { get; }
+    
+    public FuncCall(SymFunc symbol) {
+        Symbol = symbol;
+    }
+}
+
 //return stack usage in qwords
 public class AsmVisitor : IAstVisitor<int> {
     private readonly TextWriter _out;
@@ -28,6 +36,8 @@ public class AsmVisitor : IAstVisitor<int> {
     private CodeGenerator g;
     
     private Stack<Loop> _loopStack = new Stack<Loop>();
+    private Stack<FuncCall> _funcStack = new Stack<FuncCall>();
+    
     private bool IsLval { get; set; }
 
     private readonly string _txtLabelFalse = $"{SymStack.InternalPrefix}FALSE"; 
@@ -120,8 +130,8 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymRecord symRecord: 
                                 g.DeclareVariable(symVar.Name, symRecord);
                                 break;
+                            
                         }
-                        
                         break;
                 }
                 //main switch end
@@ -174,7 +184,20 @@ public class AsmVisitor : IAstVisitor<int> {
                         g.CallPrintf();
                         g.FunctionEpilogue();
                         break;
+                    
+                    default:
+                        g.FunctionPrologue(symFunc.Name);
+                        g.AllocateStack(symFunc.LocalVariableBsize);;
+                        
+                        var su = symFunc.LocalVariableBsize;
+                        su += Accept(symFunc.Body);
+                        
+                        Debug.Assert(su == symFunc.LocalVariableBsize);
+                        g.FreeStack(su);
+                        g.FunctionEpilogue();
+                        break;
                 }
+                
             }
         }
     }
@@ -427,6 +450,35 @@ public class AsmVisitor : IAstVisitor<int> {
                         g.G(Push, Rdx());
                         stackUsage = 1;
                         break;
+                    
+                    case Constants.Words.And:
+                        switch (node.Type) {
+                            case SymBool _:
+                                var exitLabel = g.GetUniqueLabel();
+                                var failLabel = g.GetUniqueLabel();
+                                
+                                Debug.Assert(Accept(node.Left) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp,Rax(), 0);
+                                g.G(Je, failLabel);
+                                
+                                Debug.Assert(Accept(node.Right) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp, Rax(), 0);
+                                g.G(Je, failLabel);
+                                
+                                g.PushImm64(1);
+                                g.G(Jmp, exitLabel);
+                                
+                                g.Label(failLabel);
+                                g.PushImm64(0);
+                                
+                                g.Label(exitLabel);
+
+                                stackUsage = 1;
+                                break;
+                        }
+                        break;
                 }
                 
                 break;    
@@ -551,17 +603,15 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(FunctionCallNode node) {
-        throw new NotImplementedException();
         var stackUse = 0;
-        for (var i = node.Args.Count - 1; i >= 0; i--) {
-            //todo: check l/rval
-            stackUse += Accept(node.Args[i]);    
-        }
+//        for (var i = node.Args.Count - 1; i >= 0; i--) {
+//            //todo: check l/rval
+//            stackUse += Accept(node.Args[i]);    
+//        }
         //crutch since functions are neither symbols nor types
         var funcIdentifier = node.Name as IdentifierNode;
-        
-        _out.WriteLine($"call {funcIdentifier.Token.Value}");
-//        FreeStack(stackUse);
+        g.G(Call, funcIdentifier.Token.Value);
+        g.FreeStack(stackUse);
         return 0;
     }
 
@@ -859,7 +909,9 @@ public class AsmVisitor : IAstVisitor<int> {
         stackUse = 0;
         g.G(Cmp, Rax(), 0);
         g.G(Je, exitLabel);
+        
         stackUse += Accept(node.Block);
+        
         Debug.Assert(stackUse == 0);
         g.G(Jmp, conditionLabel);
         
@@ -868,7 +920,9 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(ProcedureCallNode node) {
-        return  Accept(node.Function);
+        var su  = Accept(node.Function);
+        Debug.Assert(su == 0);
+        return 0;
     }
 
     public int Visit(ForNode node) {
@@ -915,10 +969,9 @@ public class AsmVisitor : IAstVisitor<int> {
         g.G(Mov, Rdx(), Der(Rsp()+8));
         
         g.G(Cmp, Der(Rcx()), Rdx());
-        g.G(node.Direction == ForNode.DirectionType.To ? Jg : Jl, exitLabel);
-        //body
-        //save important registers. x64 has no pusha/popa 64 command
         
+        g.G(node.Direction == ForNode.DirectionType.To ? Jg : Jl, exitLabel);
+
         stackUsage += Accept(node.Body);
         Debug.Assert(stackUsage == 2);
         
