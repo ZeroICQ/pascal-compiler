@@ -117,6 +117,9 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymArray symArr:
                                 g.DeclareVariable(symVar.Name, symArr);
                                 break;
+                            case SymRecord symRecord: 
+                                g.DeclareVariable(symVar.Name, symRecord);
+                                break;
                         }
                         
                         break;
@@ -487,13 +490,26 @@ public class AsmVisitor : IAstVisitor<int> {
                                 switch (realType) {
                                     case SymScalar scalar:
                                         g.G(Push, QWord(Der(symVar.Name)));
-//                                        Push($"qword [{symVar.Name}]");
                                         stackUse = 1;
                                         break;
                                     
-//                                    case SymArray arr:
-//                                        
-//                                        break;
+                                    case SymArray arr:
+                                    case SymRecord record:
+                                        //get addr
+                                        var recStackUsage = Accept(node, true);
+                                        Debug.Assert(recStackUsage == 1);
+                                        
+                                        var wholeQwords = node.Type.BSize / 8;
+                                        var reminder = node.Type.BSize % 8;
+                                        
+                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+                                        g.G(Pop, Rax());
+                                        g.AllocateStack(totalInMemoryQSize);
+                                        g.G(Mov, Rbx(), Rsp());
+                                        g.PushStructToStack(wholeQwords, reminder);
+
+                                        return totalInMemoryQSize;                                        
+                                    
                                 }
                                 
                                 break;
@@ -585,7 +601,41 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(AccessNode node) {
-        throw new System.NotImplementedException();
+        var isLval = IsLval;
+        g.Comment($"accessing field {node.Field.StringValue} of {node.Name.Type.Name} lval:{IsLval.ToString()}");
+        var stackUsage = 0;
+    
+        var record = node.Name.Type as SymRecord;
+        Debug.Assert(record != null);
+
+        stackUsage += Accept(node.Name, true);
+        Debug.Assert(stackUsage == 1);
+        g.G(Pop, Rax());
+        g.G(Add, Rax(), record.OffsetTable[node.Field.Value]);
+        g.G(Push, Rax());
+        
+        if (isLval)
+            return 1;
+        
+        //isrval
+        g.G(Pop, Rax());
+        
+        if (node.Type is SymChar) {
+            g.G(Xor, Rdx(), Rdx());
+            g.G(Mov, Dl(), Der(Rax()));
+            g.G(Push, Rdx());
+            return 1;
+        }
+        
+        var wholeQwords = node.Type.BSize / 8;
+        var reminder = node.Type.BSize % 8;
+        
+        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+        g.AllocateStack(totalInMemoryQSize);
+        g.G(Mov, Rbx(), Rsp());
+        g.PushStructToStack(wholeQwords, reminder);
+
+        return wholeQwords;
     }
 
     public int Visit(IndexNode node) {

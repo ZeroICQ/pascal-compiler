@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
     
 namespace Compiler {
@@ -451,15 +452,23 @@ public class SymRecord : SymType {
     public override string Name { get; }
     public SymTable Fields { get; }
     public override int BSize { get; }
+    
+    public Dictionary<string, long> OffsetTable = new Dictionary<string, long>();
 
     public SymRecord(string name, SymTable fields) {
         Name = name;
         Fields = fields;
 
         foreach (var field in Fields) {
-            if (field is SymVar symVar)
+            if (field is SymVar symVar) {
+                OffsetTable.Add(field.Name, BSize);
                 BSize += symVar.Type.BSize;
-            //todo align?
+            }
+            else {
+                Debug.Assert(false);
+            }
+            
+            //todo: align?
         }
     }
     

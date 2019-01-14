@@ -152,7 +152,10 @@ public class CodeGenerator {
     public void DeclareVariable(string name, SymArray symArray) {
         _out.WriteLine($"{name}: times {(symArray.BSize).ToString()} db 0");
     }
-
+    
+    public void DeclareVariable(string name, SymRecord symRecord) {
+        _out.WriteLine($"{name}: times {(symRecord.BSize).ToString()} db 0");
+    }
 
     public void AllocateStack(int qwords) {
         G(Sub, Rsp(), qwords * 8);
