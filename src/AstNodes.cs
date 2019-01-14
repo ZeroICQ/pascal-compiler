@@ -208,11 +208,13 @@ public class IndexNode : ExprNode {
 public abstract class StatementNode : AstNode {
 }
 
-public class WritelnStatementNode : StatementNode {
-    public List<ExprNode> Args { get; } 
-    
-    public WritelnStatementNode(List<ExprNode> args) {
+public class WriteStatementNode : StatementNode {
+    public List<ExprNode> Args { get; }
+    public bool IsLn { get; }
+
+    public WriteStatementNode(List<ExprNode> args, bool isLn) {
         Args = args;
+        IsLn = isLn;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor) {

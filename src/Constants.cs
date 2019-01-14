@@ -18,7 +18,7 @@ public static class Constants {
         Absolute, And, Array, Asm, Begin, Break, Case, Const, Constructor, Continue, Destructor, Div, Do, Downto, Else, End, File, For,
         Function, Goto, If, Implementation, In, Inherited, Inline, Interface, Label, Mod, Nil, Not, Object, Out, Of, Operator,
         Or, Packed, Procedure, Program, Record, Reintroduce, Repeat, Self, Set, Shl, Shr, String, Then, To, Type, Unit,
-        Until, Uses, Var, While, With, Writeln, Xor
+        Until, Uses, Var, While, With, Writeln, Write, Xor
     }
 
     public enum Operators {

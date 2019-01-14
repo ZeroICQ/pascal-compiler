@@ -132,8 +132,8 @@ public class PrintVisitor : IAstVisitor<PrinterNode> {
         return new PrinterNode(node.Token.StringValue);
     }
 
-    public PrinterNode Visit(WritelnStatementNode node) {
-        var pNode = new PrinterNode("Wrtiteln");
+    public PrinterNode Visit(WriteStatementNode node) {
+        var pNode = new PrinterNode("Wrtite"+ (node.IsLn ? "ln" : ""));
         foreach (var arg in node.Args) {
             pNode.AddChild(arg.Accept(this));
         }

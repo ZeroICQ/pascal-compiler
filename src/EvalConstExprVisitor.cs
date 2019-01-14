@@ -129,7 +129,7 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
         return new SymCharConst(Name, _symStack.SymChar, node.Value);
     }
 
-    public SymConst Visit(WritelnStatementNode node) {
+    public SymConst Visit(WriteStatementNode node) {
         throw EvalException();
     }
 

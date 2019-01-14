@@ -149,11 +149,15 @@ public class CodeGenerator {
     
     //arrays
     public void DeclareVariable(string name, SymArray symArray) {
-        _out.WriteLine($"{name}: times {(symArray.BSize / 8).ToString()} db 0");
+        _out.WriteLine($"{name}: times {(symArray.BSize).ToString()} db 0");
     }
 
 
     public void AllocateStack(int qwords) {
+        G(Sub, Rsp(), qwords * 8);
+    }
+    
+    public void AllocateStack(ulong qwords) {
         G(Sub, Rsp(), qwords * 8);
     }
 
@@ -269,7 +273,15 @@ public class AsmArg {
         return new AsmArg($"{lhs.Val} + {rhs.ToString()}"); 
     }
     
+    public static AsmArg operator +(AsmArg lhs, ulong rhs) {
+        return new AsmArg($"{lhs.Val} + {rhs.ToString()}"); 
+    }
+    
     public static AsmArg operator -(AsmArg lhs, int rhs) {
+        return new AsmArg($"{lhs.Val} - {rhs.ToString()}"); 
+    }
+    
+    public static AsmArg operator -(AsmArg lhs, ulong rhs) {
         return new AsmArg($"{lhs.Val} - {rhs.ToString()}"); 
     }
     
@@ -293,8 +305,20 @@ public class AsmArg {
         return new AsmArg("rdx");
     }
     
+    public static AsmArg Dl() {
+        return new AsmArg("dl");
+    }
+    
     public static AsmArg Rsp() {
         return new AsmArg("rsp");
+    }
+    
+    public static AsmArg Rsi() {
+        return new AsmArg("rsi");
+    }
+    
+    public static AsmArg Rdi() {
+        return new AsmArg("rdi");
     }
     
     public static AsmArg Rbp() {
@@ -338,6 +362,7 @@ public enum DoubleArgCmd {
     And,
     Subsd,
     Addsd,
+    Shl,
 }
 
 
@@ -369,6 +394,9 @@ public enum NoArgCmd {
     Finit,
     Cqo,
     Nop,
+    Cld,
+    Std,
+    Movsq
 }
 
 public enum DataTypes {

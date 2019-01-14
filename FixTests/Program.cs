@@ -23,9 +23,9 @@ class Programm {
             var pr = RunCompiler(@"C:\Users\Alexey\dev\CSharp\pascal-compiler\src\bin\Debug\netcoreapp2.1\Compiler.dll", $"{flags} -i {testFile}");
             
             using (var answer = new StreamWriter($"{testName}.test", false, Encoding.UTF8)) {
-                while (!pr.StandardOutput.EndOfStream) {
-                    answer.Write(pr.StandardOutput.Read());
-                }
+                var a = pr.StandardOutput.ReadToEnd();
+                answer.Write(a);
+                
             }
             pr.WaitForExit();// Waits here for the process to exit.
         }
@@ -38,7 +38,7 @@ class Programm {
         pr.StartInfo.Arguments = $"{path} {flags}";
         pr.StartInfo.UseShellExecute = false;
         pr.StartInfo.RedirectStandardOutput = true;
-        pr.StartInfo.StandardOutputEncoding = Encoding.ASCII;
+        pr.StartInfo.StandardOutputEncoding = Encoding.UTF8;
         pr.Start();
         
         return pr;

@@ -74,8 +74,19 @@ public class Parser {
             _lexer.Retract();
             throw Illegal(t);
         }
+
+        var paramList = new List<SymVar>();
         
-        var paramList = ParseParamList();
+        t = _lexer.GetNextToken();
+        
+        if (!(t is SeparatorToken sep && sep.Value == Constants.Separators.Semicolon)) {
+            _lexer.Retract();
+            paramList = ParseParamList();
+        }
+        else {
+            _lexer.Retract();
+        }
+
         IdentifierToken returnTypeToken = null;
         
         //parse return type
@@ -567,7 +578,10 @@ public class Parser {
                         return new ControlSequence(reserved);
                     case Constants.Words.Writeln:
                         _lexer.Retract();
-                        return ParseWritelnStatement();
+                        return ParseWriteStatement(true);
+                    case Constants.Words.Write:
+                        _lexer.Retract();
+                        return ParseWriteStatement(false);
                 }
                 break;
             
@@ -612,17 +626,20 @@ public class Parser {
 //        throw Illegal(t);
     }
 
-    //starts at "->writeln[...]"
-    private WritelnStatementNode ParseWritelnStatement() {
-        Require(Constants.Words.Writeln);
+    //starts at "->write(ln)[...]"
+    private WriteStatementNode ParseWriteStatement(bool isLn) {
+        if (isLn)
+            Require(Constants.Words.Writeln);
+        else
+            Require(Constants.Words.Write);
         var t = _lexer.GetNextToken();
         
         if (t is OperatorToken sep && sep.Value == Constants.Operators.OpenParenthesis) {
-            return new WritelnStatementNode(ParseArgumentList());
+            return new WriteStatementNode(ParseArgumentList(), isLn);
         }
         
          _lexer.Retract();
-        return new WritelnStatementNode(new List<ExprNode>());
+        return new WriteStatementNode(new List<ExprNode>(), isLn);
     }
 
     private ForNode ParseForStatement() {

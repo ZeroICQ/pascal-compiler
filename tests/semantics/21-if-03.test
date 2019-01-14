@@ -1,1 +1,24 @@
-﻿Types "boolean" and "integer" are incompatible at 3,12.
+﻿                             Main Block
+                                  ┴
+                                 If
+   ┌───────────┬──────────────────┴───────────┐
+ More   Empty statement                      If
+ ┌─┴─┐                       ┌─────────────┬──┴─────────────┐
+10  20                   (boolean)  Empty statement  Empty statement
+                          ┌──┴
+                         10
+
+Global:
+──────────────────────
+│Name    │Type       │
+══════════════════════
+│integer │Scalar type│
+──────────────────────
+│char    │Scalar type│
+──────────────────────
+│double  │Scalar type│
+──────────────────────
+│boolean │Scalar type│
+──────────────────────
+│string  │Type       │
+──────────────────────

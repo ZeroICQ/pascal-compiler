@@ -265,7 +265,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         return true;
     }
 
-    public bool Visit(WritelnStatementNode node) {
+    public bool Visit(WriteStatementNode node) {
         //todo: rmk when add pointers
         
         foreach (var arg in node.Args) {

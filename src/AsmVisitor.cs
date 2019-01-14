@@ -587,66 +587,88 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(IndexNode node) {
-        g.Comment($"access array islval: {IsLval.ToString()}");
+        g.Comment($"index array islval: {IsLval.ToString()}");
         var isLval = IsLval;
-        var stackUsage = Accept(node.IndexExpr);
-        Debug.Assert(stackUsage == 1);
+        var arrType = node.Operand.Type as SymArray;
+        Debug.Assert(arrType != null);
         
+        g.Comment($"index before eval index expr");
+        var stackUsage = Accept(node.IndexExpr);
+        g.Comment($"index after eval index expr");
+        Debug.Assert(stackUsage == 1);
+        // calculate address
         stackUsage += Accept(node.Operand, true);
         Debug.Assert(stackUsage == 2);
         g.G(Pop, Rax());
         g.G(Pop, Rdx());
-        continue froom here
-        var
-        i: array[1..3] of array[2..3] of integer;
-        begin
-        i[2][2] := 228;
-        writeln(i[2][2]);
-        end.
-            
-        g.G(Imul, Rdx(), node.Operand.Type.BSize);
+        g.G(Sub, Rdx(), arrType.MinIndex.Value);
+        // rax - address
+        // rdx - index
+        
+        // calc offset
+        g.G(Imul, Rdx(), node.Type.BSize);
+        // get addr
         g.G(Add, Rax(), Rdx());
         g.G(Push, Rax());
         stackUsage = 1;
+        
         if (isLval)             
             return stackUsage;
 
-        //addr
+        // rvalue - push to stack
         g.G(Pop, Rax());
         stackUsage = 0;
-        // if rval
-        g.G(Mov, Rcx(), node.Type.BSize / 8);
-        g.G(Add, Rax(), Rcx());
-
-        var loop = g.GetUniqueLabel();
-        g.Label(loop);
         
-        g.G(Push, QWord(Der(Rax())));
-        stackUsage += 1;
-        g.G(Dec, Rax());
+        if (node.Type is SymChar) {
+            g.G(Xor, Rdx(), Rdx());
+            g.G(Mov, Dl(), Der(Rax()));
+            g.G(Push, Rdx());
+            return 1;
+        }
         
-        g.G(SingleArgCmd.Loop, loop);
-        return stackUsage;
 
-//        Comment($"assign");
-//        //keep in r9 dst pointer        
-//        Mov("r9", "rsp");
-//        Add("r9", (8*rhsStackUse).ToString());
-//        Mov("r9", "[r9]");
-//        
-//        //rcx - counter
-//        Xor("rcx", "rcx");
-//        // loop
-//        var label = WriteGetUniqueLabel();
-//        Pop("qword [r9]");
-//        Add("r9", "8");
-//        
-//        Inc("rcx");
-//        Cmp("rcx", rhsStackUse.ToString());
-//        Jl(label);
-//        
-//        //lhs
-//        g.FreeStack(1);
+        var wholeQwords = node.Type.BSize / 8;
+        var reminder = node.Type.BSize % 8;
+        
+        //in qwords
+        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+        g.AllocateStack(totalInMemoryQSize);
+        
+        // rax - source address
+        // rbx - dest  address
+        // calc last qword
+        // rsi - source
+        g.G(Add, Rax(), 8*wholeQwords);
+        g.G(Mov, Rsi(), Rax());
+        
+        g.G(Mov, Rbx(), Rsp());
+        g.G(Add, Rbx(), 8*wholeQwords);
+        g.G(Mov, Rdi(), Rbx());
+        
+        g.G(Xor, Rdx(), Rdx());
+        if (reminder > 0) {
+            for (var i = 0; i < reminder; i++) {
+                g.G(Mov, Dl(), Der(Rax()));
+                g.G(Shl, Rdx(), 8);
+                g.G(Add, Rax(), 8);
+            }
+
+            for (var i = reminder + 1; i < 8; i++) {
+                g.G(Shl, Rdx(), 8);
+            }
+            
+            g.G(Mov, Der(Rdi()), Rdx());
+        }
+
+        if (wholeQwords > 0) {
+            g.G(Sub, Rsi(), 8);
+            g.G(Sub, Rdi(), 8);
+            g.G(Std);
+            g.G(Mov, Rcx(), wholeQwords);
+            g.G(Movsq);
+        }
+
+        return totalInMemoryQSize;
 
     }
 
@@ -923,7 +945,7 @@ public class AsmVisitor : IAstVisitor<int> {
         return 1;
     }
 
-    public int Visit(WritelnStatementNode node) {
+    public int Visit(WriteStatementNode node) {
         
         foreach (var arg in node.Args) {
             var realType = arg.Type;
@@ -965,6 +987,9 @@ public class AsmVisitor : IAstVisitor<int> {
                     break;
             }
         }
+
+        if (!node.IsLn)
+            return 0;
 
         var su = g.PushStringInStack("\n");
         g.G(Mov, Rcx(), Rsp());

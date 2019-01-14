@@ -1,1 +1,22 @@
-﻿Types "boolean" and "integer" are incompatible at 2,11.
+﻿        Main Block
+             ┴
+          While
+    ┌────────┴────┐
+(boolean)  Empty statement
+ ┌──┴
+25
+
+Global:
+──────────────────────
+│Name    │Type       │
+══════════════════════
+│integer │Scalar type│
+──────────────────────
+│char    │Scalar type│
+──────────────────────
+│double  │Scalar type│
+──────────────────────
+│boolean │Scalar type│
+──────────────────────
+│string  │Type       │
+──────────────────────

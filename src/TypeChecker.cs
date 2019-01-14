@@ -233,6 +233,7 @@ public class TypeChecker {
             case SymBool _ :
                 switch (realSourceType) {
                     case SymBool _ :
+                        return true;
                     case SymInt _:
                         if (!canModify)
                             return true;

@@ -1,1 +1,1 @@
-﻿Operator and is not overloaded for "boolean" and "integer" at 5,13.
+﻿Types "integer" and "boolean" are incompatible at 5,13.
