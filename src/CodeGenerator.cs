@@ -226,7 +226,7 @@ public class CodeGenerator {
     //args
     // rax - source address
     // rbx - dest  address
-    public void MovStruct(int wholeQwords, int reminder) {
+    public void PushStructToStack(int wholeQwords, int reminder) {
         // rax - source address
         // rbx - dest  address
         // calc last qword
@@ -240,15 +240,13 @@ public class CodeGenerator {
         
         G(Xor, Rdx(), Rdx());
         if (reminder > 0) {
+            G(Add, Rax(), 8 * (reminder - 1));
             for (var i = 0; i < reminder; i++) {
-                G(Mov, Dl(), Der(Rax()));
                 G(Shl, Rdx(), 8);
-                G(Add, Rax(), 8);
+                G(Mov, Dl(), Der(Rax()));
+                G(Sub, Rax(), 8);
             }
 
-            for (var i = reminder + 1; i < 8; i++) {
-                G(Shl, Rdx(), 8);
-            }
             
             G(Mov, Der(Rdi()), Rdx());
         }
@@ -259,7 +257,9 @@ public class CodeGenerator {
             G(Mov, Rcx(), wholeQwords);
             G(Pushfq);
             G(Std);
-            _out.WriteLine("rep Movsq");
+            G(Rep);
+            G(Movsq);
+//            _out.WriteLine("rep Movsq");
             G(Popfq);
         }
         
@@ -439,8 +439,10 @@ public enum NoArgCmd {
     Cld,
     Std,
     Movsq,
+    Movsb,
     Pushfq,
-    Popfq
+    Popfq,
+    Rep
 }
 
 public enum DataTypes {

@@ -635,7 +635,7 @@ public class AsmVisitor : IAstVisitor<int> {
         var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
         g.AllocateStack(totalInMemoryQSize);
         g.G(Mov, Rbx(), Rsp());
-        g.MovStruct(wholeQwords, reminder);
+        g.PushStructToStack(wholeQwords, reminder);
 
         return totalInMemoryQSize;
     }
@@ -743,35 +743,17 @@ public class AsmVisitor : IAstVisitor<int> {
         //in qwords
         var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
         
-        g.G(Lea, Rbx(), Der(Rsp() + 8*rhsStackUse));
-        g.G(Mov, Rbx(), Der(Rbx()));
+        g.G(Lea, Rdi(), Der(Rsp() + 8*rhsStackUse));
+        // rbx - dest
+        // rax - source
+        g.G(Mov, Rdi(), Der(Rdi()));
         
-        g.G(Mov, Rax(), Rsp());
-        
-        g.MovStruct(wholeQwords, reminder);
-        g.FreeStack(totalInMemoryQSize + 1);
-        return 0;
-        
-        //non scalar types assign record/array
-//        Comment($"assign");
-//        //keep in r9 dst pointer        
-//        Mov("r9", "rsp");
-//        Add("r9", (8*rhsStackUse).ToString());
-//        Mov("r9", "[r9]");
-//        
-//        //rcx - counter
-//        Xor("rcx", "rcx");
-//        // loop
-//        var label = WriteGetUniqueLabel();
-//        Pop("qword [r9]");
-//        Add("r9", "8");
-//        
-//        Inc("rcx");
-//        Cmp("rcx", rhsStackUse.ToString());
-//        Jl(label);
-//        
-//        //lhs
-//        g.FreeStack(1);
+        g.G(Mov, Rsi(), Rsp());
+        g.G(Mov, Rcx(), node.Right.Type.BSize);
+        g.G(Rep);
+        g.G(Movsb);
+//        g.PushStructToStack(wholeQwords, reminder);
+        g.FreeStack(rhsStackUse + 1);
         return 0;
     }
 
