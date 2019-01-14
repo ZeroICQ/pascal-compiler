@@ -256,9 +256,11 @@ public class CodeGenerator {
         if (wholeQwords > 0) {
             G(Sub, Rsi(), 8);
             G(Sub, Rdi(), 8);
-            G(Std);
             G(Mov, Rcx(), wholeQwords);
+            G(Pushfq);
+            G(Std);
             _out.WriteLine("rep Movsq");
+            G(Popfq);
         }
         
     }
@@ -436,7 +438,9 @@ public enum NoArgCmd {
     Nop,
     Cld,
     Std,
-    Movsq
+    Movsq,
+    Pushfq,
+    Popfq
 }
 
 public enum DataTypes {

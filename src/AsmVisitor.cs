@@ -528,7 +528,8 @@ public class AsmVisitor : IAstVisitor<int> {
                 
                 break;
         }
-
+        
+        Debug.Assert(stackUse != 0);
         return stackUse;
     }
 
@@ -742,13 +743,13 @@ public class AsmVisitor : IAstVisitor<int> {
         //in qwords
         var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
         
-        g.G(Lea, Rbx(), Der(Rsp() + rhsStackUse));
+        g.G(Lea, Rbx(), Der(Rsp() + 8*rhsStackUse));
         g.G(Mov, Rbx(), Der(Rbx()));
         
         g.G(Mov, Rax(), Rsp());
         
         g.MovStruct(wholeQwords, reminder);
-        g.FreeStack(totalInMemoryQSize);
+        g.FreeStack(totalInMemoryQSize + 1);
         return 0;
         
         //non scalar types assign record/array
