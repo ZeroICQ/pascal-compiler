@@ -137,14 +137,15 @@ public class CodeGenerator {
         _out.WriteLine($"{name}: db \"{val}\", 0");
     }
     //scalars
-    public void DeclareVariable(string name, long initVal) {
-        _out.WriteLine($"{name}: dq {initVal.ToString()}");
+    
+    public void DeclareVariable(string name, DataTypes type, long initVal) {
+        _out.WriteLine($"{name}: {type.ToString().ToLowerInvariant()} {initVal.ToString()}");
     }
     
-    public void DeclareVariable(string name, double initVal) {
+    public void DeclareVariable(string name, DataTypes type, double initVal) {
         var initDoubleVal = initVal.ToString(CultureInfo.InvariantCulture);
         var dot = initDoubleVal.Contains('.') ? "" : ".";
-        _out.WriteLine($"{name}: dq {initDoubleVal}{dot}");
+        _out.WriteLine($"{name}: {type.ToString().ToLowerInvariant()} {initDoubleVal}{dot}");
     }
     
     //arrays

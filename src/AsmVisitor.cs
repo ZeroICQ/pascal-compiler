@@ -6,6 +6,7 @@ using static Compiler.AsmArg;
 using static Compiler.DoubleArgCmd;
 using static Compiler.SingleArgCmd;
 using static Compiler.NoArgCmd;
+using static Compiler.DataTypes;
 
 namespace Compiler {
 
@@ -87,7 +88,7 @@ public class AsmVisitor : IAstVisitor<int> {
 
     private void GenerateGlobals() {
         
-        //todo: add records, arrays, initializers
+        //todo: add records, 
         foreach (var table in _symStack) {
             foreach (var symbol in table) {
                 
@@ -100,17 +101,17 @@ public class AsmVisitor : IAstVisitor<int> {
                         switch (symVar.Type) {
                             case SymInt symInt:
                                 var initIntVal = ((SymIntConst) symVar.InitialValue)?.Value ?? 0;
-                                g.DeclareVariable(symVar.Name, initIntVal);
+                                g.DeclareVariable(symVar.Name, Dq, initIntVal);
                                 break;
                             
                             case SymDouble symInt:
                                 var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
-                                g.DeclareVariable(symVar.Name, initDoubleVal);
+                                g.DeclareVariable(symVar.Name, Dq, initDoubleVal);
                                 break;
                             
                             case SymChar symChar:
                                 var initCharVal = ((SymCharConst) symVar.InitialValue)?.Value ?? 0;
-                                g.DeclareVariable(symVar.Name, initCharVal);
+                                g.DeclareVariable(symVar.Name, Db, initCharVal);
                                 break;
                             
                             case SymArray symArr:
@@ -741,7 +742,6 @@ public class AsmVisitor : IAstVisitor<int> {
         var wholeQwords = node.Right.Type.BSize / 8;
         var reminder = node.Right.Type.BSize % 8;
         //in qwords
-        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
         
         g.G(Lea, Rdi(), Der(Rsp() + 8*rhsStackUse));
         // rbx - dest
