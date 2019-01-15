@@ -308,9 +308,11 @@ public class AsmArg {
         return new AsmArg($"qword {arg.ToString()}");
     }
     
-    public static AsmArg Word(AsmArg arg) {
-        return new AsmArg($"word {arg.Val}");
+    public static AsmArg Byte(AsmArg arg) {
+        return new AsmArg($"byte {arg.Val}");
     }
+    
+   
 
     public static AsmArg QWord(string arg) {
         return new AsmArg($"qword {arg}");
@@ -410,7 +412,7 @@ public enum DoubleArgCmd {
     Subsd,
     Addsd,
     Shl,
-    Or
+    Or,
 }
 
 
@@ -433,7 +435,7 @@ public enum SingleArgCmd {
     Je,
     Inc,
     Dec,
-    Loop
+    Loop,
 }
 
 public enum NoArgCmd {

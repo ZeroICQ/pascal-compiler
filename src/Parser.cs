@@ -105,7 +105,6 @@ public class Parser {
         t = _lexer.GetNextToken();
         //local variables
         if (t is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Var) {
-            //todo: make parameters not globals
             ParseVariableDeclarations(SymVar.SymLocTypeEnum.Local);
         }
         else {

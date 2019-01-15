@@ -602,8 +602,13 @@ public class AsmVisitor : IAstVisitor<int> {
                                 g.G(Push, symVar.Name);
                                 stackUse = 1;
                                 break;
-                            case SymVar.SymLocTypeEnum.Local:
                             case SymVar.SymLocTypeEnum.Parameter:
+                                g.G(Mov, Rax(), Rbp());
+                                g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
+                                g.G(Push, Rax());
+                                stackUse = 1;
+                                break;
+                            case SymVar.SymLocTypeEnum.Local:
                             case SymVar.SymLocTypeEnum.VarParameter:
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
@@ -620,7 +625,14 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymVar.SymLocTypeEnum.Global:
                                 
                                 switch (realType) {
-                                    case SymScalar scalar:
+                                    case SymChar _:
+                                        g.G(Xor, Rbx(), Rbx());
+                                        g.G(Mov, Bl(), Der(symVar.Name));
+                                        g.G(Push, Rbx());
+                                        stackUse = 1;
+                                        break;
+                                    case SymDouble _:
+                                    case SymInt _:
                                         g.G(Push, QWord(Der(symVar.Name)));
                                         stackUse = 1;
                                         break;
@@ -646,8 +658,42 @@ public class AsmVisitor : IAstVisitor<int> {
                                 }
                                 
                                 break;
-                            case SymVar.SymLocTypeEnum.Local:
                             case SymVar.SymLocTypeEnum.Parameter:
+                                switch (realType) {
+//                                    case SymDouble _:
+//                                    case SymInt _:
+//                                        g.G(Mov, Rcx(), Der(Rbp() + _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]));
+//                                        g.G(Push, Rcx());
+//                                        stackUse = 1;
+//                                        break;
+                                    
+                                    case SymScalar _:
+                                        g.G(Push, QWord(Der(Rbp() + _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name])));
+                                        stackUse = 1;
+                                        break;
+                                    
+                                    
+//                                    case SymArray arr:
+//                                    case SymRecord record:
+//                                        //get addr
+//                                        var recStackUsage = Accept(node, true);
+//                                        Debug.Assert(recStackUsage == 1);
+//                                        
+//                                        var wholeQwords = node.Type.BSize / 8;
+//                                        var reminder = node.Type.BSize % 8;
+//                                        
+//                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+//                                        g.G(Pop, Rax());
+//                                        g.AllocateStack(totalInMemoryQSize);
+//                                        g.G(Mov, Rbx(), Rsp());
+//                                        g.PushStructToStack(wholeQwords, reminder);
+//
+//                                        return totalInMemoryQSize;                                        
+                                    
+                                }
+                                break;
+                            
+                            case SymVar.SymLocTypeEnum.Local:
                             case SymVar.SymLocTypeEnum.VarParameter:
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
@@ -698,14 +744,15 @@ public class AsmVisitor : IAstVisitor<int> {
                 case SymVar.SymLocTypeEnum.Parameter:
                     stackUse += Accept(node.Args[i]);
                     break;
-                
+                case SymVarOrConst.SymLocTypeEnum.VarParameter:
+                    stackUse += Accept(node.Args[i], true);
+                    break;
                 default:
                     Debug.Assert(false);
                     break;
             }
                 
         }
-        
         
         g.Comment($"function call eval function address");
         var nameStackUsage = Accept(node.Name);

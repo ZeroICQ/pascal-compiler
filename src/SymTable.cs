@@ -505,6 +505,9 @@ public class SymFunc : SymType {
     
     public int LocalVariableBsize { get; } 
     
+    public Dictionary<string, int> ParamsOffsetTable = new Dictionary<string, int>();
+
+    
     public SymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType) {
         Name = name;
         Parameters = parameters;
@@ -528,8 +531,16 @@ public class SymFunc : SymType {
 
             if (lvar.LocType != SymVar.SymLocTypeEnum.Local)
                 continue;
-            
             LocalVariableBsize += lvar.Type.BSize;
+        }
+
+        var paramOffset = 16;
+        foreach (var param in parameters) {
+            ParamsOffsetTable.Add(param.Name, paramOffset);
+            var paramSize = param.Type.BSize;
+            //  parameters will be aligned on stack
+            paramSize += paramSize % 8 > 0 ? 8 - paramSize % 8  : 0;
+            paramOffset += paramSize;
         }
     }
 
