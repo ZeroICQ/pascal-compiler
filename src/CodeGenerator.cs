@@ -410,6 +410,7 @@ public enum DoubleArgCmd {
     Subsd,
     Addsd,
     Shl,
+    Or
 }
 
 

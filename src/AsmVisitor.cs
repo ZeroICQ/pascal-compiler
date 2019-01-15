@@ -223,14 +223,17 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(BinaryExprNode node) {
+        var lhsStackUsage = 0;
+        var rhsStackUsage = 0;
         g.Comment($"binary operation for {node.Operation.StringValue} before eval operands");
 
-
+        //lazy statements evaluate arguments on demand
         switch (node.Operation) {
             case ReservedToken word:
                 switch (word.Value) {
 
                     case Constants.Words.And:
+                    //todo: add binary and
                         switch (node.Type) {
                             case SymBool _:
                                 var exitLabel = g.GetUniqueLabel();
@@ -255,17 +258,71 @@ public class AsmVisitor : IAstVisitor<int> {
                                 g.Label(exitLabel);
 
                                 return 1;
+                            case SymInt _:
+                                lhsStackUsage = Accept(node.Left);
+                                rhsStackUsage = Accept(node.Right);
+                                Debug.Assert(lhsStackUsage == 1);
+                                Debug.Assert(rhsStackUsage == 1);
+                                
+                                g.G(Pop, Rbx());
+                                g.G(Pop, Rax());
+                                g.G(And, Rax(), Rbx());
+                                g.G(Push, Rax());
+                                return 1;
+                            default:
+                                Debug.Assert(false);
+                                break;
                         }
-
+                        break;
+                    
+                    case Constants.Words.Or:
+                        //todo: add binary or
+                        switch (node.Type) {
+                            case SymBool _:
+                                var exitLabel = g.GetUniqueLabel();
+                                var successLabel = g.GetUniqueLabel();
+                                
+                                Debug.Assert(Accept(node.Left) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp, Rax(), 1);
+                                g.G(Je, successLabel);
+                                
+                                Debug.Assert(Accept(node.Right) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp, Rax(), 1);
+                                g.G(Je, successLabel);
+                                
+                                g.PushImm64(0);
+                                g.G(Jmp, exitLabel);
+                                
+                                g.Label(successLabel);
+                                g.PushImm64(1);
+                                
+                                g.Label(exitLabel);
+                                return 1;
+                            case SymInt _:
+                                lhsStackUsage = Accept(node.Left);
+                                rhsStackUsage = Accept(node.Right);
+                                Debug.Assert(lhsStackUsage == 1);
+                                Debug.Assert(rhsStackUsage == 1);
+                                
+                                g.G(Pop, Rbx());
+                                g.G(Pop, Rax());
+                                g.G(Or, Rax(), Rbx());
+                                g.G(Push, Rax());
+                                return 1;
+                            default:
+                                Debug.Assert(false);
+                                break;
+                        }
                         break;
                 }
-
                 break;
         }
         
 
-        var lhsStackUsage = Accept(node.Left);
-        var rhsStackUsage = Accept(node.Right);
+        lhsStackUsage = Accept(node.Left);
+        rhsStackUsage = Accept(node.Right);
         
         g.Comment($"binary operation for {node.Operation.StringValue} after eval operands");
         var stackUsage = 0;

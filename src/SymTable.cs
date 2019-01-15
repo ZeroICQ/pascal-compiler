@@ -510,6 +510,10 @@ public class SymFunc : SymType {
         foreach (var localSymbol in LocalVariables) {
             var lvar = localSymbol as SymVar;
             Debug.Assert(lvar != null);
+
+            if (lvar.VarType != SymVar.VarTypeEnum.Local)
+                continue;
+            
             LocalVariableBsize += lvar.Type.BSize;
         }
     }
