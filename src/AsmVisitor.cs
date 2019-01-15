@@ -225,6 +225,45 @@ public class AsmVisitor : IAstVisitor<int> {
     public int Visit(BinaryExprNode node) {
         g.Comment($"binary operation for {node.Operation.StringValue} before eval operands");
 
+
+        switch (node.Operation) {
+            case ReservedToken word:
+                switch (word.Value) {
+
+                    case Constants.Words.And:
+                        switch (node.Type) {
+                            case SymBool _:
+                                var exitLabel = g.GetUniqueLabel();
+                                var failLabel = g.GetUniqueLabel();
+
+                                Debug.Assert(Accept(node.Left) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp, Rax(), 0);
+                                g.G(Je, failLabel);
+
+                                Debug.Assert(Accept(node.Right) == 1);
+                                g.G(Pop, Rax());
+                                g.G(Cmp, Rax(), 0);
+                                g.G(Je, failLabel);
+
+                                g.PushImm64(1);
+                                g.G(Jmp, exitLabel);
+
+                                g.Label(failLabel);
+                                g.PushImm64(0);
+
+                                g.Label(exitLabel);
+
+                                return 1;
+                        }
+
+                        break;
+                }
+
+                break;
+        }
+        
+
         var lhsStackUsage = Accept(node.Left);
         var rhsStackUsage = Accept(node.Right);
         
@@ -449,35 +488,6 @@ public class AsmVisitor : IAstVisitor<int> {
                         g.G(Idiv, Rbx());
                         g.G(Push, Rdx());
                         stackUsage = 1;
-                        break;
-                    
-                    case Constants.Words.And:
-                        switch (node.Type) {
-                            case SymBool _:
-                                var exitLabel = g.GetUniqueLabel();
-                                var failLabel = g.GetUniqueLabel();
-                                
-                                Debug.Assert(Accept(node.Left) == 1);
-                                g.G(Pop, Rax());
-                                g.G(Cmp,Rax(), 0);
-                                g.G(Je, failLabel);
-                                
-                                Debug.Assert(Accept(node.Right) == 1);
-                                g.G(Pop, Rax());
-                                g.G(Cmp, Rax(), 0);
-                                g.G(Je, failLabel);
-                                
-                                g.PushImm64(1);
-                                g.G(Jmp, exitLabel);
-                                
-                                g.Label(failLabel);
-                                g.PushImm64(0);
-                                
-                                g.Label(exitLabel);
-
-                                stackUsage = 1;
-                                break;
-                        }
                         break;
                 }
                 
@@ -860,8 +870,9 @@ public class AsmVisitor : IAstVisitor<int> {
     public int Visit(IfNode node) {
         g.Comment($"if node start");
         var stackUsage = 0;
-        g.Comment($"if node condition");
+        g.Comment($"if node before condition");
         stackUsage += Accept(node.Condition);
+        g.Comment($"if node after condition");
         Debug.Assert(stackUsage == 1);
         
         var exitLabel = g.GetUniqueLabel();
@@ -891,6 +902,7 @@ public class AsmVisitor : IAstVisitor<int> {
         g.Label(exitLabel);
         
         Debug.Assert(stackUsage == 0);
+        g.Comment($"end if");
         return stackUsage;
     }
 
