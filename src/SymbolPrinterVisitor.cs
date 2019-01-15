@@ -17,8 +17,8 @@ public class SymbolPrinterVisitor : ISymVisitor {
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
     public void Visit(SymVarOrConst symbol) {
-        if (symbol.Type is SymFunc symFunc) {
-            Visit(symFunc);
+        if (symbol is SymFuncConst symConstFunc) {
+            Visit(symConstFunc.FuncType);
             return;
         }
         
@@ -84,6 +84,9 @@ public class SymbolPrinterVisitor : ISymVisitor {
     }
 
     public void Visit(SymFunc symbol) {
+        if (symbol is PredefinedSymFunc)
+            return;
+        
         var name = symbol.Name;
         var returnType = symbol.ReturnType.Name;
 

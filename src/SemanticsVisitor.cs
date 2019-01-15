@@ -7,6 +7,11 @@ namespace Compiler {
 public class SemanticsVisitor : IAstVisitor<bool> {
     private readonly SymStack _stack;
     private readonly TypeChecker _typeChecker;
+    
+    //not null if inside function
+    public bool IsInsideFunction { get; set; } = false;
+    //null - procedure
+    public SymType FunctionReturnType { get; set; } = null; 
 
     public SemanticsVisitor(SymStack stack, TypeChecker typeChecker) {
         _stack = stack;
@@ -83,25 +88,43 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
         node.Name.Accept(this);
         //todo: rmk when add pointers
+        
         if (!(node.Name.Type is SymFunc funcIdentifier)) {
             var t = ExprNode.GetClosestToken(node);
             throw new FunctionExpectedException(node.Name.Type, t.Lexeme, t.Line, t.Column);
         }
+        
 
-//        var funcSym = _stack.FindFunction(funcIdentifier.Token.Value);
-        
-//        if (funcSym == null)
-//            throw new IdentifierNotDefinedException(funcIdentifier.Token.Lexeme, funcIdentifier.Token.Line, funcIdentifier.Token.Column);
-        
         foreach (var arg in node.Args) {
             arg.Accept(this);
         }
         
-//        var symbol = _typeChecker.RequireFunction(funcIdentifier.Token, funcSym, node.Args);
+        //the very special crutch 
+        if (node.Name.Type is ExitSymFunc exit) {
+            if (FunctionReturnType == null) {
+                if (node.Args.Count != 0) {
+                    var t = ExprNode.GetClosestToken(node.Name);
+                    throw new WrongArgumentsNumberException(0, node.Args.Count, t.Lexeme, t.Line, t.Column);
+                }
+            }
+            else {
+                if (node.Args.Count != 1) {
+                    var t = ExprNode.GetClosestToken(node.Name);
+                    throw new WrongArgumentsNumberException(0, node.Args.Count, t.Lexeme, t.Line, t.Column);
+                }
+
+                var tmp = node.Args[0];
+                _typeChecker.RequireCast(FunctionReturnType, ref tmp);
+                node.Args[0] = tmp;
+            }
+
+            node.Symbol = _stack.ExitFunc;
+            return true;
+        }
+        
         var symbol = _typeChecker.RequireFunction(ExprNode.GetClosestToken(node.Name), funcIdentifier, node.Args);
         node.Type = symbol.ReturnType;
         node.Symbol = symbol;
-        //todo: function cal return lvalues
         return true;
     }
 

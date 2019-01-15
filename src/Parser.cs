@@ -115,13 +115,23 @@ public class Parser {
             }    
         }
         
+        SymType returnType = null;
+        if (returnTypeToken != null) {
+            returnType = _symStack.FindType(returnTypeToken.Value);
+            if (returnType == null)
+                throw new TypeNotFoundException(returnTypeToken.Lexeme, returnTypeToken.Line, returnTypeToken.Column);
+        }
 
+        _semanticsVisitor.IsInsideFunction = true;
+        _semanticsVisitor.FunctionReturnType = returnType;
+        
         var body = ParseStatementWithCheck();
+        
+        _semanticsVisitor.IsInsideFunction = false;
         Require(Constants.Separators.Semicolon);
         
         var localVars = _symStack.Pop();
-//        _symStack.AddFunction(identifierToken, paramList, localVars, body, returnTypeToken);
-        _symStack.AddFunction(identifierToken, paramList, localVars, body, returnTypeToken);
+        _symStack.AddFunction(identifierToken, paramList, localVars, body, returnType);
     }
 
     private List<SymVar> ParseParamList() {

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection.Metadata;
 
 namespace Compiler {
 
@@ -15,12 +14,13 @@ public class SymStack : IEnumerable<SymTable> {
     public readonly SymDouble SymDouble = new SymDouble();
     public readonly SymBool SymBool = new SymBool();
     public readonly SymString SymString = new SymString();
-    
+
     public readonly StringWriteSymFunc StringWrite = new StringWriteSymFunc();
     public readonly IntWriteSymFunc IntWrite = new IntWriteSymFunc();
     public readonly DoubleWriteSymFunc DoubleWrite = new DoubleWriteSymFunc();
     public readonly CharWriteSymFunc CharWrite = new CharWriteSymFunc();
     public readonly BoolWriteSymFunc BoolWrite = new BoolWriteSymFunc();
+    public readonly ExitSymFunc ExitFunc = new ExitSymFunc();
 
     public static string InternalPrefix => "_@@@_"; 
 
@@ -32,11 +32,13 @@ public class SymStack : IEnumerable<SymTable> {
         AddType(SymBool);        
         AddType(SymString);      
         //predefined functions
-        _stack.Peek().Add(StringWrite);
-        _stack.Peek().Add(IntWrite);
-        _stack.Peek().Add(DoubleWrite);
-        _stack.Peek().Add(CharWrite);
-        _stack.Peek().Add(BoolWrite);
+        
+        _stack.Peek().Add(new SymFuncConst(StringWrite.Name, StringWrite, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst(IntWrite.Name, IntWrite, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst(DoubleWrite.Name, DoubleWrite, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst(CharWrite.Name, CharWrite, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst(BoolWrite.Name, BoolWrite, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst("exit", ExitFunc, SymVarOrConst.SymLocTypeEnum.Global));
         
     }
 
@@ -96,16 +98,16 @@ public class SymStack : IEnumerable<SymTable> {
     }
 
     public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, 
-        IdentifierToken returnTypeToken) 
+        SymType returnType) 
     {
-        //todo: add checks!!!
-        SymType returnType = null;
+        //todo: add checks
         RequireSymbolRewritable(nameToken);
-        if (returnTypeToken != null) {
-            returnType = FindType(returnTypeToken.Value);
-            if (returnType == null)
-                throw new TypeNotFoundException(returnTypeToken.Lexeme, returnTypeToken.Line, returnTypeToken.Column);
-        }
+//        SymType returnType = null;
+//        if (returnTypeToken != null) {
+//            returnType = FindType(returnTypeToken.Value);
+//            if (returnType == null)
+//                throw new TypeNotFoundException(returnTypeToken.Lexeme, returnTypeToken.Line, returnTypeToken.Column);
+//        }
 //        _stack.Peek().Add(new SymFunc(nameToken.Value, paramList, localVars, body, returnType));
         AddConst(nameToken, new SymFuncConst(nameToken.Value, 
             new SymFunc(nameToken.Value, paramList, localVars, body, returnType),
@@ -259,7 +261,8 @@ public class ArrayOfConst : SymType {
     private ArrayOfConst() {}
     private static ArrayOfConst _instance;
     //should not be used
-    public override int BSize => throw new NotImplementedException();
+    //8 for size, 8 for address
+    public override int BSize => 16;
 
     public static ArrayOfConst Instance => _instance ?? (_instance = new ArrayOfConst());
 
@@ -507,6 +510,7 @@ public class SymFunc : SymType {
     public int LocalVariableBsize { get; } 
     
     public Dictionary<string, int> ParamsOffsetTable = new Dictionary<string, int>();
+    public int ParamsSizeB { get; }
     //sub from rbp to get address of local var
     public Dictionary<string, int> LocalVarOffsetTable = new Dictionary<string, int>();
 
@@ -549,6 +553,8 @@ public class SymFunc : SymType {
             paramSize += paramSize % 8 > 0 ? 8 - paramSize % 8  : 0;
             paramOffset += paramSize;
         }
+
+        ParamsSizeB = paramOffset;
     }
 
 
@@ -565,6 +571,16 @@ public abstract class PredefinedSymFunc : SymFunc {
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
+}
+
+public class ExitSymFunc : PredefinedSymFunc {
+    public ExitSymFunc()
+        : base(
+            $"{SymStack.InternalPrefix}exit",
+            null, 
+            null, 
+            null, 
+            null) { }
 }
 
 public class StringWriteSymFunc : PredefinedSymFunc {
