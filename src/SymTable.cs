@@ -539,7 +539,6 @@ public class SymFunc : SymType {
             if (lvar.LocType != SymVar.SymLocTypeEnum.Local)
                 continue;
             LocalVariableBsize += lvar.Type.BSize;
-            
             LocalVarOffsetTable.Add(lvar.Name, LocalVariableBsize);
         }
         // align
@@ -552,6 +551,10 @@ public class SymFunc : SymType {
             //  parameters will be aligned on stack
             paramSize += paramSize % 8 > 0 ? 8 - paramSize % 8  : 0;
             paramOffset += paramSize;
+            
+            if (param.Type is OpenArray op && param.LocType == SymVarOrConst.SymLocTypeEnum.Parameter) {
+                
+            }
         }
 
         ParamsSizeB = paramOffset;
