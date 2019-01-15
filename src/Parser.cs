@@ -102,14 +102,19 @@ public class Parser {
         }
         
         Require(Constants.Separators.Semicolon);
-        t = _lexer.GetNextToken();
+        
         //local variables
-        if (t is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Var) {
-            ParseVariableDeclarations(SymVar.SymLocTypeEnum.Local);
+        while (true) {
+            t = _lexer.GetNextToken();
+            if (t is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Var) {
+                ParseVariableDeclarations(SymVar.SymLocTypeEnum.Local);
+            }
+            else {
+                _lexer.Retract();
+                break;
+            }    
         }
-        else {
-            _lexer.Retract();
-        }
+        
 
         var body = ParseStatementWithCheck();
         Require(Constants.Separators.Semicolon);
@@ -763,7 +768,6 @@ public class Parser {
     private enum ParseVarRefStates {Start, AfterDot, AfterBracket, AfterParenthesis}
     // id {.id | [expression] | (arg,...)}, 
     private ExprNode ParseVariableReference() {
-        // ASK: really?
         ExprNode varRef;
         
         //get first mandatory identifier

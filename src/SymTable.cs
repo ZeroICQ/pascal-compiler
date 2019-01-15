@@ -498,6 +498,7 @@ public class SymFunc : SymType {
     public override int BSize => throw new NotImplementedException();
     
     public List<SymVar> Parameters { get; }
+    // whole symtable with parameters
     public SymTable LocalVariables { get; }
     // if null -> procedure
     public SymType ReturnType { get; }
@@ -506,6 +507,8 @@ public class SymFunc : SymType {
     public int LocalVariableBsize { get; } 
     
     public Dictionary<string, int> ParamsOffsetTable = new Dictionary<string, int>();
+    //sub from rbp to get address of local var
+    public Dictionary<string, int> LocalVarOffsetTable = new Dictionary<string, int>();
 
     
     public SymFunc(string name, List<SymVar> parameters, SymTable localVariables, StatementNode body, SymType returnType) {
@@ -525,15 +528,19 @@ public class SymFunc : SymType {
         if (localVariables == null)
             return;
         
-        foreach (var localSymbol in LocalVariables) {
+        foreach (var localSymbol in LocalVariables.Reverse()) {
             var lvar = localSymbol as SymVar;
             Debug.Assert(lvar != null);
 
             if (lvar.LocType != SymVar.SymLocTypeEnum.Local)
                 continue;
             LocalVariableBsize += lvar.Type.BSize;
+            
+            LocalVarOffsetTable.Add(lvar.Name, LocalVariableBsize);
         }
-
+        // align
+        LocalVariableBsize += LocalVariableBsize % 8 > 0 ? 8 - LocalVariableBsize % 8 : 0;  
+            
         var paramOffset = 16;
         foreach (var param in parameters) {
             ParamsOffsetTable.Add(param.Name, paramOffset);

@@ -25,6 +25,14 @@ public class CodeGenerator {
         _out.WriteLine($"{cmd.ToString().ToLowerInvariant()} {lhs.Val}, {rhs.Val}");
     }
     
+    public void G(DoubleArgCmd cmd, AsmArg lhs, double rhs) {
+        var rhsDoubleVal = rhs.ToString(CultureInfo.InvariantCulture);
+        var dot = rhsDoubleVal.Contains('.') ? "" : ".";
+        
+        _out.WriteLine($"{cmd.ToString().ToLowerInvariant()} {lhs.Val}, {rhsDoubleVal}{dot}");
+    }
+
+    
     public void G(DoubleArgCmd cmd, AsmArg lhs, int rhs) {
         _out.WriteLine($"{cmd.ToString().ToLowerInvariant()} {lhs.Val}, {rhs.ToString()}");
     }
@@ -337,6 +345,10 @@ public class AsmArg {
     public static AsmArg Rax() {
         return new AsmArg("rax");
     } 
+    
+    public static AsmArg Al() {
+        return new AsmArg("al");
+    }
     
     public static AsmArg Rbx() {
         return new AsmArg("rbx");

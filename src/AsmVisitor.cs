@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using static Compiler.AsmArg;
 using static Compiler.DoubleArgCmd;
 using static Compiler.SingleArgCmd;
@@ -116,7 +117,7 @@ public class AsmVisitor : IAstVisitor<int> {
                                 g.DeclareVariable(symVar.Name, Dq, initIntVal);
                                 break;
                             
-                            case SymDouble symInt:
+                            case SymDouble symDouble:
                                 var initDoubleVal = ((SymDoubleConst) symVar.InitialValue)?.Value ?? 0;
                                 g.DeclareVariable(symVar.Name, Dq, initDoubleVal);
                                 break;
@@ -144,8 +145,8 @@ public class AsmVisitor : IAstVisitor<int> {
     private void GenerateFunctions() {
         foreach (var table in _symStack) {
             foreach (var symbol in table) {
+                // user-defined functions
                 if (symbol is SymFuncConst symFuncConst) {
-                    
                     var exitLabel = g.GetUniqueLabel();
                     _funcStack.Push(new FuncCall(symFuncConst.FuncType, exitLabel));
                         
@@ -153,7 +154,51 @@ public class AsmVisitor : IAstVisitor<int> {
                     g.AllocateStack(symFuncConst.FuncType.LocalVariableBsize);;
                         
                     var su = symFuncConst.FuncType.LocalVariableBsize;
+                    //initialize local variables
+                    foreach (var localVar in symFuncConst.FuncType.LocalVariables) {
+                        var lvar = localVar as SymVar;
                         
+                        if (lvar.LocType != SymVar.SymLocTypeEnum.Local)
+                            continue;
+                        
+                        var offset = symFuncConst.FuncType.LocalVarOffsetTable[localVar.Name];
+                        Debug.Assert(lvar != null);
+                        
+                        switch (lvar.Type) {
+                            case SymArray array:
+                                // trash
+                                break;
+                            case SymChar c:
+                                var charInitVal = ((SymCharConst) lvar.InitialValue)?.Value ?? 0;
+                                g.G(Xor, Rax(), Rax());
+                                g.G(Mov, Al(), charInitVal);
+                                g.G(Mov, Rbx(), Rbp());
+                                g.G(Sub, Rbx(), offset);
+                                
+                                g.G(Mov, Byte(Der(Rbx())), Al());
+                                break;
+                            case SymDouble d:
+                                var doubleInitVal = ((SymDoubleConst) lvar.InitialValue)?.Value ?? 0;
+                                g.PushImm64(doubleInitVal);
+                                g.G(Pop, Rax());
+                                g.G(Mov, Rbx(), Rbp());
+                                g.G(Sub, Rbx(), offset);
+                                
+                                g.G(Mov, Der(Rbx()), Rax());
+                                break;
+                            case SymInt i1:
+                                var intInitVal = ((SymIntConst) lvar.InitialValue)?.Value ?? 0;
+                                g.G(Mov, Rax(), intInitVal);
+                                g.G(Mov, Rbx(), Rbp());
+                                g.G(Sub, Rbx(), offset);
+                                
+                                g.G(Mov, Der(Rbx()), Rax());
+                                break;
+                            case SymRecord record:
+                                break;
+                        }
+                    }
+                    
                     su += Accept(symFuncConst.FuncType.Body);
                         
                     Debug.Assert(su == symFuncConst.FuncType.LocalVariableBsize);
@@ -161,7 +206,6 @@ public class AsmVisitor : IAstVisitor<int> {
                     g.Label(exitLabel);
                     g.FreeStack(su);
                     g.FunctionEpilogue();
-                    
                 }
                 
                 
@@ -609,6 +653,11 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUse = 1;
                                 break;
                             case SymVar.SymLocTypeEnum.Local:
+                                g.G(Mov, Rax(), Rbp());
+                                g.G(Sub, Rax(),  _funcStack.Peek().Symbol.LocalVarOffsetTable[symVar.Name]);
+                                g.G(Push, Rax());
+                                stackUse = 1;
+                                break;
                             case SymVar.SymLocTypeEnum.VarParameter:
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
@@ -653,47 +702,84 @@ public class AsmVisitor : IAstVisitor<int> {
                                         g.G(Mov, Rbx(), Rsp());
                                         g.PushStructToStack(wholeQwords, reminder);
 
-                                        return totalInMemoryQSize;                                        
+                                        stackUse = totalInMemoryQSize;
+                                        break;
                                     
                                 }
                                 
                                 break;
                             case SymVar.SymLocTypeEnum.Parameter:
                                 switch (realType) {
-//                                    case SymDouble _:
-//                                    case SymInt _:
-//                                        g.G(Mov, Rcx(), Der(Rbp() + _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]));
-//                                        g.G(Push, Rcx());
-//                                        stackUse = 1;
-//                                        break;
-                                    
                                     case SymScalar _:
                                         g.G(Push, QWord(Der(Rbp() + _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name])));
                                         stackUse = 1;
                                         break;
                                     
                                     
-//                                    case SymArray arr:
-//                                    case SymRecord record:
-//                                        //get addr
-//                                        var recStackUsage = Accept(node, true);
-//                                        Debug.Assert(recStackUsage == 1);
-//                                        
-//                                        var wholeQwords = node.Type.BSize / 8;
-//                                        var reminder = node.Type.BSize % 8;
-//                                        
-//                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
-//                                        g.G(Pop, Rax());
-//                                        g.AllocateStack(totalInMemoryQSize);
-//                                        g.G(Mov, Rbx(), Rsp());
-//                                        g.PushStructToStack(wholeQwords, reminder);
-//
-//                                        return totalInMemoryQSize;                                        
+                                    case SymArray arr:
+                                    case SymRecord record:
+                                        //get addr
+                                        var recStackUsage = Accept(node, true);
+                                        Debug.Assert(recStackUsage == 1);
+                                        
+                                        var wholeQwords = node.Type.BSize / 8;
+                                        var reminder = node.Type.BSize % 8;
+                                        
+                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+                                        g.G(Pop, Rax());
+                                        g.AllocateStack(totalInMemoryQSize);
+                                        g.G(Mov, Rbx(), Rsp());
+                                        g.PushStructToStack(wholeQwords, reminder);
+
+                                        stackUse = totalInMemoryQSize;
+                                        break;
                                     
                                 }
                                 break;
                             
                             case SymVar.SymLocTypeEnum.Local:
+                                g.G(Mov, Rax(), Rbp());
+                                g.G(Sub, Rax(),  _funcStack.Peek().Symbol.LocalVarOffsetTable[symVar.Name]);
+                                //rax - addr to var
+                                
+                                switch (realType) {
+                                    case SymChar _:
+                                        
+                                        g.G(Xor, Rbx(), Rbx());
+                                        g.G(Mov, Bl(), Der(Rax()));
+                                        g.G(Push, Rbx());
+                                        stackUse = 1;
+                                        break;
+                                    case SymDouble _:
+                                    case SymInt _:
+                                        g.G(Push, QWord(Der(Rax())));
+                                        stackUse = 1;
+                                        break;
+                                    
+                                    
+                                    case SymArray arr:
+                                    case SymRecord record:
+                                        //get addr
+                                        var recStackUsage = Accept(node, true);
+                                        Debug.Assert(recStackUsage == 1);
+                                        
+                                        var wholeQwords = node.Type.BSize / 8;
+                                        var reminder = node.Type.BSize % 8;
+                                        
+                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+                                        g.G(Pop, Rax());
+                                        g.AllocateStack(totalInMemoryQSize);
+                                        
+                                        g.G(Mov, Rbx(), Rsp());
+                                        g.PushStructToStack(wholeQwords, reminder);
+
+                                        stackUse = totalInMemoryQSize;
+                                        break;
+                                    
+                                }    
+                                
+                                
+                                break;
                             case SymVar.SymLocTypeEnum.VarParameter:
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
@@ -1073,7 +1159,7 @@ public class AsmVisitor : IAstVisitor<int> {
 
     public int Visit(ProcedureCallNode node) {
         var su  = Accept(node.Function);
-        Debug.Assert(su == 0);
+        g.FreeStack(su);
         return 0;
     }
 
