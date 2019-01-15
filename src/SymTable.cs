@@ -254,23 +254,6 @@ public abstract class SymType : Symbol {
     public abstract int BSize { get; }
 }
 
-// should be only used for parameters
-public class ArrayOfConst : SymType {
-    public override string Name => "Array of const";
-    
-    private ArrayOfConst() {}
-    private static ArrayOfConst _instance;
-    //should not be used
-    //8 for size, 8 for address
-    public override int BSize => 16;
-
-    public static ArrayOfConst Instance => _instance ?? (_instance = new ArrayOfConst());
-
-    public override void Accept(ISymVisitor visitor) {
-        visitor.Visit(this);
-    }
-}
-
 // scalars
 public abstract class SymScalar : SymType {
 }
@@ -466,6 +449,23 @@ public class SymArray : SymType {
     }
     
 }
+
+// should be only used for parameters
+public class OpenArray : SymType {
+    public SymType InnerType { get; }
+    public override string Name => $"Open array of {InnerType.Name}";
+    //8 for size, 8 for address
+    public override int BSize => 16;
+
+    public OpenArray(SymType symInnerType) {
+        InnerType = symInnerType;
+    }
+    
+    public override void Accept(ISymVisitor visitor) {
+        visitor.Visit(this);
+    }
+}
+
 
 public class SymRecord : SymType {
     public override string Name { get; }

@@ -205,8 +205,15 @@ public class Parser {
                     switch (reservedToken.Value) {
                         case Constants.Words.Array:
                             if (_lexer.GetNextToken() is ReservedToken res && res.Value == Constants.Words.Of) {
-                                Require(Constants.Words.Const);
-                                paramType = ArrayOfConst.Instance;
+                                var x = _lexer.GetNextToken();
+                                if (!(x is IdentifierToken id))
+                                    throw Illegal(x);
+                                
+                                var innerType = _symStack.FindType(id.Value);
+                                if (innerType == null)
+                                    throw new TypeNotFoundException(id.Lexeme, id.Line, id.Column);
+
+                                paramType = new OpenArray(innerType);
                             }
                             else {
                                 //some other array

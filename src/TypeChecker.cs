@@ -26,6 +26,17 @@ public class TypeChecker {
                     throw new WrongParameterTypeException();
                 
                 case SymVar.SymLocTypeEnum.Parameter:
+
+                    if (currParameter.Type is OpenArray openArray) {
+                        if (!(curArgument.Type is SymArray argArr) || !IsTypesEqual(openArray.InnerType, argArr.Type)) {
+                            var t = ExprNode.GetClosestToken(curArgument);
+                            throw new IncompatibleTypesException(currParameter.Type, curArgument.Type, t.Lexeme, 
+                                t.Line, t.Column);
+                        }
+
+                        args[i] = curArgument;
+                        break;
+                    }
                     RequireCast(currParameter.Type, ref curArgument);
                     args[i] = curArgument;
                     break;
