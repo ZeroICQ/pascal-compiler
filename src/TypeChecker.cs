@@ -30,6 +30,13 @@ public class TypeChecker {
                     args[i] = curArgument;
                     break;
                 case SymVar.SymLocTypeEnum.VarParameter:
+                    if (!IsTypesEqual(curArgument.Type, currParameter.Type)) {
+                    var t = ExprNode.GetClosestToken(curArgument);
+                        throw new IncompatibleTypesException(curArgument.Type, currParameter.Type,
+                            t.Lexeme, t.Line, t.Column);
+                    }
+                    
+                    break;
                 case SymVar.SymLocTypeEnum.OutParameter:
                 case SymVar.SymLocTypeEnum.ConstParameter:
                     throw new NotImplementedException();

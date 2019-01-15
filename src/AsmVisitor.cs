@@ -663,6 +663,12 @@ public class AsmVisitor : IAstVisitor<int> {
                                 stackUse = 1;
                                 break;
                             case SymVar.SymLocTypeEnum.VarParameter:
+                                g.G(Mov, Rax(), Rbp());
+                                g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
+                                g.G(Mov, Rax(), Der(Rax()));
+                                g.G(Push, Rax());
+                                stackUse = 1;
+                                break;
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
                                 throw new NotImplementedException();
@@ -781,10 +787,48 @@ public class AsmVisitor : IAstVisitor<int> {
                                         break;
                                     
                                 }    
-                                
-                                
                                 break;
                             case SymVar.SymLocTypeEnum.VarParameter:
+                                g.G(Mov, Rax(), Rbp());
+                                g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
+                                g.G(Mov, Rax(), Der(Rax()));
+                                //rax - addr to var
+                                
+                                switch (realType) {
+                                    case SymChar _:
+                                        g.G(Xor, Rbx(), Rbx());
+                                        g.G(Mov, Bl(), Der(Rax()));
+                                        g.G(Push, Rbx());
+                                        stackUse = 1;
+                                        break;
+                                    case SymDouble _:
+                                    case SymInt _:
+                                        g.G(Push, QWord(Der(Rax())));
+                                        stackUse = 1;
+                                        break;
+                                    
+                                    
+                                    case SymArray arr:
+                                    case SymRecord record:
+                                        //get addr
+                                        var recStackUsage = Accept(node, true);
+                                        Debug.Assert(recStackUsage == 1);
+                                        
+                                        var wholeQwords = node.Type.BSize / 8;
+                                        var reminder = node.Type.BSize % 8;
+                                        
+                                        var totalInMemoryQSize = wholeQwords + (reminder > 0 ? 1 : 0);
+                                        g.G(Pop, Rax());
+                                        g.AllocateStack(totalInMemoryQSize);
+                                        
+                                        g.G(Mov, Rbx(), Rsp());
+                                        g.PushStructToStack(wholeQwords, reminder);
+
+                                        stackUse = totalInMemoryQSize;
+                                        break;
+                                    
+                                }    
+                                break;
                             case SymVar.SymLocTypeEnum.ConstParameter:
                             case SymVar.SymLocTypeEnum.OutParameter:
                                 throw new NotImplementedException();
