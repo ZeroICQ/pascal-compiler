@@ -22,9 +22,11 @@ class Loop {
 
 class FuncCall {
     public SymFunc Symbol { get; }
-    
-    public FuncCall(SymFunc symbol) {
+    public string ExitLabel { get; }
+
+    public FuncCall(SymFunc symbol, string exitLabel) {
         Symbol = symbol;
+        ExitLabel = exitLabel;
     }
 }
 
@@ -142,6 +144,27 @@ public class AsmVisitor : IAstVisitor<int> {
     private void GenerateFunctions() {
         foreach (var table in _symStack) {
             foreach (var symbol in table) {
+                if (symbol is SymFuncConst symFuncConst) {
+                    
+                    var exitLabel = g.GetUniqueLabel();
+                    _funcStack.Push(new FuncCall(symFuncConst.FuncType, exitLabel));
+                        
+                    g.FunctionPrologue(symFuncConst.Name);
+                    g.AllocateStack(symFuncConst.FuncType.LocalVariableBsize);;
+                        
+                    var su = symFuncConst.FuncType.LocalVariableBsize;
+                        
+                    su += Accept(symFuncConst.FuncType.Body);
+                        
+                    Debug.Assert(su == symFuncConst.FuncType.LocalVariableBsize);
+                        
+                    g.Label(exitLabel);
+                    g.FreeStack(su);
+                    g.FunctionEpilogue();
+                    
+                }
+                
+                
                 if (!(symbol is SymFunc symFunc))
                     continue;
 
@@ -185,18 +208,8 @@ public class AsmVisitor : IAstVisitor<int> {
                         g.FunctionEpilogue();
                         break;
                     
-                    default:
-                        g.FunctionPrologue(symFunc.Name);
-                        g.AllocateStack(symFunc.LocalVariableBsize);;
-                        
-                        var su = symFunc.LocalVariableBsize;
-                        su += Accept(symFunc.Body);
-                        
-                        Debug.Assert(su == symFunc.LocalVariableBsize);
-                        g.FreeStack(su);
-                        g.FunctionEpilogue();
-                        break;
                 }
+                
                 
             }
         }
@@ -584,16 +597,16 @@ public class AsmVisitor : IAstVisitor<int> {
 
                 switch (IsLval) {
                     case true:
-                        switch (symVar.VarType) {
-                            case SymVar.VarTypeEnum.Global:
+                        switch (symVar.LocType) {
+                            case SymVar.SymLocTypeEnum.Global:
                                 g.G(Push, symVar.Name);
                                 stackUse = 1;
                                 break;
-                            case SymVar.VarTypeEnum.Local:
-                            case SymVar.VarTypeEnum.Parameter:
-                            case SymVar.VarTypeEnum.VarParameter:
-                            case SymVar.VarTypeEnum.ConstParameter:
-                            case SymVar.VarTypeEnum.OutParameter:
+                            case SymVar.SymLocTypeEnum.Local:
+                            case SymVar.SymLocTypeEnum.Parameter:
+                            case SymVar.SymLocTypeEnum.VarParameter:
+                            case SymVar.SymLocTypeEnum.ConstParameter:
+                            case SymVar.SymLocTypeEnum.OutParameter:
                                 throw new NotImplementedException();
                             default:
                                 throw new ArgumentOutOfRangeException();
@@ -603,14 +616,15 @@ public class AsmVisitor : IAstVisitor<int> {
                     
                     //case rval
                     case false:
-                        switch (symVar.VarType) {
-                            case SymVar.VarTypeEnum.Global:
+                        switch (symVar.LocType) {
+                            case SymVar.SymLocTypeEnum.Global:
                                 
                                 switch (realType) {
                                     case SymScalar scalar:
                                         g.G(Push, QWord(Der(symVar.Name)));
                                         stackUse = 1;
                                         break;
+                                    
                                     
                                     case SymArray arr:
                                     case SymRecord record:
@@ -632,11 +646,11 @@ public class AsmVisitor : IAstVisitor<int> {
                                 }
                                 
                                 break;
-                            case SymVar.VarTypeEnum.Local:
-                            case SymVar.VarTypeEnum.Parameter:
-                            case SymVar.VarTypeEnum.VarParameter:
-                            case SymVar.VarTypeEnum.ConstParameter:
-                            case SymVar.VarTypeEnum.OutParameter:
+                            case SymVar.SymLocTypeEnum.Local:
+                            case SymVar.SymLocTypeEnum.Parameter:
+                            case SymVar.SymLocTypeEnum.VarParameter:
+                            case SymVar.SymLocTypeEnum.ConstParameter:
+                            case SymVar.SymLocTypeEnum.OutParameter:
                                 throw new NotImplementedException();
                             default:
                                 throw new ArgumentOutOfRangeException();
@@ -660,6 +674,9 @@ public class AsmVisitor : IAstVisitor<int> {
                     case SymCharConst charConst:
                         g.PushImm64(charConst.Value);
                         break;
+                    case SymFuncConst funcConst:
+                        g.G(Push, funcConst.Name);
+                        break;
                 }
                 
                 break;
@@ -670,14 +687,33 @@ public class AsmVisitor : IAstVisitor<int> {
     }
 
     public int Visit(FunctionCallNode node) {
-        var stackUse = 0;
-//        for (var i = node.Args.Count - 1; i >= 0; i--) {
-//            //todo: check l/rval
-//            stackUse += Accept(node.Args[i]);    
-//        }
-        //crutch since functions are neither symbols nor types
-        var funcIdentifier = node.Name as IdentifierNode;
-        g.G(Call, funcIdentifier.Token.Value);
+        g.Comment($"function call");
+        //return val
+        var stackUse = node.Symbol.ReturnType.BSize;
+        g.AllocateStack(node.Symbol.ReturnType.BSize);
+
+        //todo: add var param 
+        for (var i = node.Args.Count - 1; i >= 0; i--) {
+            switch (node.Symbol.Parameters[i].LocType) {
+                case SymVar.SymLocTypeEnum.Parameter:
+                    stackUse += Accept(node.Args[i]);
+                    break;
+                
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+                
+        }
+        
+        
+        g.Comment($"function call eval function address");
+        var nameStackUsage = Accept(node.Name);
+        Debug.Assert(nameStackUsage == 1);
+        
+        
+        g.G(Pop, Rax());
+        g.G(Call, Rax());
         g.FreeStack(stackUse);
         return 0;
     }

@@ -81,23 +81,24 @@ public class SemanticsVisitor : IAstVisitor<bool> {
     public bool Visit(FunctionCallNode node) {
         if (node.Type != null) return true;
 
+        node.Name.Accept(this);
         //todo: rmk when add pointers
-        if (!(node.Name is IdentifierNode funcIdentifier)) {
-            node.Name.Accept(this);
+        if (!(node.Name.Type is SymFunc funcIdentifier)) {
             var t = ExprNode.GetClosestToken(node);
             throw new FunctionExpectedException(node.Name.Type, t.Lexeme, t.Line, t.Column);
         }
 
-        var funcSym = _stack.FindFunction(funcIdentifier.Token.Value);
+//        var funcSym = _stack.FindFunction(funcIdentifier.Token.Value);
         
-        if (funcSym == null)
-            throw new IdentifierNotDefinedException(funcIdentifier.Token.Lexeme, funcIdentifier.Token.Line, funcIdentifier.Token.Column);
+//        if (funcSym == null)
+//            throw new IdentifierNotDefinedException(funcIdentifier.Token.Lexeme, funcIdentifier.Token.Line, funcIdentifier.Token.Column);
         
         foreach (var arg in node.Args) {
             arg.Accept(this);
         }
         
-        var symbol = _typeChecker.RequireFunction(funcIdentifier.Token, funcSym, node.Args);
+//        var symbol = _typeChecker.RequireFunction(funcIdentifier.Token, funcSym, node.Args);
+        var symbol = _typeChecker.RequireFunction(ExprNode.GetClosestToken(node.Name), funcIdentifier, node.Args);
         node.Type = symbol.ReturnType;
         node.Symbol = symbol;
         //todo: function cal return lvalues

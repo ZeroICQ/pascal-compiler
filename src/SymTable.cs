@@ -95,7 +95,9 @@ public class SymStack : IEnumerable<SymTable> {
         return null;
     }
 
-    public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, IdentifierToken returnTypeToken) {
+    public void AddFunction(IdentifierToken nameToken, List<SymVar> paramList, SymTable localVars, StatementNode body, 
+        IdentifierToken returnTypeToken) 
+    {
         //todo: add checks!!!
         SymType returnType = null;
         RequireSymbolRewritable(nameToken);
@@ -104,10 +106,13 @@ public class SymStack : IEnumerable<SymTable> {
             if (returnType == null)
                 throw new TypeNotFoundException(returnTypeToken.Lexeme, returnTypeToken.Line, returnTypeToken.Column);
         }
-        _stack.Peek().Add(new SymFunc(nameToken.Value, paramList, localVars, body, returnType));
+//        _stack.Peek().Add(new SymFunc(nameToken.Value, paramList, localVars, body, returnType));
+        AddConst(nameToken, new SymFuncConst(nameToken.Value, 
+            new SymFunc(nameToken.Value, paramList, localVars, body, returnType),
+            SymVarOrConst.SymLocTypeEnum.Global));
     }
     
-    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymVar.VarTypeEnum varType, 
+    public void AddVariable(IdentifierToken variableToken, IdentifierToken typeToken, SymVar.SymLocTypeEnum locType, 
         SymConst value = null) 
     {
         var type = FindType(typeToken.Value);
@@ -117,11 +122,11 @@ public class SymStack : IEnumerable<SymTable> {
 
         RequireSymbolRewritable(variableToken);
         //type check for initial value must be performed earlier. i.e. in parser.       
-        var symVar = new SymVar(variableToken.Value, type, value, varType);
+        var symVar = new SymVar(variableToken.Value, type, value, locType);
         _stack.Peek().Add(symVar);
     }
     
-    public SymVar AddVariable(IdentifierToken variableToken, SymType type, SymVar.VarTypeEnum varMod, SymConst value = null) 
+    public SymVar AddVariable(IdentifierToken variableToken, SymType type, SymVar.SymLocTypeEnum varMod, SymConst value = null) 
     {
         
         RequireSymbolRewritable(variableToken);
@@ -131,9 +136,9 @@ public class SymStack : IEnumerable<SymTable> {
         return symVar;
     }
 
-    public void AddArray(IdentifierToken identifierToken, SymArray arrayType, SymVar.VarTypeEnum varType) {
+    public void AddArray(IdentifierToken identifierToken, SymArray arrayType, SymVar.SymLocTypeEnum locType) {
         RequireSymbolRewritable(identifierToken);
-        var symVar = new SymVar(identifierToken.Value, arrayType, null, varType);
+        var symVar = new SymVar(identifierToken.Value, arrayType, null, locType);
         _stack.Peek().Add(symVar);
     }
 
@@ -321,34 +326,37 @@ public class SymBool : SymScalar {
 }
 
 public abstract class SymVarOrConst : Symbol {
+    public enum SymLocTypeEnum {Global, Local, Parameter, VarParameter, ConstParameter, OutParameter}
+    
     public override string Name { get; }
     public SymType Type { get; }
     public bool IsConst { get; }
     // not null only at constants and initialized variables. is used to print symtable.
     public string InitialStringValue { get; protected set; }
-
-    protected SymVarOrConst(string name, SymType type, bool isConst) {
+    public SymLocTypeEnum LocType { get; }
+    
+    protected SymVarOrConst(string name, SymType type, SymLocTypeEnum locType, bool isConst) {
         Name = name;
         Type = type;
         IsConst = isConst;
+        LocType = locType;
     }
     
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
+
 }
 
 // variables
 public class SymVar : SymVarOrConst {
-    public enum VarTypeEnum {Global, Local, Parameter, VarParameter, ConstParameter, OutParameter}
     // nullable
     public SymConst InitialValue { get; }
-    public VarTypeEnum VarType { get; }
-    public SymVar(string name, SymType type, SymConst initialValue, VarTypeEnum varType)
-        : base(name, type, false) 
+    
+    public SymVar(string name, SymType type, SymConst initialValue, SymLocTypeEnum locType)
+        : base(name, type, locType, false) 
     {
         InitialValue = initialValue;
-        VarType = varType;
         InitialStringValue = initialValue?.InitialStringValue;
     }
 }
@@ -357,13 +365,20 @@ public abstract class SymConst : SymVarOrConst {
     public override void Accept(ISymVisitor visitor) {
         visitor.Visit(this);
     }
-    protected SymConst(string name, SymType type) : base(name, type, true) {}
+    protected SymConst(string name, SymType type, SymLocTypeEnum locType) : base(name, type, locType, true) {}
+}
+
+public class SymFuncConst : SymConst {
+    public SymFunc FuncType { get; }
+    public SymFuncConst(string name, SymFunc funcType, SymLocTypeEnum locType) : base(name, funcType, locType) {
+        FuncType = funcType;
+    }
 }
 
 public class SymIntConst : SymConst {
     public long Value { get; }
 
-    public SymIntConst(string name, SymType type, long value) : base(name, type) {
+    public SymIntConst(string name, SymType type, long value, SymLocTypeEnum locType) : base(name, type, locType) {
         Value = value;
         InitialStringValue = value.ToString();
     }
@@ -375,7 +390,7 @@ public class SymIntConst : SymConst {
 public class SymDoubleConst : SymConst {
     public double Value { get; }
 
-    public SymDoubleConst(string name, SymType type, double value) : base(name, type) {
+    public SymDoubleConst(string name, SymType type, double value, SymLocTypeEnum locType) : base(name, type, locType) {
         Value = value;
         InitialStringValue = value.ToString();
     }
@@ -389,7 +404,7 @@ public class SymCharConst : SymConst {
     // or string?
     public char Value { get; }
     
-    public SymCharConst(string name, SymType type, char value) : base(name, type) {
+    public SymCharConst(string name, SymType type, char value, SymLocTypeEnum locType) : base(name, type, locType) {
         Value = value;
         InitialStringValue = value.ToString();
     }
@@ -402,7 +417,7 @@ public class SymCharConst : SymConst {
 public class SymBoolConst : SymConst {
     public bool Value { get; }
 
-    public SymBoolConst(string name, SymType type, bool value) : base(name, type) {
+    public SymBoolConst(string name, SymType type, bool value, SymLocTypeEnum locType) : base(name, type, locType) {
         Value = value;
         InitialStringValue = value.ToString();
     }
@@ -415,7 +430,7 @@ public class SymBoolConst : SymConst {
 public class SymStringConst : SymConst {
     public string Value { get; }
 
-    public SymStringConst(string name, SymType type, string value) : base(name, type) {
+    public SymStringConst(string name, SymType type, string value, SymLocTypeEnum locType) : base(name, type, locType) {
         Value = value;
         InitialStringValue = value;
     }
@@ -511,7 +526,7 @@ public class SymFunc : SymType {
             var lvar = localSymbol as SymVar;
             Debug.Assert(lvar != null);
 
-            if (lvar.VarType != SymVar.VarTypeEnum.Local)
+            if (lvar.LocType != SymVar.SymLocTypeEnum.Local)
                 continue;
             
             LocalVariableBsize += lvar.Type.BSize;
@@ -538,7 +553,7 @@ public class StringWriteSymFunc : PredefinedSymFunc {
     public StringWriteSymFunc() : 
         base(
             $"{SymStack.InternalPrefix}swrite", 
-            new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.VarTypeEnum.Parameter)}, 
+            new List<SymVar>() {new SymVar("str", new SymString(), null, SymVar.SymLocTypeEnum.Parameter)}, 
             null, 
             null, 
             null
@@ -550,7 +565,7 @@ public class IntWriteSymFunc : PredefinedSymFunc {
     public IntWriteSymFunc()
         : base(
             $"{SymStack.InternalPrefix}iwrite", 
-            new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.VarTypeEnum.Parameter)}, 
+            new List<SymVar>() {new SymVar("intnum", new SymInt(), null, SymVar.SymLocTypeEnum.Parameter)}, 
             null, 
             null, 
             null
@@ -562,7 +577,7 @@ public class DoubleWriteSymFunc : PredefinedSymFunc {
     public DoubleWriteSymFunc()
         : base(
             $"{SymStack.InternalPrefix}dwrite", 
-            new List<SymVar>() {new SymVar("doublenum", new SymDouble(), null, SymVar.VarTypeEnum.Parameter)}, 
+            new List<SymVar>() {new SymVar("doublenum", new SymDouble(), null, SymVar.SymLocTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }
@@ -572,7 +587,7 @@ public class CharWriteSymFunc : PredefinedSymFunc {
     public CharWriteSymFunc()
         : base(
             $"{SymStack.InternalPrefix}cwrite", 
-            new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.VarTypeEnum.Parameter)}, 
+            new List<SymVar>() {new SymVar("c", new SymChar(), null, SymVar.SymLocTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }
@@ -582,7 +597,7 @@ public class BoolWriteSymFunc : PredefinedSymFunc {
     public BoolWriteSymFunc()
         : base(
             $"{SymStack.InternalPrefix}bwrite", 
-            new List<SymVar>() {new SymVar("b", new SymBool(), null, SymVar.VarTypeEnum.Parameter)}, 
+            new List<SymVar>() {new SymVar("b", new SymBool(), null, SymVar.SymLocTypeEnum.Parameter)}, 
             null, 
             null, 
             null) { }

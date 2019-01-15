@@ -17,6 +17,11 @@ public class SymbolPrinterVisitor : ISymVisitor {
     private List<KeyValuePair<string, string>> _entries = new List<KeyValuePair<string, string>>();
 
     public void Visit(SymVarOrConst symbol) {
+        if (symbol.Type is SymFunc symFunc) {
+            Visit(symFunc);
+            return;
+        }
+        
         var name = symbol.Name;
         var type = symbol.Type.Name;
 
@@ -90,15 +95,15 @@ public class SymbolPrinterVisitor : ISymVisitor {
             else
                 isFirst = false;
 
-            switch (p.VarType) {
-                case SymVar.VarTypeEnum.OutParameter:
+            switch (p.LocType) {
+                case SymVar.SymLocTypeEnum.OutParameter:
                     paramsList.Append("out ");
                     break;
-                case SymVar.VarTypeEnum.VarParameter:
+                case SymVar.SymLocTypeEnum.VarParameter:
                     paramsList.Append("var ");
                     break;
                 
-                case SymVar.VarTypeEnum.ConstParameter:
+                case SymVar.SymLocTypeEnum.ConstParameter:
                     paramsList.Append("const ");
                     break;
             }

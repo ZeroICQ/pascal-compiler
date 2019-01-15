@@ -106,7 +106,7 @@ public class Parser {
         //local variables
         if (t is ReservedToken reservedToken && reservedToken.Value == Constants.Words.Var) {
             //todo: make parameters not globals
-            ParseVariableDeclarations(SymVar.VarTypeEnum.Local);
+            ParseVariableDeclarations(SymVar.SymLocTypeEnum.Local);
         }
         else {
             _lexer.Retract();
@@ -116,6 +116,7 @@ public class Parser {
         Require(Constants.Separators.Semicolon);
         
         var localVars = _symStack.Pop();
+//        _symStack.AddFunction(identifierToken, paramList, localVars, body, returnTypeToken);
         _symStack.AddFunction(identifierToken, paramList, localVars, body, returnTypeToken);
     }
 
@@ -127,19 +128,19 @@ public class Parser {
             var t = _lexer.GetNextToken();
             
             //determine type var/const/out/<no modificator>
-            var paramModifier = SymVar.VarTypeEnum.Parameter;
+            var paramModifier = SymVar.SymLocTypeEnum.Parameter;
             switch (t) {
                 case ReservedToken reservedToken:
                     switch (reservedToken.Value) {
                         case Constants.Words.Var:
-                            paramModifier = SymVar.VarTypeEnum.VarParameter;
+                            paramModifier = SymVar.SymLocTypeEnum.VarParameter;
                             break;
                         
                         case Constants.Words.Const:
-                            paramModifier = SymVar.VarTypeEnum.ConstParameter;
+                            paramModifier = SymVar.SymLocTypeEnum.ConstParameter;
                             break;
                         case Constants.Words.Out:
-                            paramModifier = SymVar.VarTypeEnum.OutParameter;
+                            paramModifier = SymVar.SymLocTypeEnum.OutParameter;
                             break;                    
                     default:
                         _lexer.Retract();
@@ -334,7 +335,7 @@ public class Parser {
 
     // start after "var"
     private enum ParseVariableDeclarationsStates {Start, SingleVariable, MultipleVariables} 
-    private void ParseVariableDeclarations(SymVar.VarTypeEnum varType = SymVar.VarTypeEnum.Global) {
+    private void ParseVariableDeclarations(SymVar.SymLocTypeEnum locType = SymVar.SymLocTypeEnum.Global) {
         var state = ParseVariableDeclarationsStates.Start;
         
         var identifiers = new List<IdentifierToken>();
@@ -388,7 +389,7 @@ public class Parser {
                         else
                             _lexer.Retract();    
                         
-                        _symStack.AddVariable(identifiers[0], typeToken, varType, initialValue);
+                        _symStack.AddVariable(identifiers[0], typeToken, locType, initialValue);
                         Require(Constants.Separators.Semicolon);
                         isFirst = false;
                         state = ParseVariableDeclarationsStates.Start;
@@ -398,7 +399,7 @@ public class Parser {
                         _lexer.Retract();
                         var arrayType = ParseArrayTypeDeclaration();
                         Require(Constants.Separators.Semicolon);
-                        _symStack.AddArray(identifiers[0], arrayType, varType);
+                        _symStack.AddArray(identifiers[0], arrayType, locType);
                         
                         isFirst = false;
                         state = ParseVariableDeclarationsStates.Start;
@@ -423,7 +424,7 @@ public class Parser {
                             
                             if (typeT is IdentifierToken tpToken) {
                                 foreach (var id in identifiers) {
-                                    _symStack.AddVariable(id, tpToken, varType);
+                                    _symStack.AddVariable(id, tpToken, locType);
                                 }
                                 Require(Constants.Separators.Semicolon);
                                 isFirst = false;
@@ -436,7 +437,7 @@ public class Parser {
                                 Require(Constants.Separators.Semicolon);
                                 
                                 foreach (var id in identifiers) {
-                                    _symStack.AddArray(id, arrayType, varType);
+                                    _symStack.AddArray(id, arrayType, locType);
                                 }
                                 
                                 isFirst = false;

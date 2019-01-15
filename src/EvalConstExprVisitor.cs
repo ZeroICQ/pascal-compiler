@@ -46,13 +46,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymDoubleConst(Name, _symStack.SymDouble, (double) leftInt.Value / rightInt.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble, (double) leftInt.Value / rightInt.Value, left.LocType);
                 }
                 break;
             case SymDoubleConst leftDouble:
                 switch (right) {
                     case SymDoubleConst rightDouble:
-                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value / rightDouble.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value / rightDouble.Value, left.LocType);
                 }
                 break;
         }
@@ -65,13 +65,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value * rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value * rightInt.Value, left.LocType);
                 }
                 break;
             case SymDoubleConst leftDouble:
                 switch (right) {
                     case SymDoubleConst rightDouble:
-                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value * rightDouble.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value * rightDouble.Value, left.LocType);
                 }
                 break;
         }
@@ -84,13 +84,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value + rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value + rightInt.Value, left.LocType);
                 }
                 break;
             case SymDoubleConst leftDouble:
                 switch (right) {
                     case SymDoubleConst rightDouble:
-                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value + rightDouble.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value + rightDouble.Value, left.LocType);
                 }
                 break;
         }
@@ -103,13 +103,13 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymIntConst leftInt:
                 switch (right) {
                     case SymIntConst rightInt:
-                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value - rightInt.Value);
+                        return new SymIntConst(Name, _symStack.SymInt, leftInt.Value - rightInt.Value, left.LocType);
                 }
                 break;
             case SymDoubleConst leftDouble:
                 switch (right) {
                     case SymDoubleConst rightDouble:
-                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value - rightDouble.Value);
+                        return new SymDoubleConst(Name, _symStack.SymDouble,leftDouble.Value - rightDouble.Value, left.LocType);
                 }
                 break;
         }
@@ -118,15 +118,15 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
     }
 
     public SymConst Visit(IntegerNode node) {
-        return new SymIntConst(Name, _symStack.SymInt, node.Token.Value);
+        return new SymIntConst(Name, _symStack.SymInt, node.Token.Value, SymVarOrConst.SymLocTypeEnum.Global);
     }
 
     public SymConst Visit(DoubleNode node) {
-        return new SymDoubleConst(Name, _symStack.SymDouble, node.Token.Value);
+        return new SymDoubleConst(Name, _symStack.SymDouble, node.Token.Value, SymVarOrConst.SymLocTypeEnum.Global);
     }
 
     public SymConst Visit(CharNode node) {
-        return new SymCharConst(Name, _symStack.SymChar, node.Value);
+        return new SymCharConst(Name, _symStack.SymChar, node.Value, SymVarOrConst.SymLocTypeEnum.Global);
     }
 
     public SymConst Visit(WriteStatementNode node) {
@@ -149,7 +149,7 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
             case SymDouble s:
                 switch (castingConst) {
                     case SymIntConst intConst:
-                        return new SymDoubleConst(intConst.Name, _symStack.SymDouble, intConst.Value);
+                        return new SymDoubleConst(intConst.Name, _symStack.SymDouble, intConst.Value, SymVarOrConst.SymLocTypeEnum.Global);
                     case SymDoubleConst doubleConst:
                         return castingConst;
                 }
@@ -184,9 +184,9 @@ public class EvalConstExprVisitor : IAstVisitor<SymConst> {
                         switch (exprConst) {
                             
                             case SymIntConst intConst:
-                                return new SymIntConst(intConst.Name, intConst.Type, -intConst.Value);
+                                return new SymIntConst(intConst.Name, intConst.Type, -intConst.Value, SymVarOrConst.SymLocTypeEnum.Global);
                             case SymDoubleConst doubleConst:
-                                return new SymDoubleConst(doubleConst.Name, doubleConst.Type, -doubleConst.Value);
+                                return new SymDoubleConst(doubleConst.Name, doubleConst.Type, -doubleConst.Value, SymVarOrConst.SymLocTypeEnum.Global);
                         }
                         break;
                 }

@@ -20,18 +20,18 @@ public class TypeChecker {
             var currParameter = funcSym.Parameters[i];
             var curArgument  = args[i];
             
-            switch (funcSym.Parameters[i].VarType) {
-                case SymVar.VarTypeEnum.Global:
-                case SymVar.VarTypeEnum.Local:
+            switch (funcSym.Parameters[i].LocType) {
+                case SymVar.SymLocTypeEnum.Global:
+                case SymVar.SymLocTypeEnum.Local:
                     throw new WrongParameterTypeException();
                 
-                case SymVar.VarTypeEnum.Parameter:
+                case SymVar.SymLocTypeEnum.Parameter:
                     RequireCast(currParameter.Type, ref curArgument);
                     args[i] = curArgument;
                     break;
-                case SymVar.VarTypeEnum.VarParameter:
-                case SymVar.VarTypeEnum.OutParameter:
-                case SymVar.VarTypeEnum.ConstParameter:
+                case SymVar.SymLocTypeEnum.VarParameter:
+                case SymVar.SymLocTypeEnum.OutParameter:
+                case SymVar.SymLocTypeEnum.ConstParameter:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException();
