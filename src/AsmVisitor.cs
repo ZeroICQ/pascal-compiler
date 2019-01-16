@@ -950,7 +950,7 @@ public class AsmVisitor : IAstVisitor<int> {
                 var arrayType = node.Args[i].Type as SymArray;
                 Debug.Assert(arrayType != null);
                         
-                g.PushImm64(arrayType.Size);
+                g.PushImm64(arrayType.Size - 1);
                 stackUse += 8;
                 break;
             }
@@ -1076,6 +1076,8 @@ public class AsmVisitor : IAstVisitor<int> {
             // rax - addr
             // rdx - index
             g.G(Pop, Rax());
+            g.G(Add, Rax(), 8);
+            g.G(Mov, Rax(), Der(Rax()));
             g.G(Pop, Rdx());
             
             g.G(Imul, Rdx(), node.Type.BSize);
