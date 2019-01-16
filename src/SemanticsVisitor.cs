@@ -136,6 +136,24 @@ public class SemanticsVisitor : IAstVisitor<bool> {
 
             return true;
         }
+
+        if (node.Name.Type is LowSymFunc low) {
+            node.Symbol = _stack.LowFunc; 
+            node.Type = _stack.LowFunc.ReturnType;
+            
+            var t = ExprNode.GetClosestToken(node.Name);
+            if (node.Args.Count != 1) {
+                throw new WrongArgumentsNumberException(1, node.Args.Count, t.Lexeme, t.Line, t.Column);
+            }
+
+            if (!(node.Args[0].Type is SymArray || node.Args[0].Type is OpenArray)) {
+                throw new IllegalExprException(t.Lexeme, t.Line, t.Column);
+            }
+            
+            //inline functions add here
+
+            return true;
+        }
         
         var symbol = _typeChecker.RequireFunction(ExprNode.GetClosestToken(node.Name), funcIdentifier, node.Args);
         node.Type = symbol.ReturnType;

@@ -22,6 +22,7 @@ public class SymStack : IEnumerable<SymTable> {
     public readonly BoolWriteSymFunc BoolWrite = new BoolWriteSymFunc();
     public readonly ExitSymFunc ExitFunc = new ExitSymFunc();
     public readonly HighSymFunc HighFunc = new HighSymFunc();
+    public readonly LowSymFunc LowFunc = new LowSymFunc();
 
     public static string InternalPrefix => "_@@@_"; 
 
@@ -41,6 +42,7 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(new SymFuncConst(BoolWrite.Name, BoolWrite, SymVarOrConst.SymLocTypeEnum.Global));
         _stack.Peek().Add(new SymFuncConst("exit", ExitFunc, SymVarOrConst.SymLocTypeEnum.Global));
         _stack.Peek().Add(new SymFuncConst("high", HighFunc, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst("low", LowFunc, SymVarOrConst.SymLocTypeEnum.Global));
         
     }
 
@@ -590,6 +592,16 @@ public class HighSymFunc : PredefinedSymFunc {
             $"{SymStack.InternalPrefix}high", 
             null, 
             null, 
+            null, 
+            new SymInt()) { }
+}
+
+public class LowSymFunc : PredefinedSymFunc {
+    public LowSymFunc()
+        : base(
+            $"{SymStack.InternalPrefix}low",
+            null,
+            null,
             null, 
             new SymInt()) { }
 }

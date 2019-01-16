@@ -195,9 +195,8 @@ public class AsmVisitor : IAstVisitor<int> {
                         break;
                     
                     case ExitSymFunc _:
-                        break;
-                    
                     case HighSymFunc _:
+                    case LowSymFunc _:
                         //inline
                         break;
                     
@@ -207,9 +206,11 @@ public class AsmVisitor : IAstVisitor<int> {
                         _funcStack.Push(new FuncCall(symFuncConst.FuncType, exitLabel));
                         
                         g.FunctionPrologue(symFuncConst.Name);
-                        g.AllocateStack(symFuncConst.FuncType.LocalVariableBsize);;
+                        g.AllocateStack(symFuncConst.FuncType.LocalVariableBsize / 8);
                         
-                        var su = symFuncConst.FuncType.LocalVariableBsize;
+                        var su = symFuncConst.FuncType.LocalVariableBsize / 8;
+
+                        
                         //initialize local variables
                         foreach (var localVar in symFuncConst.FuncType.LocalVariables) {
                             var lvar = localVar as SymVar;
@@ -255,10 +256,44 @@ public class AsmVisitor : IAstVisitor<int> {
                                     break;
                             }
                         }
+                        
+                        foreach (var param in symFuncConst.FuncType.Parameters) {
+                            if (!(param.Type is OpenArray op && param.LocType == SymVarOrConst.SymLocTypeEnum.Parameter)) 
+                                continue;
+                            //push after locals
+                            var offset = symFuncConst.FuncType.ParamsOffsetTable[param.Name];
+                            
+                            g.G(Mov, Rax(), Rbp());
+                            g.G(Add, Rax(), offset);
+                            //rbx - last index
+                            g.G(Mov, Rbx(), Rax());
+                            g.G(Mov, Rbx(), Der(Rbx()));
+                            //rbx -size
+                            g.G(Inc, Rbx());
+                            
+                            //rax - pointer to addr
+                            g.G(Add, Rax(), 8);
+                            g.G(Mov, Rsi(), Der(Rax()));
+                            
+                            //rsi - source
+                            
+                            g.Comment("allocate ");
+                            g.G(Mov, Rdx(), Rbx());
+                            g.G(Imul, Rdx(), op.InnerType.BSize);
+                            g.G(Sub, Rsp(), Rdx());
+                            //change pointer
+                            g.G(Mov, Der(Rax()), Rsp());
+
+                            g.G(Mov, Rdi(), Rsp());
+                            g.G(Mov, Rcx(), Rdx());
+                            
+                            g.G(Rep);
+                            g.G(Movsb);
+                        }
                     
                         su += Accept(symFuncConst.FuncType.Body);
                         _funcStack.Pop();  
-                        Debug.Assert(su == symFuncConst.FuncType.LocalVariableBsize);
+                        Debug.Assert(su == symFuncConst.FuncType.LocalVariableBsize / 8);
                             
                         g.Label(exitLabel);
                         g.FreeStack(su);
@@ -659,9 +694,7 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymVar.SymLocTypeEnum.Parameter:
                                 g.G(Mov, Rax(), Rbp());
                                 g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
-                                if (symVar.Type is OpenArray) {
-                                    g.G(Add, Rax(), 8);
-                                }
+                                
                                 g.G(Push, Rax());
                                 stackUse = 1;
                                 break;
@@ -726,7 +759,6 @@ public class AsmVisitor : IAstVisitor<int> {
 
                                         stackUse = totalInMemoryQSize;
                                         break;
-                                    
                                 }
                                 
                                 break;
@@ -755,6 +787,7 @@ public class AsmVisitor : IAstVisitor<int> {
                                         stackUse = totalInMemoryQSize;
                                         break;
                                     case OpenArray _:
+                                        Debug.Assert(false);
                                         break;
                                     
                                 }
@@ -925,6 +958,21 @@ public class AsmVisitor : IAstVisitor<int> {
         return 0;
     }
     
+    private int LowFunction(ExprNode nodeArg) {
+        if (nodeArg.Type is SymArray symArr) {
+            g.PushImm64(symArr.MinIndex.Value);
+            return 1;
+        }
+
+        if (nodeArg.Type is OpenArray openArray) {
+            g.PushImm64(0);
+            return 1;
+        }
+
+        Debug.Assert(false);
+        return 0;
+    }
+    
     public int Visit(FunctionCallNode node) {
         g.Comment($"function call");
         
@@ -934,6 +982,10 @@ public class AsmVisitor : IAstVisitor<int> {
         
         if (node.Symbol is HighSymFunc) {
             return HighFunction(node.Args[0]);
+        }
+        
+        if (node.Symbol is LowSymFunc) {
+            return LowFunction(node.Args[0]);
         }
             
         //return val
@@ -951,8 +1003,8 @@ public class AsmVisitor : IAstVisitor<int> {
                 Debug.Assert(arrayType != null);
                         
                 g.PushImm64(arrayType.Size - 1);
-                stackUse += 8;
-                break;
+                stackUse += 1;
+                continue;
             }
             
             switch (curParam.LocType) {
@@ -1075,9 +1127,12 @@ public class AsmVisitor : IAstVisitor<int> {
             stackUsage += Accept(node.Operand, true);
             // rax - addr
             // rdx - index
+            
+            //discard index 
             g.G(Pop, Rax());
             g.G(Add, Rax(), 8);
             g.G(Mov, Rax(), Der(Rax()));
+//            g.G(Mov, Rax(), Der(Rax()));
             g.G(Pop, Rdx());
             
             g.G(Imul, Rdx(), node.Type.BSize);
