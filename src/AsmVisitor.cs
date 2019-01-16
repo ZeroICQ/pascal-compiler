@@ -97,11 +97,10 @@ public class AsmVisitor : IAstVisitor<int> {
         _mainExitLabel = g.GetUniqueLabel();
         Accept(_astRoot);
         
-        g.Label(_mainExitLabel);
-        g.FunctionEpilogue();
         //return code 0
+        g.Label(_mainExitLabel);
         g.G(Xor, Rax(), Rax());
-        g.G(Ret);
+        g.FunctionEpilogue();
     }
 
     private void GenerateGlobals() {
