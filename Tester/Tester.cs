@@ -231,7 +231,8 @@ class Tester {
         var testFiles = Directory.GetFiles($"{testDir}/{path}/").Reverse();
         var tmpDirPath = $"{testDir}/{path}/tmp";
         
-        const string fpcPath = @"C:\Users\Alexey\dev\toolchains\lazarus\fpc\3.0.4\bin\x86_64-win64";
+//        const string fpcPath = @"C:\Users\Alexey\dev\toolchains\lazarus\fpc\3.0.4\bin\x86_64-win64";
+        const string fpcPath = @"C:\lazarus\fpc\3.0.0\bin\x86_64-win64";
         const string compatibilityUnitName = "compatibility";
         
         //clean tmp dir

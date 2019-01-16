@@ -21,6 +21,7 @@ public class SymStack : IEnumerable<SymTable> {
     public readonly CharWriteSymFunc CharWrite = new CharWriteSymFunc();
     public readonly BoolWriteSymFunc BoolWrite = new BoolWriteSymFunc();
     public readonly ExitSymFunc ExitFunc = new ExitSymFunc();
+    public readonly HighSymFunc HighFunc = new HighSymFunc();
 
     public static string InternalPrefix => "_@@@_"; 
 
@@ -39,6 +40,7 @@ public class SymStack : IEnumerable<SymTable> {
         _stack.Peek().Add(new SymFuncConst(CharWrite.Name, CharWrite, SymVarOrConst.SymLocTypeEnum.Global));
         _stack.Peek().Add(new SymFuncConst(BoolWrite.Name, BoolWrite, SymVarOrConst.SymLocTypeEnum.Global));
         _stack.Peek().Add(new SymFuncConst("exit", ExitFunc, SymVarOrConst.SymLocTypeEnum.Global));
+        _stack.Peek().Add(new SymFuncConst("high", HighFunc, SymVarOrConst.SymLocTypeEnum.Global));
         
     }
 
@@ -551,10 +553,6 @@ public class SymFunc : SymType {
             //  parameters will be aligned on stack
             paramSize += paramSize % 8 > 0 ? 8 - paramSize % 8  : 0;
             paramOffset += paramSize;
-            
-            if (param.Type is OpenArray op && param.LocType == SymVarOrConst.SymLocTypeEnum.Parameter) {
-                
-            }
         }
 
         ParamsSizeB = paramOffset;
@@ -584,6 +582,16 @@ public class ExitSymFunc : PredefinedSymFunc {
             null, 
             null, 
             null) { }
+}
+
+public class HighSymFunc : PredefinedSymFunc {
+    public HighSymFunc()
+        : base(
+            $"{SymStack.InternalPrefix}high", 
+            null, 
+            null, 
+            null, 
+            new SymInt()) { }
 }
 
 public class StringWriteSymFunc : PredefinedSymFunc {

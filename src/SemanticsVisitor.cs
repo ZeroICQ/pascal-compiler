@@ -99,7 +99,7 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             arg.Accept(this);
         }
         
-        //the very special crutch 
+        //the very special crutches 
         if (node.Name.Type is ExitSymFunc exit) {
             if (FunctionReturnType == null) {
                 if (node.Args.Count != 0) {
@@ -119,6 +119,21 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             }
 
             node.Symbol = _stack.ExitFunc;
+            return true;
+        }
+
+        if (node.Name.Type is HighSymFunc high) {
+            node.Symbol = _stack.HighFunc; 
+            node.Type = _stack.HighFunc.ReturnType; 
+            var t = ExprNode.GetClosestToken(node.Name);
+            if (node.Args.Count != 1) {
+                throw new WrongArgumentsNumberException(1, node.Args.Count, t.Lexeme, t.Line, t.Column);
+            }
+
+            if (!(node.Args[0].Type is SymArray || node.Args[0].Type is OpenArray)) {
+                throw new IllegalExprException(t.Lexeme, t.Line, t.Column);
+            }
+
             return true;
         }
         
@@ -161,12 +176,18 @@ public class SemanticsVisitor : IAstVisitor<bool> {
         node.Operand.Accept(this);
         node.IndexExpr.Accept(this);
 
-        
         var token = ExprNode.GetClosestToken(node.Operand);
-        if (!(node.Operand.Type is SymArray arrayType))
+        
+        if (node.Operand.Type is SymArray arrayType) {
+            node.Type = arrayType.Type;
+        }
+        else if (node.Operand.Type is OpenArray openArrayType){
+            node.Type = openArrayType.InnerType;
+        }
+        else {    
             throw new ArrayExpectedException(node.Operand.Type, token.Lexeme, token.Line, token.Column);
-
-        node.Type = arrayType.Type;
+        }
+        
         node.IsLvalue = true;
         
         _typeChecker.RequireCast(_stack.SymInt, ref node.IndexExpr);
@@ -178,9 +199,13 @@ public class SemanticsVisitor : IAstVisitor<bool> {
             // requireCast above guarantees that it is not null
             node.IndexExpr = new IntegerNode(new IntegerToken(indexConst.Value, token.Line, token.Column));
 
-            if (!(arrayType.MinIndex.Value <= indexConst.Value && indexConst.Value <= arrayType.MaxIndex.Value))
-                throw new RangeCheckErrorException(indexConst.Value, arrayType.MinIndex.Value, 
-                    arrayType.MaxIndex.Value, token.Line, token.Column);
+            if (!(node.Operand.Type is SymArray arrayT)) {
+                return true;
+            }
+
+            if (!(arrayT.MinIndex.Value <= indexConst.Value && indexConst.Value <= arrayT.MaxIndex.Value))
+                throw new RangeCheckErrorException(indexConst.Value, arrayT.MinIndex.Value, 
+                    arrayT.MaxIndex.Value, token.Line, token.Column);
 
         }
         catch (ConstExprEvalException) {

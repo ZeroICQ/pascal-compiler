@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -196,6 +197,10 @@ public class AsmVisitor : IAstVisitor<int> {
                     case ExitSymFunc _:
                         break;
                     
+                    case HighSymFunc _:
+                        //inline
+                        break;
+                    
                     // user-defined
                     default:
                         var exitLabel = g.GetUniqueLabel();
@@ -218,6 +223,7 @@ public class AsmVisitor : IAstVisitor<int> {
                             switch (lvar.Type) {
                                 case SymArray array:
                                     // trash
+                                    //todo: initialize
                                     break;
                                 case SymChar c:
                                     var charInitVal = ((SymCharConst) lvar.InitialValue)?.Value ?? 0;
@@ -653,6 +659,9 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymVar.SymLocTypeEnum.Parameter:
                                 g.G(Mov, Rax(), Rbp());
                                 g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
+                                if (symVar.Type is OpenArray) {
+                                    g.G(Add, Rax(), 8);
+                                }
                                 g.G(Push, Rax());
                                 stackUse = 1;
                                 break;
@@ -665,7 +674,10 @@ public class AsmVisitor : IAstVisitor<int> {
                             case SymVar.SymLocTypeEnum.VarParameter:
                                 g.G(Mov, Rax(), Rbp());
                                 g.G(Add, Rax(), _funcStack.Peek().Symbol.ParamsOffsetTable[symVar.Name]);
-                                g.G(Mov, Rax(), Der(Rax()));
+                                
+                                if (!(symVar.Type is OpenArray))
+                                    g.G(Mov, Rax(), Der(Rax()));
+                                
                                 g.G(Push, Rax());
                                 stackUse = 1;
                                 break;
@@ -725,7 +737,6 @@ public class AsmVisitor : IAstVisitor<int> {
                                         stackUse = 1;
                                         break;
                                     
-                                    
                                     case SymArray arr:
                                     case SymRecord record:
                                         //get addr
@@ -742,6 +753,8 @@ public class AsmVisitor : IAstVisitor<int> {
                                         g.PushStructToStack(wholeQwords, reminder);
 
                                         stackUse = totalInMemoryQSize;
+                                        break;
+                                    case OpenArray _:
                                         break;
                                     
                                 }
@@ -894,6 +907,24 @@ public class AsmVisitor : IAstVisitor<int> {
         return 0;
     }
 
+    private int HighFunction(ExprNode nodeArg) {
+        if (nodeArg.Type is SymArray symArr) {
+            g.PushImm64(symArr.MaxIndex.Value);
+            return 1;
+        }
+
+        if (nodeArg.Type is OpenArray openArray) {
+            Accept(nodeArg, true);
+            g.G(Pop, Rax());
+            g.G(Mov, Rax(), Der(Rax()));
+            g.G(Push, Rax());
+            return 1;
+        }
+
+        Debug.Assert(false);
+        return 0;
+    }
+    
     public int Visit(FunctionCallNode node) {
         g.Comment($"function call");
         
@@ -901,7 +932,10 @@ public class AsmVisitor : IAstVisitor<int> {
             return ExitFunction(node.Args[0]);
         }
         
-        
+        if (node.Symbol is HighSymFunc) {
+            return HighFunction(node.Args[0]);
+        }
+            
         //return val
         var returnValStackUse = node.Symbol.ReturnType.BSize / 8 + (node.Symbol.ReturnType.BSize % 8 > 0 ? 1 : 0);
         g.AllocateStack(returnValStackUse);
@@ -909,8 +943,32 @@ public class AsmVisitor : IAstVisitor<int> {
 
         //todo: add var param 
         for (var i = node.Args.Count - 1; i >= 0; i--) {
-            switch (node.Symbol.Parameters[i].LocType) {
-                case SymVar.SymLocTypeEnum.Parameter:
+            var curParam = node.Symbol.Parameters[i];
+
+            if (curParam.Type is OpenArray) {
+                stackUse += Accept(node.Args[i], true);
+                var arrayType = node.Args[i].Type as SymArray;
+                Debug.Assert(arrayType != null);
+                        
+                g.PushImm64(arrayType.Size);
+                stackUse += 8;
+                break;
+            }
+            
+            switch (curParam.LocType) {
+                case SymVarOrConst.SymLocTypeEnum.Parameter:
+                    // if open array - push size and addr
+//                    if (curParam.Type is OpenArray) {
+//                        stackUse += Accept(node.Args[i], true);
+//                        var arrayType = node.Args[i].Type as SymArray;
+//                        Debug.Assert(arrayType != null);
+//                        
+//                        var arrTypeSize = arrayType.BSize / 8 + (arrayType.BSize % 8 > 0 ? 1 : 0);
+//                        g.PushImm64(arrTypeSize);
+//                        stackUse += 8;
+//                        break;
+//                    }
+                    
                     stackUse += Accept(node.Args[i]);
                     break;
                 case SymVarOrConst.SymLocTypeEnum.VarParameter:
@@ -920,7 +978,6 @@ public class AsmVisitor : IAstVisitor<int> {
                     Debug.Assert(false);
                     break;
             }
-                
         }
         
         g.Comment($"function call eval function address");
@@ -1010,11 +1067,54 @@ public class AsmVisitor : IAstVisitor<int> {
     public int Visit(IndexNode node) {
         g.Comment($"index array islval: {IsLval.ToString()}");
         var isLval = IsLval;
+        var stackUsage = 0;
+        
+        if (node.Operand.Type is OpenArray) {
+            g.Comment("index open array");
+            stackUsage += Accept(node.IndexExpr);
+            stackUsage += Accept(node.Operand, true);
+            // rax - addr
+            // rdx - index
+            g.G(Pop, Rax());
+            g.G(Pop, Rdx());
+            
+            g.G(Imul, Rdx(), node.Type.BSize);
+            // get addr
+            g.G(Add, Rax(), Rdx());
+            g.G(Push, Rax());
+            stackUsage = 1;
+        
+            if (isLval)             
+                return stackUsage;
+
+            // rvalue - push to stack
+            g.G(Pop, Rax());
+            stackUsage = 0;
+        
+            if (node.Type is SymChar) {
+                g.G(Xor, Rdx(), Rdx());
+                g.G(Mov, Dl(), Der(Rax()));
+                g.G(Push, Rdx());
+                return 1;
+            }
+        
+            var wholeQwordsOpen = node.Type.BSize / 8;
+            var reminderOpen = node.Type.BSize % 8;
+        
+            //in qwords
+            var totalInMemoryQSizeOpen = wholeQwordsOpen + (reminderOpen > 0 ? 1 : 0);
+            g.AllocateStack(totalInMemoryQSizeOpen);
+            g.G(Mov, Rbx(), Rsp());
+            g.PushStructToStack(wholeQwordsOpen, reminderOpen);
+
+            return totalInMemoryQSizeOpen;
+        }
+        
         var arrType = node.Operand.Type as SymArray;
         Debug.Assert(arrType != null);
         
         g.Comment($"index before eval index expr");
-        var stackUsage = Accept(node.IndexExpr);
+        stackUsage = Accept(node.IndexExpr);
         g.Comment($"index after eval index expr");
         Debug.Assert(stackUsage == 1);
         // calculate address
@@ -1047,7 +1147,6 @@ public class AsmVisitor : IAstVisitor<int> {
             return 1;
         }
         
-
         var wholeQwords = node.Type.BSize / 8;
         var reminder = node.Type.BSize % 8;
         
@@ -1205,7 +1304,7 @@ public class AsmVisitor : IAstVisitor<int> {
         
         //false
         g.Label(falseBranchLabel);
-        g.G(Nop);
+//        g.G(Nop);
 
         if (node.FalseBranch != null) {
             g.Comment($"false branch");
